@@ -39,7 +39,7 @@ def image(image, tab=''):
     print '\t%sImage Sequence Num: %s' % (tab, image.image_seq)
     for volume in image.volumes:
         print '\t%sVolume:%s' % (tab, volume)
-    print '\t%sPEB Range: %s - %s' % (tab, image.peb_range[0], (image.peb_range[0]+image.peb_range[1]))
+    print '\t%sPEB Range: %s - %s' % (tab, image.peb_range[0], (image.peb_range[0]+image.peb_range[1]-1))
 
 
 def volume(volume, tab=''):

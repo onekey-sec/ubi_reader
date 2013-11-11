@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #############################################################
-# ubi_reader/ubifs
+# ubi_reader
 # (c) 2013 Jason Pruitt (jrspruitt@gmail.com)
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,29 +16,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
-import sys
 
-class log():
-    def __init__(self):
-        self.log_to_file = False
-        self.exit_on_except = False
+from ubifs import walk, output
 
-    def _out(self, s):
-        if self.log_to_file:
-            with open('ubifs.log', 'a') as f:
-                f.write('%s\n' % s)
-            f.close()
-        else:
-            print '%s' % s
-    
-        if self.exit_on_except:
-            sys.exit()
+output_folder = 'extracted'
 
-    def write(self, s):
-        self._out(s)
 
-    def write_node(self, n):
-        buf = '%s\n' % n
-        for key, value in n:
-            buf += '\t%s: %r\n' % (key, value)
-        self._out(buf)
+def extract_files(ubifs_, out_path):
+    """Extract UBIFS contents to_path/
+
+    Arguments:
+    Obj:ubifs    -- UBIFS object.
+    Str:out_path  -- Path to extract contents to.
+    """
+
+    try:
+        inodes = {}
+        walk.index(ubifs_, ubifs_.master_node.root_lnum, ubifs_.master_node.root_offs, inodes)
+
+        for dent in inodes[1]['dent']:
+            output.dents(ubifs_, inodes, dent, out_path)
+
+    except Exception, e:
+        import traceback
+        ubifs_.log.write('%s' % e)
+        traceback.print_exc()

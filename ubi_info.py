@@ -19,7 +19,8 @@
 import time
 
 import sys
-from ubi import ubi
+from ubi_io import ubi_file
+from ubi import ubi, get_peb_size
 from ubi import sort
 
 def print_info(ubi, num=None):
@@ -70,14 +71,9 @@ Usage:
         '''
         sys.exit(1)
 
-    else:
-        # You want a specific starting offset of input file
-        #ubi = ubi(path, start_offset=0x06000000, block_size=131072)
-        
-        # You know the block size, saves a second or two
-        #ubi = ubi(path, block_size=131072) 
 
-        # Create UBI Object
-        ubi = ubi(path)
-        print_info(ubi, num)
-        sys.exit(1)
+    block_size = get_peb_size(path)
+    ubi_file = ubi_file(path, block_size)
+    ubi = ubi(ubi_file)
+    print_info(ubi, num)
+    sys.exit()

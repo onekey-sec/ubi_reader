@@ -44,7 +44,7 @@ def parse_key(key):
     khash = hkey
 
     #if key_type < UBIFS_KEY_TYPES_CNT:
-    return key_type, ino_num, khash
+    return {'type':key_type, 'ino_num':ino_num, 'khash': khash}
 
 def decompress(ctype, unc_len, data):
     """Decompress data.

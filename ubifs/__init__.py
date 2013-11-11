@@ -18,11 +18,11 @@
 #############################################################
 import re
 import struct
-from ubifs.defines import *
-from ubifs.nodes import extract
-from ubifs import nodes
-from ubifs.log import log
 
+from ubifs.defines import *
+from ubifs import nodes
+from ubifs.nodes import extract
+from ubifs.log import log
 
 class ubifs_file(object):
     """UBI image file object
@@ -73,7 +73,7 @@ class ubifs_file(object):
             yield buf
 
 
-class ubifs(ubifs_file):
+class ubifs():
     """UBIFS object
 
     Arguments:

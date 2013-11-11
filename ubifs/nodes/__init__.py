@@ -19,6 +19,7 @@
 
 import struct
 from ubifs.defines import *
+from ubifs.misc import parse_key
 
 class common_hdr(object):
     def __init__(self, buf):
@@ -70,7 +71,10 @@ class dent_node(object):
     def __init__(self, buf):
         fields = dict(zip(UBIFS_DENT_NODE_FIELDS, struct.unpack(UBIFS_DENT_NODE_FORMAT,buf)))
         for key in fields:
-            setattr(self, key, fields[key])
+            if key == 'key':
+                setattr(self, key, parse_key(fields[key]))
+            else:
+                setattr(self, key, fields[key])
         setattr(self, 'name', '')
 
     def __repr__(self):
@@ -86,7 +90,10 @@ class data_node(object):
     def __init__(self, buf):
         fields = dict(zip(UBIFS_DATA_NODE_FIELDS, struct.unpack(UBIFS_DATA_NODE_FORMAT,buf)))
         for key in fields:
-            setattr(self, key, fields[key])
+            if key == 'key':
+                setattr(self, key, parse_key(fields[key]))
+            else:
+                setattr(self, key, fields[key])
         setattr(self, 'offset', 0)
         setattr(self, 'compr_len', 0)
 
@@ -118,7 +125,10 @@ class ino_node(object):
     def __init__(self, buf):
         fields = dict(zip(UBIFS_INO_NODE_FIELDS, struct.unpack(UBIFS_INO_NODE_FORMAT,buf)))
         for key in fields:
-            setattr(self, key, fields[key])
+            if key == 'key':
+                setattr(self, key, parse_key(fields[key]))
+            else:
+                setattr(self, key, fields[key])
         setattr(self, 'data', '')
 
     def __repr__(self):

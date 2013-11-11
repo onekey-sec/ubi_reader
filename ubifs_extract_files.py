@@ -16,43 +16,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
+
 import os
 import sys
-from ubi_io import ubi_file, leb_virtual_file
+import time
+
+from ubi_io import ubi_file
 from ubifs import ubifs, get_leb_size
-from ubifs.defines import *
-from ubifs.misc import decompress, parse_key
-from ubifs import walk, extract
-from ubi import ubi, get_peb_size
-
-
-
-
-def extract_all(ubifs, to_path='extracted'):
-    """Extract UBIFS contents to_path/
-
-    Arguments:
-    Obj:ubifs    -- UBIFS object.
-    Str:to_path  -- Path to extract contents to.
-    """
-    try:
-        if not os.path.exists(to_path):
-            os.mkdir(to_path)
-        elif os.listdir(to_path):
-            raise Exception('Directory is not empty.')
-        inodes = {}
-        walk.index(ubifs, ubifs.master_node.root_lnum, ubifs.master_node.root_offs, inodes)
-
-        for dent in inodes[1]['dent']:
-            extract.dents(ubifs, inodes, dent, to_path)
-
-    except Exception, e:
-        import traceback
-        ubifs.log.write('%s' % e)
-        traceback.print_exc()
+from ui_common import extract_files, output_folder
 
 if __name__ == '__main__':
-
 
     try:
         path = sys.argv[1]
@@ -75,8 +48,23 @@ Usage:
     depending on files ownership and type.
     """
     sys.exit(1)
+    
+    # Create path to extract to.
+    img_name = os.path.splitext(os.path.basename(path))[0]
+    out_path = os.path.join(output_folder, img_name)
 
+    if not os.path.exists(out_path):
+        os.mkdir(out_path)
+    elif os.listdir(out_path):
+        print 'Directory is not empty.'
+        sys.exit()
+
+    # Determine blocksize if not provided
     block_size = get_leb_size(sys.argv[1])
-    ubifs_file = ubi_file(sys.argv[1], block_size)
-    ubifs = ubifs(ubifs_file)
-    extract_all(ubifs)
+    # Create file object
+    ubifs_file_ = ubi_file(sys.argv[1], block_size)
+    # Create UBIFS object
+    ubifs_ = ubifs(ubifs_file_)
+    # Run extract all files
+    extract_files(ubifs_, out_path)
+

@@ -21,32 +21,8 @@ import sys
 
 from ubi import ubi, get_peb_size
 from ubifs import ubifs
-from ubifs import walk, extract
 from ubi_io import ubi_file, leb_virtual_file
-
-
-def extract_all(ubifs, to_path='extracted'):
-    """Extract UBIFS contents to_path/
-
-    Arguments:
-    Obj:ubifs    -- UBIFS object.
-    Str:to_path  -- Path to extract contents to.
-    """
-    try:
-        if not os.path.exists(to_path):
-            os.mkdir(to_path)
-        elif os.listdir(to_path):
-            raise Exception('Directory is not empty.')
-        inodes = {}
-        walk.index(ubifs, ubifs.master_node.root_lnum, ubifs.master_node.root_offs, inodes)
-
-        for dent in inodes[1]['dent']:
-            extract.dents(ubifs, inodes, dent, to_path)
-
-    except Exception, e:
-        import traceback
-        ubifs.log.write('%s' % e)
-        traceback.print_exc()
+from ui_common import extract_files, output_folder
 
 if __name__ == '__main__':
     try:
@@ -71,18 +47,32 @@ Usage:
         '''
         sys.exit(1)
 
+    # Create path to extract to.
+    img_name = os.path.splitext(os.path.basename(path))[0]
+    out_path = os.path.join(output_folder, img_name)
 
+    # Get block size if not provided
     block_size = get_peb_size(path)
-    ubi_file_ = ubi_file(sys.argv[1], block_size)
-    ubi_ = ubi(ubi_file_)
+    # Create file object.
+    ubi_file = ubi_file(sys.argv[1], block_size)
+    # Create UBI object
+    ubi = ubi(ubi_file)
 
-    if not os.path.exists('extracted'):
-        os.mkdir('extracted')
-
-    for image in ubi_.images:
+    # Traverse items found extracting files.
+    for image in ubi.images:
         for volume in image.volumes:
-            ubifs_file_ = leb_virtual_file(ubi_, image.volumes[volume])
-            ubifs_ = ubifs(ubifs_file_)
-            extract_all(ubifs_,  'extracted/%s' % volume)
+            vol_out_path = os.path.join(out_path, volume)
+
+            if not os.path.exists(vol_out_path):
+                os.makedirs(vol_out_path)
+            elif os.listdir(vol_out_path):
+                print 'Volume directory is not empty. %s' % vol_out_path
+                sys.exit()
+            # Create file object backed by UBI blocks.
+            ubifs_file = leb_virtual_file(ubi, image.volumes[volume])
+            # Create UBIFS object
+            ubifs = ubifs(ubifs_file)
+            print 'Extracting Volume: %s' % volume
+            extract_files(ubifs,  vol_out_path)
 
     sys.exit()

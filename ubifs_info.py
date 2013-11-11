@@ -16,11 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
-import os
+
 import sys
 
-from ubifs import ubifs
-
+from ubi_io import ubi_file
+from ubifs import ubifs, get_leb_size
 if __name__ == '__main__':
     if sys.argv[1] in ['-h','--help']:
         print """
@@ -29,10 +29,11 @@ Usage:
 
 Prints superblock and master node contents.
             """
-    ubifs = ubifs(sys.argv[1])
-    for key, value in ubifs.superblock_node:
-        print '%s: %s' % (key, value)
+    path = sys.argv[1]
+    block_size = get_leb_size(path)
+    ubi_file = ubi_file(path, block_size)
+    ubifs = ubifs(ubi_file)
+    ubifs.log.write_node(ubifs.superblock_node)
 
-    for key, value in ubifs.master_node:
-        print '%s: %s' % (key, value)
+    ubifs.log.write_node(ubifs.master_node)
     sys.exit()

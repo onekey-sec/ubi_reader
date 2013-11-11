@@ -20,8 +20,8 @@
 import os
 import struct
 
-from ubifs.misc import parse_key, decompress
 from ubifs.defines import *
+from ubifs.misc import decompress
 
 def dents(ubifs, inodes, dent_node, path=''):
     inode = inodes[dent_node.inum]
@@ -90,16 +90,14 @@ def _process_reg_file(ubifs, inode, path):
         buf = ''
         if 'data' in inode:
             compr_type = 0
-            sorted_data = sorted(inode['data'], key=lambda x: parse_key(x.key)[2])
-            last_khash = parse_key(sorted_data[0].key)[2]-1
-            
+            sorted_data = sorted(inode['data'], key=lambda x: x.key['khash'])
+            last_khash = sorted_data[0].key['khash']-1
             for data in sorted_data:
                 
                 # If data nodes are missing in sequence, fill in blanks
                 # with \x00 * UBIFS_BLOCK_SIZE
-                khash = parse_key(data.key)[2]
-                if khash - last_khash != 1:
-                    while 1 != (khash - last_khash):
+                if data.key['khash'] - last_khash != 1:
+                    while 1 != (data.key['khash'] - last_khash):
                         buf += '\x00'*UBIFS_BLOCK_SIZE
                         last_khash += 1
 
@@ -107,10 +105,10 @@ def _process_reg_file(ubifs, inode, path):
                 ubifs.file.seek(data.offset)
                 d = ubifs.file.read(data.compr_len)
                 buf += decompress(compr_type, data.size, d)
-                last_khash = khash
+                last_khash = data.key['khash']
 
     except Exception, e:
-        raise Exception('inode num:%s :%s' % (parse_key(inode['ino'].key)[1], e))
+        raise Exception('inode num:%s :%s' % (inode['ino'].key['ino_num'], e))
     
     # Pad end of file with \x00
     if inode['ino'].size > len(buf):

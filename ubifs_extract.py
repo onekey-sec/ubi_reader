@@ -22,14 +22,17 @@ import sys
 from ubi import ubi, get_peb_size
 from ubi_io import ubi_file
 
+output_folder = 'extracted'
 
 def extract_ubifs(ubi):
     for image in ubi.images:
+        img = 0
         for volume in image.volumes:
-            f = open('ubifs_1%s.img' % volume, 'wb')
+            f = open('%s/img-%s_vol-%s.ubifs' % (output_folder, img, volume), 'wb')
             # Get UBIFS image from volume.
             for block in image.volumes[volume].reader(ubi):
                 f.write(block)
+        img += 1
 
 if __name__ == '__main__':
     try:
@@ -52,10 +55,12 @@ Usage:
         '''
         sys.exit(1)
 
-    else:
-        # Create UBI Object
-        block_size = get_peb_size(path)
-        ubi_file = ubi_file(path, block_size)
-        ubi = ubi(ubi_file)
-        extract_ubifs(ubi)
-        sys.exit(1)
+    # Determine block size if not provided
+    block_size = get_peb_size(path)
+    # Create file object
+    ubi_file_ = ubi_file(path, block_size)
+    # Create UBI object
+    ubi_ = ubi(ubi_file_)
+    # Run extract UBIFS
+    extract_ubifs(ubi_)
+    sys.exit(1)

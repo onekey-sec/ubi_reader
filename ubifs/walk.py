@@ -19,7 +19,6 @@
 
 from ubifs import extract
 from ubifs.defines import *
-from ubifs.misc import parse_key
 
 def index(ubifs, lnum, offset, inodes={}):
     """Walk the index gathering Inode, Dir Entry, and File nodes.
@@ -46,7 +45,7 @@ def index(ubifs, lnum, offset, inodes={}):
 
     elif chdr.node_type == UBIFS_INO_NODE:
         inon = extract.ino_node(ubifs, lnum, offset+UBIFS_COMMON_HDR_SZ)
-        ino_num = parse_key(inon.key)[1]
+        ino_num = inon.key['ino_num']
 
         if not ino_num in inodes:
             inodes[ino_num] = {}
@@ -55,7 +54,7 @@ def index(ubifs, lnum, offset, inodes={}):
 
     elif chdr.node_type == UBIFS_DATA_NODE:
         datn = extract.data_node(ubifs, lnum, offset+UBIFS_COMMON_HDR_SZ, chdr.len)
-        ino_num = parse_key(datn.key)[1]
+        ino_num = datn.key['ino_num']
         
         if not ino_num in inodes:
             inodes[ino_num] = {}
@@ -67,7 +66,7 @@ def index(ubifs, lnum, offset, inodes={}):
 
     elif chdr.node_type == UBIFS_DENT_NODE:
         dn = extract.dent_node(ubifs, lnum, offset+UBIFS_COMMON_HDR_SZ)
-        ino_num = parse_key(dn.key)[1]
+        ino_num = dn.key['ino_num']
 
         if not ino_num in inodes:
             inodes[ino_num] = {}

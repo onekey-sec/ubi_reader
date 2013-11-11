@@ -174,7 +174,7 @@ class ubi():
         Returns:
         Int -- PEB Size.
         """
-        return self.block_size
+        return self.file.block_size
     peb_size = property(_get_peb_size)
 
 
