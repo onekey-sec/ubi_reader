@@ -65,5 +65,5 @@ Usage:
     # Create UBIFS object
     uubifs = ubifs(ufsfile)
     # Run extract all files
-    extract_files(uubifs, out_path)
+    extract_files(uubifs, out_path, True)
     sys.exit()

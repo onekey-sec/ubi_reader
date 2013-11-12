@@ -23,29 +23,37 @@ import struct
 from ubifs.defines import *
 from ubifs.misc import decompress
 
-def dents(ubifs, inodes, dent_node, path=''):
+def dents(ubifs, inodes, dent_node, path='', user=False):
     inode = inodes[dent_node.inum]
     dent_path = os.path.join(path, dent_node.name)
         
     if dent_node.type == UBIFS_ITYPE_DIR:
         if not os.path.exists(dent_path):
             os.mkdir(dent_path)
+            if user:
+                set_file_perms(dent_path, inode)
         if 'dent' in inode:
             for dnode in inode['dent']:
-                dents(ubifs, inodes, dnode, dent_path)
+                dents(ubifs, inodes, dnode, dent_path, user)
 
     elif dent_node.type == UBIFS_ITYPE_REG:
         try:
             if inode['ino'].nlink > 1:
                 if 'hlink' not in inode:
                     inode['hlink'] = dent_path
-                    _process_reg_file(ubifs, inode, dent_path)
+                    buf = process_reg_file(ubifs, inode, dent_path)
+                    write_reg_file(dent_path, buf)
                 else:
                     os.link(inode['hlink'] ,dent_path)
             else:
-                _process_reg_file(ubifs, inode, dent_path)
+                buf = process_reg_file(ubifs, inode, dent_path)
+                write_reg_file(dent_path, buf)
+                
+            if user:
+                set_file_perms(dent_path, inode)
+
         except Exception, e:
-            ubifs.log.write('_parse_reg:failed:%s' % e)
+            ubifs.log.write('FILE Fail: %s' % e)
 
     elif dent_node.type == UBIFS_ITYPE_LNK:
         try:
@@ -57,35 +65,51 @@ def dents(ubifs, inodes, dent_node, path=''):
     elif dent_node.type in [UBIFS_ITYPE_BLK, UBIFS_ITYPE_CHR]:
         try:
             dev = struct.unpack('<II', inode['ino'].data)[0]
-            os.mknod(dent_path, inode['ino'].mode, dev)
+            if user:
+                os.mknod(dent_path, inode['ino'].mode, dev)
+                if user:
+                    set_file_perms(path, inode)
+            else:
+                # Just create dummy file.
+                write_reg_file(dent_path, str(dev))
+                if user:
+                    set_file_perms(dent_path, inode)
+                
         except Exception, e:
             ubifs.log.write('DEV Fail: %s : %s' % (dent_path, e))
 
     elif dent_node.type == UBIFS_ITYPE_FIFO:
         try:
             os.mkfifo(dent_path, inode['ino'].mode)
+            if user:
+                set_file_perms(dent_path, inode)
         except Exception, e:
             ubifs.log.write('FIFO Fail: %s : %s' % (dent_path, e))
 
     elif dent_node.type == UBIFS_ITYPE_SOCK:
         try:
             # Just create dummy file.
-            _write_reg_file(ubifs, dent_path, inode, '')
+            write_reg_file(dent_path, '')
+            if user:
+                set_file_perms(dent_path, inode)
         except Exception, e:
             ubifs.log.write('SOCK Fail: %s' % (dent_path))
 
 
-def _write_reg_file(ubifs, path, inode, data):
-    if not os.path.exists(path):
-        with open(path, 'wb') as f:
-            f.write(data)
+def set_file_perms(path, inode):
+    try:
         os.chmod(path, inode['ino'].mode)
         os.chown(path, inode['ino'].uid, inode['ino'].gid)
-    else:
-        raise Exception('File collision: %s' % path)
+    except:
+        raise Exception('Failed File Permissions: %s' % (path)) 
+
+    
+def write_reg_file(path, data):
+    with open(path, 'wb') as f:
+        f.write(data)
 
 
-def _process_reg_file(ubifs, inode, path):
+def process_reg_file(ubifs, inode, path):
     try:
         buf = ''
         if 'data' in inode:
@@ -110,8 +134,8 @@ def _process_reg_file(ubifs, inode, path):
     except Exception, e:
         raise Exception('inode num:%s :%s' % (inode['ino'].key['ino_num'], e))
     
-    # Pad end of file with \x00
+    # Pad end of file with \x00 if needed.
     if inode['ino'].size > len(buf):
         buf += '\x00' * (inode['ino'].size - len(buf))
         
-    _write_reg_file(ubifs, path, inode, buf)
+    return buf

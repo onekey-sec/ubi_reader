@@ -72,6 +72,6 @@ Usage:
             ufsfile = leb_virtual_file(uubi, image.volumes[volume])
             # Create UBIFS object
             uubifs = ubifs(ufsfile)
-            extract_files(uubifs,  vol_out_path)
+            extract_files(uubifs,  vol_out_path, True)
 
     sys.exit()
