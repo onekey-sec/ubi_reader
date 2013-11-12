@@ -17,23 +17,40 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+import os
 import sys
 
 from ubi_io import ubi_file
 from ubifs import ubifs, get_leb_size
+
+
 if __name__ == '__main__':
-    if sys.argv[1] in ['-h','--help']:
+    try:
+        path = sys.argv[1]
+        if not os.path.exists(path):
+            print 'Path not found.'
+            sys.exit(0)
+    except:
+        path = '-h'
+    
+    if path in ['-h', '--help']:
         print """
 Usage:
     ubifs_info.py /path/to/ubifs.img
 
 Prints superblock and master node contents.
             """
-    path = sys.argv[1]
-    block_size = get_leb_size(path)
-    ubi_file = ubi_file(path, block_size)
-    ubifs = ubifs(ubi_file)
-    ubifs.log.write_node(ubifs.superblock_node)
+        sys.exit()
 
-    ubifs.log.write_node(ubifs.master_node)
+    path = sys.argv[1]
+    # Determine block size if not provided.
+    block_size = get_leb_size(path)
+    # Create file object.
+    ufile = ubi_file(path, block_size)
+    # Create UBIFS Object.
+    uubifs = ubifs(ufile)
+    # Write super block node info
+    uubifs.log.write_node(uubifs.superblock_node)
+    # Write first master node.
+    uubifs.log.write_node(uubifs.master_node)
     sys.exit()

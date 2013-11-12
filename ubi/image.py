@@ -24,6 +24,8 @@ class description(object):
     def __init__(self, blocks, image_num, layout_info):
         self._image_num = image_num
         self._image_seq = blocks[layout_info[0]].ec_hdr.image_seq
+        self.vid_hdr_offset = blocks[layout_info[0]].ec_hdr.vid_hdr_offset
+        
         self._start_peb = layout_info[2][0]
         self._total_pebs = layout_info[2][1]
         seq_blocks_list = sort.by_image_seq(blocks, self._image_seq)

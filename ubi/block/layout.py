@@ -34,8 +34,7 @@ def group_pairs(blocks, layout_blocks_list):
             if blocks[l].vtbl_recs[0].name == blocks[lnd[0]].vtbl_recs[0].name:
                 lnd.append(blocks[l].peb_num)
                 break
-            else:
-                print 'block not found'
+
         else:
                 layouts_grouped.append([blocks[l].peb_num])
 
@@ -54,11 +53,12 @@ def associate_blocks(blocks, layout_pairs, start_peb_num):
     List -- Layout block pairs grouped with associated block ranges.
     """
     block_len = len(blocks)
-
+    img_cnt = 0
     rs_pebs = 0
     part_offset = start_peb_num
 
     for layout_pair in layout_pairs:
+        img_cnt += 1
         part_offset += rs_pebs
 
         for vrec in blocks[layout_pair[0]].vtbl_recs:
@@ -67,6 +67,8 @@ def associate_blocks(blocks, layout_pairs, start_peb_num):
         if rs_pebs > block_len:
             rs_pebs = block_len-2
 
+        if img_cnt > 1:
+            part_offset += 2
         layout_pair.append([part_offset,rs_pebs+2])
 
     return layout_pairs

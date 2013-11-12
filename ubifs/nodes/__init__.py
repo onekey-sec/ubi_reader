@@ -59,7 +59,7 @@ class mst_node(object):
             setattr(self, key, fields[key])
 
     def __repr__(self):
-        return 'UBIFS Super Block Node'
+        return 'UBIFS Master Block Node'
 
     def __iter__(self):
         for key in dir(self):

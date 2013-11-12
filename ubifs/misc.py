@@ -18,7 +18,7 @@
 #############################################################
 import lzo
 import struct
-
+import zlib
 from ubifs.defines import *
 
 # For happy printing
@@ -46,6 +46,7 @@ def parse_key(key):
     #if key_type < UBIFS_KEY_TYPES_CNT:
     return {'type':key_type, 'ino_num':ino_num, 'khash': khash}
 
+
 def decompress(ctype, unc_len, data):
     """Decompress data.
 
@@ -60,7 +61,7 @@ def decompress(ctype, unc_len, data):
     if ctype == UBIFS_COMPR_LZO:
         return lzo.decompress(''.join(('\xf0', struct.pack('>I', unc_len), data)))
     elif ctype == UBIFS_COMPR_ZLIB:
-        return data
+        return zlib(decompress(data))
     else:
         return data
 

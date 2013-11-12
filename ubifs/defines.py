@@ -111,6 +111,7 @@ UBIFS_ITYPES_CNT = 7 # Support file type count
 # Supported key has functions
 UBIFS_KEY_HASH_R5   = 0 # R5 hash
 UBIFS_KEY_HASH_TEST = 1 # Test hash, returns first 4 bytes of name
+PRINT_UBIFS_KEY_HASH = ['r5', 'test']
 
 # Supported key formats
 UBIFS_SIMPLE_KEY_FMT = 0
@@ -159,6 +160,7 @@ UBIFS_COMPR_NONE        = 0 # No compression
 UBIFS_COMPR_LZO         = 1 # LZO compression
 UBIFS_COMPR_ZLIB        = 2 # ZLIB compression
 UBIFS_COMPR_TYPES_CNT   = 3 # Count of supported compression types
+PRINT_UBIFS_COMPR = ['none','lzo','zlib']
 
 # UBIFS node types
 UBIFS_INO_NODE          = 0  # Inode node

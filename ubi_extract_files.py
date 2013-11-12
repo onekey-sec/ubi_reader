@@ -22,7 +22,7 @@ import sys
 from ubi import ubi, get_peb_size
 from ubifs import ubifs
 from ubi_io import ubi_file, leb_virtual_file
-from ui_common import extract_files, output_folder
+from ui.common import extract_files, output_dir
 
 if __name__ == '__main__':
     try:
@@ -49,17 +49,17 @@ Usage:
 
     # Create path to extract to.
     img_name = os.path.splitext(os.path.basename(path))[0]
-    out_path = os.path.join(output_folder, img_name)
+    out_path = os.path.join(output_dir, img_name)
 
     # Get block size if not provided
     block_size = get_peb_size(path)
     # Create file object.
-    ubi_file = ubi_file(sys.argv[1], block_size)
+    ufile = ubi_file(sys.argv[1], block_size)
     # Create UBI object
-    ubi = ubi(ubi_file)
+    uubi = ubi(ufile)
 
     # Traverse items found extracting files.
-    for image in ubi.images:
+    for image in uubi.images:
         for volume in image.volumes:
             vol_out_path = os.path.join(out_path, volume)
 
@@ -69,10 +69,9 @@ Usage:
                 print 'Volume directory is not empty. %s' % vol_out_path
                 sys.exit()
             # Create file object backed by UBI blocks.
-            ubifs_file = leb_virtual_file(ubi, image.volumes[volume])
+            ufsfile = leb_virtual_file(uubi, image.volumes[volume])
             # Create UBIFS object
-            ubifs = ubifs(ubifs_file)
-            print 'Extracting Volume: %s' % volume
-            extract_files(ubifs,  vol_out_path)
+            uubifs = ubifs(ufsfile)
+            extract_files(uubifs,  vol_out_path)
 
     sys.exit()

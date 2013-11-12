@@ -101,10 +101,10 @@ UBI_VTBL_REC_SZ = struct.calcsize(VTBL_REC_FORMAT) # 172
 # Volume Identifier Header
 UBI_VID_DYNAMIC = 1 # Volume can be resized.
 UBI_VID_STATIC  = 2 # Volume can not be resized.
-PRINT_VOL_TYPE_LIST = [0, 'Dynamic', 'Static']
+PRINT_VOL_TYPE_LIST = [0, 'dynamic', 'static']
 
 # Volume table record
-UBI_VTBL_AUTORESIZE_FLG = '\x01'
+UBI_VTBL_AUTORESIZE_FLG = 1
 
 UBI_COMPAT_DELETE   = 1 # Delete this internal volume before anything written.
 UBI_COMPAT_RO       = 2 # Attach this device in read-only mode.

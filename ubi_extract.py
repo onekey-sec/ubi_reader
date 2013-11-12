@@ -21,14 +21,12 @@ import os
 import sys
 from ubi import ubi, get_peb_size
 from ubi_io import ubi_file
+from ui.common import output_dir
 
-output_folder = 'extracted'
 
 def extract_ubi(ubi, out_path):
-    img_cnt = 0
     for image in ubi.images:
-        f = open('%s/img-%s.ubi' % (out_path, img_cnt), 'wb')
-
+        f = open('%s/img-%s.ubi' % (out_path, image.image_num), 'wb')
         # iterate through image blocks
         for block in image.get_blocks(ubi.blocks):
             if ubi.blocks[block].is_valid:
@@ -59,7 +57,7 @@ Usage:
 
     # Create path to extract to.
     img_name = os.path.splitext(os.path.basename(path))[0]
-    out_path = os.path.join(output_folder, img_name)
+    out_path = os.path.join(output_dir, img_name)
 
     if not os.path.exists(out_path):
         os.mkdir(out_path)
@@ -68,9 +66,9 @@ Usage:
     # Determine block size if not provided.
     block_size = get_peb_size(path)
     # Create file object.
-    ubi_file_ = ubi_file(path, block_size)
+    ufile = ubi_file(path, block_size)
     # Create UBI object
-    ubi_ = ubi(ubi_file_)
+    uubi = ubi(ufile)
     # Run extract UBI.
-    extract_ubi(ubi_, out_path)
+    extract_ubi(uubi, out_path)
     sys.exit()

@@ -19,7 +19,7 @@
 
 from ubifs import walk, output
 
-output_folder = 'extracted'
+output_dir = 'output'
 
 
 def extract_files(ubifs_, out_path):

@@ -16,12 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
-import time
 
+import os
 import sys
 from ubi_io import ubi_file
 from ubi import ubi, get_peb_size
-from ubi import sort
 
 def print_info(ubi, num=None):
     # Roll through all Objects pretty contained information
@@ -51,14 +50,19 @@ def print_info(ubi, num=None):
             print 'Block out of range, printing first UBI block'
             ubi.blocks[ubi.first_peb_num].display()
     return
-    
+
+
 if __name__ == '__main__':
     try:
         path = sys.argv[1]
-        num = int(sys.argv[2])
-
+        if not os.path.exists(path):
+            print 'Path not found.'
+        try:
+            num = int(sys.argv[2])    
+        except:
+            num = None
     except:
-        num = None
+        path = '-h'
     
     if path in ['-h', '--help']:
         print '''
@@ -71,9 +75,12 @@ Usage:
         '''
         sys.exit(1)
 
-
+    # Determine block size if not provided
     block_size = get_peb_size(path)
-    ubi_file = ubi_file(path, block_size)
-    ubi = ubi(ubi_file)
-    print_info(ubi, num)
+    # Create file object
+    ufile = ubi_file(path, block_size)
+    # Create UBI object
+    uubi = ubi(ufile)
+    # Print info
+    print_info(uubi, num)
     sys.exit()

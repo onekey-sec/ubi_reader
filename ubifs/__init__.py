@@ -24,55 +24,6 @@ from ubifs import nodes
 from ubifs.nodes import extract
 from ubifs.log import log
 
-class ubifs_file(object):
-    """UBI image file object
-
-    Arguments:
-    Str:path         -- Path to file to parse
-    
-    Methods:
-    seek            -- Put file head to specified byte offset.
-        Int:offset
-    read            -- Read specified bytes from file handle.
-        Int:size
-    tell            -- Returns byte offset of current file location.
-    reader          -- Generator that returns data from file.
-    reset           -- Reset file position to start_offset
-
-    Handles all the actual file interactions, read, seek,
-    extract blocks, etc.
-    """
-
-    def __init__(self, path):
-        self._fhandle = open(path, 'rb')
-
-
-    def seek(self, offset):
-        self._fhandle.seek(offset)
-
-
-    def read(self, size):
-        return self._fhandle.read(size)
-
-
-    def tell(self):
-        return self._fhandle.tell()
-
-
-    def reset(self):
-        self._fhandle.seek(0)
-
-
-    def reader(self):
-        self.reset()
-        while True:
-            buf = self.read(self.leb_size)
-
-            if not buf:
-                break
-            yield buf
-
-
 class ubifs():
     """UBIFS object
 

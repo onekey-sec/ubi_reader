@@ -40,5 +40,5 @@ class log():
     def write_node(self, n):
         buf = '%s\n' % n
         for key, value in n:
-            buf += '\t%s: %r\n' % (key, value)
+            buf += '\t%s: %s\n' % (key, value)
         self._out(buf)

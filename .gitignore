@@ -38,7 +38,7 @@ nosetests.xml
 
 # ubi_reader specific
 
-extracted/
+output/
 *.img
 *.ubi
 *.ubifs

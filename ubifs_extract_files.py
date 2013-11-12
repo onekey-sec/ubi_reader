@@ -19,11 +19,10 @@
 
 import os
 import sys
-import time
 
 from ubi_io import ubi_file
 from ubifs import ubifs, get_leb_size
-from ui_common import extract_files, output_folder
+from ui.common import extract_files, output_dir
 
 if __name__ == '__main__':
 
@@ -46,12 +45,12 @@ Usage:
     Only works with UBIFS files.
     Permissions are saved, may require running as root
     depending on files ownership and type.
-    """
-    sys.exit(1)
+        """
+        sys.exit(1)
     
     # Create path to extract to.
     img_name = os.path.splitext(os.path.basename(path))[0]
-    out_path = os.path.join(output_folder, img_name)
+    out_path = os.path.join(output_dir, img_name)
 
     if not os.path.exists(out_path):
         os.mkdir(out_path)
@@ -62,9 +61,9 @@ Usage:
     # Determine blocksize if not provided
     block_size = get_leb_size(sys.argv[1])
     # Create file object
-    ubifs_file_ = ubi_file(sys.argv[1], block_size)
+    ufsfile = ubi_file(sys.argv[1], block_size)
     # Create UBIFS object
-    ubifs_ = ubifs(ubifs_file_)
+    uubifs = ubifs(ufsfile)
     # Run extract all files
-    extract_files(ubifs_, out_path)
-
+    extract_files(uubifs, out_path)
+    sys.exit()
