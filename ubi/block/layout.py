@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from ubi.block import sort
+
 def group_pairs(blocks, layout_blocks_list):
     """Sort a list of layout blocks into pairs
 
@@ -52,23 +54,10 @@ def associate_blocks(blocks, layout_pairs, start_peb_num):
     Returns:
     List -- Layout block pairs grouped with associated block ranges.
     """
-    block_len = len(blocks)
-    img_cnt = 0
-    rs_pebs = 0
-    part_offset = start_peb_num
-
+    seq_blocks = []
     for layout_pair in layout_pairs:
-        img_cnt += 1
-        part_offset += rs_pebs
-
-        for vrec in blocks[layout_pair[0]].vtbl_recs:
-            rs_pebs += vrec.reserved_pebs
-
-        if rs_pebs > block_len:
-            rs_pebs = block_len-2
-
-        if img_cnt > 1:
-            part_offset += 2
-        layout_pair.append([part_offset,rs_pebs+2])
+        seq_blocks = sort.by_image_seq(blocks, blocks[layout_pair[0]].ec_hdr.image_seq)
+ 
+        layout_pair.append(seq_blocks)
 
     return layout_pairs

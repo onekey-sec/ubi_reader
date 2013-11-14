@@ -19,14 +19,16 @@
 
 import os
 import sys
+import argparse
+
+from ui.common import output_dir
 from ubi import ubi, get_peb_size
 from ubi_io import ubi_file
-from ui.common import output_dir
 
 
 def extract_ubi(ubi, out_path):
     for image in ubi.images:
-        f = open('%s/img-%s.ubi' % (out_path, image.image_num), 'wb')
+        f = open('%s/img-%s.ubi' % (out_path, image.image_seq), 'wb')
         # iterate through image blocks
         for block in image.get_blocks(ubi.blocks):
             if ubi.blocks[block].is_valid:
@@ -35,25 +37,32 @@ def extract_ubi(ubi, out_path):
 
 
 if __name__ == '__main__':
-    try:
-        path = sys.argv[1]
-        if not os.path.exists(path):
-            print 'Path not found.'
-            sys.exit(0)
-    except:
-        path = '-h'
+    description = 'Extract UBI image from file. Works with binary dumps containing multiple images if image_seq is not the same.'
+    usage = 'ubi_extract.py [options] filepath'
+    parser = argparse.ArgumentParser(usage=usage, description=description)
     
-    if path in ['-h', '--help']:
-        print '''
-Usage:
-    $ ubi_extract.py path/to/file/dump.bin
+    parser.add_argument('-p', '--peb-size', type=int, dest='block_size',
+                        help='Specify PEB size.')
 
-    Extracts the  UBI image and saves it
-    to ubi_<num>.ubi
+    parser.add_argument('filepath', help='File to extract UBI contents of.')
+
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit()
     
-    Works with binary data with multiple images inside.
-        '''
-        sys.exit(1)
+    args = parser.parse_args()
+
+    if args.filepath:
+        path = args.filepath
+        if not os.path.exists(path):
+            parser.error("filepath doesn't exist.")
+
+    # Determine block size if not provided
+    if args.block_size:
+        block_size = args.block_size
+    else:
+        block_size = get_peb_size(path)
+
 
     # Create path to extract to.
     img_name = os.path.splitext(os.path.basename(path))[0]
@@ -63,8 +72,6 @@ Usage:
         os.mkdir(out_path)
 
 
-    # Determine block size if not provided.
-    block_size = get_peb_size(path)
     # Create file object.
     ufile = ubi_file(path, block_size)
     # Create UBI object

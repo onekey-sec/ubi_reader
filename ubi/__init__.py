@@ -72,7 +72,7 @@ class ubi():
 
         self._images = []
         for i in range(0, len(layout_infos)):
-            self._images.append(image(self.blocks, i, layout_infos[i]))
+            self._images.append(image(self.blocks, layout_infos[i]))
 
     def _get_file(self):
         """UBI File object

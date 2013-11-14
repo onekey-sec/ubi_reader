@@ -19,6 +19,8 @@
 
 import os
 import sys
+import argparse
+
 from ubi_io import ubi_file
 from ubi import ubi, get_peb_size
 
@@ -53,34 +55,41 @@ def print_info(ubi, num=None):
 
 
 if __name__ == '__main__':
-    try:
-        path = sys.argv[1]
-        if not os.path.exists(path):
-            print 'Path not found.'
-        try:
-            num = int(sys.argv[2])    
-        except:
-            num = None
-    except:
-        path = '-h'
+    description = 'Show info about provided UBI image.'
+    usage = 'ubi_info.py [options] filepath'
+    parser = argparse.ArgumentParser(usage=usage, description=description)
     
-    if path in ['-h', '--help']:
-        print '''
-Usage:
-    $ ubi_info.py path/to/file.ubi [block number]
+    parser.add_argument('-b', '--block-num', type=int, dest="block_num",
+                        help='Block Number: Show information about this PEB. Shows first one if doesn\'t exist')
+    
+    parser.add_argument('-p', '--peb-size', type=int, dest='block_size',
+                        help='Specify PEB size.')
 
-    if no args, print all found information about UBI image.
-    if block num provided, print block description
-    block num is the PEB location of the UBI block.
-        '''
-        sys.exit(1)
+    parser.add_argument('filepath', help='File to get info from.')
+
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit()
+    
+    args = parser.parse_args()
+
+    if args.filepath:
+        path = args.filepath
+        if not os.path.exists(path):
+            parser.error("filepath doesn't exist.")
+
+    block_num  = args.block_num
 
     # Determine block size if not provided
-    block_size = get_peb_size(path)
+    if args.block_size:
+        block_size = args.block_size
+    else:
+        block_size = get_peb_size(path)
+
     # Create file object
     ufile = ubi_file(path, block_size)
     # Create UBI object
     uubi = ubi(ufile)
     # Print info
-    print_info(uubi, num)
+    print_info(uubi, block_num)
     sys.exit()

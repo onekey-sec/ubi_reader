@@ -20,7 +20,7 @@
 from ubi.defines import PRINT_COMPAT_LIST, PRINT_VOL_TYPE_LIST
 
 def ubi(ubi, tab=''):
-    print '%sUBI Image' % (tab) 
+    print '%sUBI File' % (tab) 
     print '%s---------------------' % (tab)
     print '\t%sMin I/O: %s' % (tab, ubi.min_io_size)
     print '\t%sLEB Size: %s' % (tab, ubi.leb_size)
@@ -38,14 +38,13 @@ def image(image, tab=''):
     print '%s---------------------' % (tab)
     print '\t%sImage Sequence Num: %s' % (tab, image.image_seq)
     for volume in image.volumes:
-        print '\t%sVolume:%s' % (tab, volume)
-    print '\t%sPEB Range: %s - %s' % (tab, image.peb_range[0], (image.peb_range[0]+image.peb_range[1]-1))
+        print '\t%sVolume Name:%s' % (tab, volume)
+    print '\t%sPEB Range: %s - %s' % (tab, image.peb_range[0], image.peb_range[1])
 
 
 def volume(volume, tab=''):
     print '%s%s' % (tab, volume)
     print '%s---------------------' % (tab)
-    #print '\t%simage Number: %s' % (tab, volume.image_num)
     print '\t%sVol ID: %s' % (tab, volume.vol_id)
     print '\t%sName: %s' % (tab, volume.name)
     print '\t%sBlock Count: %s' % (tab, volume.block_count)

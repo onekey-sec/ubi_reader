@@ -19,6 +19,7 @@
 
 import os
 import sys
+import argparse
 
 from ubi_io import ubi_file, leb_virtual_file
 from ubi import ubi, get_peb_size
@@ -117,33 +118,37 @@ def get_ubi_params(ubi):
                 print '\t%s\t%s %s' % (name, ubi_opt_args[key], ubi_args[key])
 
 if __name__ == '__main__':
-    try:
-        path = sys.argv[1]
-        if not os.path.exists(path):
-            print 'Path not found.'
-
-    except:
-        path = '-h'
+    description = """Gather information from the UBI image useful for using mkfs.ubi,ubinize, ubiformat, etc. and print to screen.
+Some may be duplicates, be sure to check which ones apply."""
+    usage = 'ubi_utils_info.py [options] filepath'
+    parser = argparse.ArgumentParser(usage=usage, description=description)
     
-    if path in ['-h', '--help']:
-        print """
-Usage:
-    $ ubi_utils_info.py path/to/file.ubi
+    parser.add_argument('-p', '--peb-size', type=int, dest='block_size',
+                        help='Specify PEB size.')
 
-    Print mkfs.ubi, ubinize, ubiformat, etc. Options
-    with values found in the provided UBI image.
-    Double check options for the particular ubi program,
-    as there are duplicates.
-        """
-        sys.exit(1)
+    parser.add_argument('filepath', help='File to get info from.')
+
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit()
+    
+    args = parser.parse_args()
+
+    if args.filepath:
+        path = args.filepath
+        if not os.path.exists(path):
+            parser.error("filepath doesn't exist.")
 
     # Determine block size if not provided
-    block_size = get_peb_size(path)
+    if args.block_size:
+        block_size = args.block_size
+    else:
+        block_size = get_peb_size(path)
+
     # Create file object
     ufile = ubi_file(path, block_size)
     # Create UBI object
     uubi = ubi(ufile)
-    # Create output file path and run ini creation.
-    out_path = os.path.splitext(os.path.basename(path))[0]
+    # Print info.
     get_ubi_params(uubi)
     sys.exit()

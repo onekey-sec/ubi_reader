@@ -19,51 +19,72 @@
 
 import os
 import sys
+import argparse
 
 from ubi_io import ubi_file
 from ubifs import ubifs, get_leb_size
 from ui.common import extract_files, output_dir
 
 if __name__ == '__main__':
+    description = """Extract file contents of UBIFS image."""
+    usage = 'ubifs_extract_files.py [options] filepath'
+    parser = argparse.ArgumentParser(usage=usage, description=description)
+    parser.add_argument('-l', '--log-file', dest='logpath',
+                      help='Log output to file output/LOGPATH. (default: ubifs_output.log)')
 
-    try:
-        path = sys.argv[1]
-        if not os.path.exists(path):
-            print 'Path not found.'
-            sys.exit(0)
-    except:
-        path = '-h'
-    
-    if path in ['-h', '--help']:
-        print """
-Usage:
-    $ ubifs_extract_files.py path/to/file/ubifs.img
+    parser.add_argument('-k', '--keep-permissions', action='store_true', dest='permissions',
+                      help='Maintain file permissions, requires running as root. (default: False)')
 
-    Extracts the files/dirs from a UBI image and saves it
-    to extracted/
-    
-    Only works with UBIFS files.
-    Permissions are saved, may require running as root
-    depending on files ownership and type.
-        """
-        sys.exit(1)
-    
-    # Create path to extract to.
-    img_name = os.path.splitext(os.path.basename(path))[0]
-    out_path = os.path.join(output_dir, img_name)
 
-    if not os.path.exists(out_path):
-        os.mkdir(out_path)
-    elif os.listdir(out_path):
-        print 'Directory is not empty.'
+    parser.add_argument('-q', '--quiet', action='store_true', dest='quiet',
+                      help='Suppress warnings and non-fatal errors. (default: False)')
+    
+    parser.add_argument('-e', '--leb-size', type=int, dest='block_size',
+                        help='Specify LEB size.')
+    
+    parser.add_argument('filepath', help='File to extract file contents of.')
+
+    if len(sys.argv) == 1:
+        parser.print_help()
         sys.exit()
 
-    # Determine blocksize if not provided
-    block_size = get_leb_size(sys.argv[1])
+
+    args = parser.parse_args()
+
+    if args.filepath:
+        path = args.filepath
+        if not os.path.exists(path):
+            parser.error("filepath doesn't exist.")
+
+    if args.logpath:
+        log_to_file = True
+        log_file = args.logpath
+    else:
+        log_to_file = None
+        log_file = None
+
+    # Determine block size if not provided
+    if args.block_size:
+        block_size = args.block_size
+    else:
+        block_size = get_leb_size(path)
+
+    perms = args.permissions
+    quiet = args.quiet
+
+    # Create path to extract to.
+    img_name = os.path.splitext(os.path.basename(path))[0]
+    output_path = os.path.join(output_dir, img_name)
+
     # Create file object
-    ufsfile = ubi_file(sys.argv[1], block_size)
+    ufsfile = ubi_file(path, block_size)
     # Create UBIFS object
     uubifs = ubifs(ufsfile)
+    # Set up logging
+    uubifs.log.log_file = log_file
+    uubifs.log.log_to_file = log_to_file
+    uubifs.quiet = quiet
+    os.mkdir(output_path)
     # Run extract all files
-    extract_files(uubifs, out_path, True)
+    extract_files(uubifs, output_path, perms)
     sys.exit()

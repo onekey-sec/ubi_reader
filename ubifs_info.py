@@ -19,32 +19,40 @@
 
 import os
 import sys
+import argparse
 
 from ubi_io import ubi_file
 from ubifs import ubifs, get_leb_size
 
 
 if __name__ == '__main__':
-    try:
-        path = sys.argv[1]
-        if not os.path.exists(path):
-            print 'Path not found.'
-            sys.exit(0)
-    except:
-        path = '-h'
+
+    description = """Print superblock and master node information."""
+    usage = 'ubifs_info.py [options] filepath'
+    parser = argparse.ArgumentParser(usage=usage, description=description)
     
-    if path in ['-h', '--help']:
-        print """
-Usage:
-    ubifs_info.py /path/to/ubifs.img
+    parser.add_argument('-e', '--leb-size', type=int, dest='block_size',
+                        help='Specify LEB size.')
 
-Prints superblock and master node contents.
-            """
+    parser.add_argument('filepath', help='File to get info from.')
+
+    if len(sys.argv) == 1:
+        parser.print_help()
         sys.exit()
+    
+    args = parser.parse_args()
 
-    path = sys.argv[1]
-    # Determine block size if not provided.
-    block_size = get_leb_size(path)
+    if args.filepath:
+        path = args.filepath
+        if not os.path.exists(path):
+            parser.error("filepath doesn't exist.")
+
+    # Determine block size if not provided
+    if args.block_size:
+        block_size = args.block_size
+    else:
+        block_size = get_leb_size(path)
+
     # Create file object.
     ufile = ubi_file(path, block_size)
     # Create UBIFS Object.

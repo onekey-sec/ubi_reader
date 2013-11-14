@@ -22,7 +22,7 @@ from ubifs import walk, output
 output_dir = 'output'
 
 
-def extract_files(ubifs, out_path, user=False):
+def extract_files(ubifs, out_path, perms=False):
     """Extract UBIFS contents to_path/
 
     Arguments:
@@ -34,7 +34,7 @@ def extract_files(ubifs, out_path, user=False):
         walk.index(ubifs, ubifs.master_node.root_lnum, ubifs.master_node.root_offs, inodes)
 
         for dent in inodes[1]['dent']:
-            output.dents(ubifs, inodes, dent, out_path, user)
+            output.dents(ubifs, inodes, dent, out_path, perms)
 
     except Exception, e:
         import traceback

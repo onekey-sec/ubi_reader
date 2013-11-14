@@ -19,6 +19,7 @@
 
 import os
 import sys
+import argparse
 
 from ubi import ubi, get_peb_size
 from ubi_io import ubi_file
@@ -28,34 +29,39 @@ from ui.common import output_dir
 def extract_ubifs(ubi):
     for image in ubi.images:
         for volume in image.volumes:
-            f = open('%s/img-%s_vol-%s.ubifs' % (output_dir, image.image_num, volume), 'wb')
+            f = open('%s/img-%s_vol-%s.ubifs' % (output_dir, image.image_seq, volume), 'wb')
             # Get UBIFS image from volume.
             for block in image.volumes[volume].reader(ubi):
                 f.write(block)
 
 if __name__ == '__main__':
-    try:
-        path = sys.argv[1]
-        if not os.path.exists(path):
-            print 'Path not found.'
-            sys.exit(0)
-    except:
-        path = '-h'
+    description = """Extract UBIFS image from UBI image.
+Works with binary dumps containing multiple images if image_seq is not the same."""
+    usage = 'ubi_extract_ubifs.py [options] filepath'
+    parser = argparse.ArgumentParser(usage=usage, description=description)
     
-    if path in ['-h', '--help']:
-        print '''
-Usage:
-    $ ubifs_extract.py path/to/file/image.ubi
+    parser.add_argument('-p', '--peb-size', type=int, dest='block_size',
+                        help='Specify PEB size.')
 
-    Extracts the UBIFS from a UBI image and saves it
-    to ubifs_<num>.img
+    parser.add_argument('filepath', help='File to extract UBIFS contents of.')
+
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit()
     
-    Works with binary data with multiple images inside.
-        '''
-        sys.exit(1)
+    args = parser.parse_args()
+
+    if args.filepath:
+        path = args.filepath
+        if not os.path.exists(path):
+            parser.error("filepath doesn't exist.")
 
     # Determine block size if not provided
-    block_size = get_peb_size(path)
+    if args.block_size:
+        block_size = args.block_size
+    else:
+        block_size = get_peb_size(path)
+
     # Create file object
     ufile = ubi_file(path, block_size)
     # Create UBI object

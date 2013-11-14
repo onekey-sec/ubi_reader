@@ -43,19 +43,14 @@ class description(object):
         self._vol_rec = vol_rec
         self._name = self._vol_rec.name
         self._block_list = block_list
-        self._image_num = 0
 
     def __repr__(self):
         return 'Volume: %s' % (self.name)
 
+
     def _get_name(self):
         return self._name
     name = property(_get_name)
-
-
-    def _get_image_num(self):
-        return self._image_num
-    parition_num = property(_get_image_num)
 
 
     def _get_vol_id(self):
@@ -97,14 +92,13 @@ class description(object):
                 yield ubi.file.read_block_data(ubi.blocks[block])
 
 
-def get_volumes(blocks, blocks_list, layout_info):
+def get_volumes(blocks, layout_info):
     """Get a list of UBI volume objects from list of blocks
 
     Arguments:
     List:blocks            -- List of layout block objects
-    List:blocks_list    -- List of data block indexes
-    List:layout_info    -- Layout info (indexs of layout blocks and
-                                        volume PEB range)
+    List:layout_info    -- Layout info (indexes of layout blocks and
+                                        associated data blocks.)
 
     Returns:
     Dict -- Of Volume objects by volume name, including any
@@ -112,8 +106,8 @@ def get_volumes(blocks, blocks_list, layout_info):
     """
     volumes = {}
 
-    data_blocks_list = sort.by_range(blocks, layout_info[2])
-    vol_blocks_lists = sort.by_vol_id(blocks, sort.list_by_list(data_blocks_list, blocks_list))
+    #data_blocks_list = sort.by_range(blocks, layout_info[2])
+    vol_blocks_lists = sort.by_vol_id(blocks, layout_info[2])
 
     for vol_rec in blocks[layout_info[0]].vtbl_recs:
         vol_name = vol_rec.name.strip('\x00')

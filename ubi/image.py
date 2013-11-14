@@ -21,33 +21,27 @@ from ubi.volume import get_volumes
 from ubi.block import get_blocks_in_list, sort
 
 class description(object):
-    def __init__(self, blocks, image_num, layout_info):
-        self._image_num = image_num
+    def __init__(self, blocks, layout_info):
         self._image_seq = blocks[layout_info[0]].ec_hdr.image_seq
         self.vid_hdr_offset = blocks[layout_info[0]].ec_hdr.vid_hdr_offset
         
-        self._start_peb = layout_info[2][0]
-        self._total_pebs = layout_info[2][1]
-        seq_blocks_list = sort.by_image_seq(blocks, self._image_seq)
-        self._volumes = get_volumes(blocks, seq_blocks_list, layout_info)
+        self._start_peb = min(layout_info[2])
+        self._end_peb = max(layout_info[2])
+        self._volumes = get_volumes(blocks, layout_info)
 
 
     def __repr__(self):
-        return 'Image Number: %s' % (self.image_num)
+        return 'Image: %s' % (self.image_seq)
 
 
     def get_blocks(self, blocks):
-        return get_blocks_in_list(blocks, range(self._start_peb, self._total_pebs))
+        return get_blocks_in_list(blocks, range(self._start_peb, self._end_peb))
 
 
     def _get_peb_range(self):
-        return [self._start_peb, self._total_pebs]
+        return [self._start_peb, self._end_peb]
     peb_range = property(_get_peb_range)
 
-
-    def _get_image_num(self):
-        return self._image_num
-    image_num = property(_get_image_num)
 
 
     def _get_image_seq(self):

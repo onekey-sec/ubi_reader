@@ -23,18 +23,22 @@ import struct
 from ubifs.defines import *
 from ubifs.misc import decompress
 
-def dents(ubifs, inodes, dent_node, path='', user=False):
+def dents(ubifs, inodes, dent_node, path='', perms=False):
     inode = inodes[dent_node.inum]
     dent_path = os.path.join(path, dent_node.name)
         
     if dent_node.type == UBIFS_ITYPE_DIR:
-        if not os.path.exists(dent_path):
-            os.mkdir(dent_path)
-            if user:
-                set_file_perms(dent_path, inode)
+        try:
+            if not os.path.exists(dent_path):
+                os.mkdir(dent_path)
+                if perms:
+                    set_file_perms(dent_path, inode)
+        except Exception, e:
+            ubifs.log.write('DIR Fail: %s' % e)
+
         if 'dent' in inode:
             for dnode in inode['dent']:
-                dents(ubifs, inodes, dnode, dent_path, user)
+                dents(ubifs, inodes, dnode, dent_path, perms)
 
     elif dent_node.type == UBIFS_ITYPE_REG:
         try:
@@ -49,7 +53,7 @@ def dents(ubifs, inodes, dent_node, path='', user=False):
                 buf = process_reg_file(ubifs, inode, dent_path)
                 write_reg_file(dent_path, buf)
                 
-            if user:
+            if perms:
                 set_file_perms(dent_path, inode)
 
         except Exception, e:
@@ -65,14 +69,14 @@ def dents(ubifs, inodes, dent_node, path='', user=False):
     elif dent_node.type in [UBIFS_ITYPE_BLK, UBIFS_ITYPE_CHR]:
         try:
             dev = struct.unpack('<II', inode['ino'].data)[0]
-            if user:
+            if perms:
                 os.mknod(dent_path, inode['ino'].mode, dev)
-                if user:
+                if perms:
                     set_file_perms(path, inode)
             else:
                 # Just create dummy file.
                 write_reg_file(dent_path, str(dev))
-                if user:
+                if perms:
                     set_file_perms(dent_path, inode)
                 
         except Exception, e:
@@ -81,7 +85,7 @@ def dents(ubifs, inodes, dent_node, path='', user=False):
     elif dent_node.type == UBIFS_ITYPE_FIFO:
         try:
             os.mkfifo(dent_path, inode['ino'].mode)
-            if user:
+            if perms:
                 set_file_perms(dent_path, inode)
         except Exception, e:
             ubifs.log.write('FIFO Fail: %s : %s' % (dent_path, e))
@@ -90,7 +94,7 @@ def dents(ubifs, inodes, dent_node, path='', user=False):
         try:
             # Just create dummy file.
             write_reg_file(dent_path, '')
-            if user:
+            if perms:
                 set_file_perms(dent_path, inode)
         except Exception, e:
             ubifs.log.write('SOCK Fail: %s' % (dent_path))
