@@ -97,8 +97,6 @@ Prints the Superblock node and Master node.
 
 ### Known Issues
 
-* Zlib compression is as of yet untested.
-
 * Will not create a SOCK file type, instead just saves an empty text file with its name.
 
 * For NAND dumps and the like, this will not fix anything ECC would take care of, so some bad data
@@ -109,8 +107,6 @@ may be extracted.
 * Assumes things are in good condition and where it thinks they should be...
 
 ### TODO
-
-* Test zlib compression
 
 * Organize, document, the usual.
 
