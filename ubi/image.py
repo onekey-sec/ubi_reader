@@ -18,13 +18,12 @@
 #############################################################
 from ubi import display
 from ubi.volume import get_volumes
-from ubi.block import get_blocks_in_list, sort
+from ubi.block import get_blocks_in_list
 
 class description(object):
     def __init__(self, blocks, layout_info):
         self._image_seq = blocks[layout_info[0]].ec_hdr.image_seq
         self.vid_hdr_offset = blocks[layout_info[0]].ec_hdr.vid_hdr_offset
-        
         self._start_peb = min(layout_info[2])
         self._end_peb = max(layout_info[2])
         self._volumes = get_volumes(blocks, layout_info)
@@ -35,7 +34,7 @@ class description(object):
 
 
     def get_blocks(self, blocks):
-        return get_blocks_in_list(blocks, range(self._start_peb, self._end_peb))
+        return get_blocks_in_list(blocks, range(self._start_peb, self._end_peb+1))
 
 
     def _get_peb_range(self):
