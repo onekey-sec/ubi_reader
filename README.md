@@ -14,6 +14,12 @@ Python is required.
 
 python-lzo is the only non-standard module, possibly included in your disto repo, if not.
 
+    $ sudo apt-get install liblzo2-dev
+
+    If its available in your repos.
+    $ sudo apt-get install python-lzo
+
+    Else
     $ git clone https://github.com/jd-boyd/python-lzo.git
     $ cd python-lzo
     $ python setup.py install
