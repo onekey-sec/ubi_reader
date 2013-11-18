@@ -31,6 +31,10 @@ from ubi.defines import UBI_VTBL_AUTORESIZE_FLG, PRINT_VOL_TYPE_LIST
 def create_ubinize_ini(ubi, out_path):
     for image in ubi.images:
         config = ConfigParser.ConfigParser()
+        filename, ext = os.path.splitext(out_path)
+        if not ext:
+            ext = '.ini'
+        out_path = '%s-%s%s' % (filename, image.image_seq, ext)
         f = open(out_path, 'w')
         print 'Writing to: %s' % out_path
 
@@ -40,7 +44,7 @@ def create_ubinize_ini(ubi, out_path):
             config.set(volume, 'image', 'path/to/ubifs.img')
             config.set(volume, 'vol_id', image.volumes[volume].vol_id)
 
-            # Print volume attribtures and UBI headers
+            # Print volume attributes and UBI headers
             for key, value in image.volumes[volume].vol_rec:
                 if key == 'alignment':
                     config.set(volume, 'vol_alignment', value)
