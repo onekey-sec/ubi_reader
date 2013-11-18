@@ -26,13 +26,18 @@ from ubi_io import ubi_file
 from ui.common import output_dir
 
 
-def extract_ubifs(ubi):
+def extract_ubifs(ubi, output_path):
     for image in ubi.images:
         for volume in image.volumes:
-            f = open('%s/img-%s_vol-%s.ubifs' % (output_dir, image.image_seq, volume), 'wb')
-            # Get UBIFS image from volume.
-            for block in image.volumes[volume].reader(ubi):
-                f.write(block)
+            vol_path = os.path.join(output_path, 'img-%s_vol-%s.ubifs' % (image.image_seq, volume))
+            if os.path.exists(vol_path):
+                print 'File exists skipping: %s' % vol_path
+            else:
+                print 'Writing to:  %s' % vol_path
+                f = open(vol_path, 'wb')
+                # Get UBIFS image from volume.
+                for block in image.volumes[volume].reader(ubi):
+                    f.write(block)
 
 if __name__ == '__main__':
     description = """Extract UBIFS image from UBI image.
@@ -42,6 +47,9 @@ Works with binary dumps containing multiple images if image_seq is not the same.
     
     parser.add_argument('-p', '--peb-size', type=int, dest='block_size',
                         help='Specify PEB size.')
+    
+    parser.add_argument('-o', '--output-dir', dest='output_path',
+                        help='Specify output directory path.')
 
     parser.add_argument('filepath', help='File to extract UBIFS contents of.')
 
@@ -54,7 +62,12 @@ Works with binary dumps containing multiple images if image_seq is not the same.
     if args.filepath:
         path = args.filepath
         if not os.path.exists(path):
-            parser.error("filepath doesn't exist.")
+            parser.error("File path doesn't exist.")
+
+    if args.output_path:
+        output_path = args.output_path
+    else:
+        output_path = output_dir
 
     # Determine block size if not provided
     if args.block_size:
@@ -62,10 +75,13 @@ Works with binary dumps containing multiple images if image_seq is not the same.
     else:
         block_size = get_peb_size(path)
 
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
     # Create file object
     ufile = ubi_file(path, block_size)
     # Create UBI object
     uubi = ubi(ufile)
     # Run extract UBIFS
-    extract_ubifs(uubi)
-    sys.exit(1)
+    extract_ubifs(uubi, output_path)
+    sys.exit(0)

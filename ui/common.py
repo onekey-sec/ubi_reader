@@ -17,9 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+import os
+
 from ubifs import walk, output
 
-output_dir = 'output'
+output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'output')
 
 
 def extract_files(ubifs, out_path, perms=False):

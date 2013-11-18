@@ -28,12 +28,17 @@ from ubi_io import ubi_file
 
 def extract_ubi(ubi, out_path):
     for image in ubi.images:
-        f = open('%s/img-%s.ubi' % (out_path, image.image_seq), 'wb')
-        # iterate through image blocks
-        for block in image.get_blocks(ubi.blocks):
-            if ubi.blocks[block].is_valid:
-                # Write whole block to file
-                f.write(ubi.file.read_block(ubi.blocks[block]))
+        img_path = os.path.join(out_path, 'img-%s.ubi' % image.image_seq)
+        if os.path.exists(img_path):
+            print 'File exists skipping: %s' % img_path
+        else:
+            print 'Writing to:  %s' % img_path
+            f = open(img_path, 'wb')
+            # iterate through image blocks
+            for block in image.get_blocks(ubi.blocks):
+                if ubi.blocks[block].is_valid:
+                    # Write whole block to file
+                    f.write(ubi.file.read_block(ubi.blocks[block]))
 
 
 if __name__ == '__main__':
@@ -43,6 +48,9 @@ if __name__ == '__main__':
     
     parser.add_argument('-p', '--peb-size', type=int, dest='block_size',
                         help='Specify PEB size.')
+    
+    parser.add_argument('-o', '--output-dir', dest='output_path',
+                        help='Specify output directory path.')
 
     parser.add_argument('filepath', help='File to extract UBI contents of.')
 
@@ -57,19 +65,20 @@ if __name__ == '__main__':
         if not os.path.exists(path):
             parser.error("filepath doesn't exist.")
 
+    if args.output_path:
+        output_path = args.output_path
+    else:
+        img_name = os.path.splitext(os.path.basename(path))[0]
+        output_path = os.path.join(output_dir, img_name)
+
     # Determine block size if not provided
     if args.block_size:
         block_size = args.block_size
     else:
         block_size = get_peb_size(path)
 
-
-    # Create path to extract to.
-    img_name = os.path.splitext(os.path.basename(path))[0]
-    out_path = os.path.join(output_dir, img_name)
-
-    if not os.path.exists(out_path):
-        os.mkdir(out_path)
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
 
 
     # Create file object.
@@ -77,5 +86,5 @@ if __name__ == '__main__':
     # Create UBI object
     uubi = ubi(ufile)
     # Run extract UBI.
-    extract_ubi(uubi, out_path)
+    extract_ubi(uubi, output_path)
     sys.exit()

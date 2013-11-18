@@ -41,6 +41,9 @@ if __name__ == '__main__':
     
     parser.add_argument('-p', '--peb-size', type=int, dest='block_size',
                         help='Specify PEB size.')
+    
+    parser.add_argument('-o', '--output-dir', dest='output_path',
+                        help='Specify output directory path.')
 
     parser.add_argument('filepath', help='File to extract contents of.')
 
@@ -53,7 +56,13 @@ if __name__ == '__main__':
     if args.filepath:
         path = args.filepath
         if not os.path.exists(path):
-            parser.error("filepath doesn't exist.")
+            parser.error("File path doesn't exist.")
+
+    if args.output_path:
+        output_path = args.output_path
+    else:
+        img_name = os.path.splitext(os.path.basename(path))[0]
+        output_path = os.path.join(output_dir, img_name)
 
     if args.logpath:
         log_to_file = True
@@ -71,9 +80,8 @@ if __name__ == '__main__':
     perms = args.permissions
     quiet = args.quiet
 
-    # Create path to extract to.
-    img_name = os.path.splitext(os.path.basename(path))[0]
-    out_path = os.path.join(output_dir, img_name)
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
 
     # Create file object.
     ufile = ubi_file(path, block_size)
@@ -83,13 +91,13 @@ if __name__ == '__main__':
     # Traverse items found extracting files.
     for image in uubi.images:
         for volume in image.volumes:
-            vol_out_path = os.path.join(out_path, volume)
+            vol_out_path = os.path.join(output_path, volume)
 
             if not os.path.exists(vol_out_path):
                 os.makedirs(vol_out_path)
             elif os.listdir(vol_out_path):
-                print 'Volume directory is not empty. %s' % vol_out_path
-                sys.exit()
+                parser.error('Volume output directory is not empty. %s' % vol_out_path)
+
             # Create file object backed by UBI blocks.
             ufsfile = leb_virtual_file(uubi, image.volumes[volume])
             # Create UBIFS object
@@ -98,7 +106,8 @@ if __name__ == '__main__':
             uubifs.log.log_file = log_file
             uubifs.log.log_to_file = log_to_file
             uubifs.log.quiet = quiet
-            # RUn extract all files.
-            extract_files(uubifs,  vol_out_path, perms)
+            # Run extract all files.
+            print 'Writing to: %s' % vol_out_path
+            extract_files(uubifs, vol_out_path, perms)
 
-    sys.exit()
+    sys.exit(0)

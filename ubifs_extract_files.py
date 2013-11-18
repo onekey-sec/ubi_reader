@@ -42,6 +42,9 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--leb-size', type=int, dest='block_size',
                         help='Specify LEB size.')
     
+    parser.add_argument('-o', '--output-dir', dest='output_path',
+                        help='Specify output directory path.')
+    
     parser.add_argument('filepath', help='File to extract file contents of.')
 
     if len(sys.argv) == 1:
@@ -54,7 +57,13 @@ if __name__ == '__main__':
     if args.filepath:
         path = args.filepath
         if not os.path.exists(path):
-            parser.error("filepath doesn't exist.")
+            parser.error("File path doesn't exist.")
+
+    if args.output_path:
+        output_path = args.output_path
+    else:
+        img_name = os.path.splitext(os.path.basename(path))[0]
+        output_path = os.path.join(output_dir, img_name)
 
     if args.logpath:
         log_to_file = True
@@ -69,12 +78,11 @@ if __name__ == '__main__':
     else:
         block_size = get_leb_size(path)
 
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
     perms = args.permissions
     quiet = args.quiet
-
-    # Create path to extract to.
-    img_name = os.path.splitext(os.path.basename(path))[0]
-    output_path = os.path.join(output_dir, img_name)
 
     # Create file object
     ufsfile = ubi_file(path, block_size)
@@ -84,7 +92,13 @@ if __name__ == '__main__':
     uubifs.log.log_file = log_file
     uubifs.log.log_to_file = log_to_file
     uubifs.quiet = quiet
-    os.mkdir(output_path)
+
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    elif os.listdir(output_path):
+        parser.error('Volume output directory is not empty. %s' % output_path)
+
     # Run extract all files
+    print 'Writing to: %s' % output_path
     extract_files(uubifs, output_path, perms)
     sys.exit()
