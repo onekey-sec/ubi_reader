@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-from ubi.defines import PRINT_COMPAT_LIST, PRINT_VOL_TYPE_LIST
+from ubi.defines import PRINT_COMPAT_LIST, PRINT_VOL_TYPE_LIST, UBI_VTBL_AUTORESIZE_FLG
 
 def ubi(ubi, tab=''):
     print '%sUBI File' % (tab) 
@@ -127,6 +127,8 @@ def vol_rec(vol_rec, tab=''):
                 value = PRINT_VOL_TYPE_LIST[value]
             else:
                 value = -1
+        elif key == 'flags' and value == UBI_VTBL_AUTORESIZE_FLG:
+            value = 'autoresize'
         elif key == 'name':
             value = value.strip('\x00')
 
