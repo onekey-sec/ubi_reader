@@ -21,104 +21,27 @@ import os
 import sys
 import argparse
 
-from ubi_io import ubi_file, leb_virtual_file
+from ui.common import get_ubi_params
+from ubi_io import ubi_file
 from ubi import ubi, get_peb_size
-from ubifs import ubifs
-from ubifs.defines import PRINT_UBIFS_KEY_HASH, PRINT_UBIFS_COMPR
 
-def get_ubi_params(ubi):
-    
-    # From UBIFS Superblock
-    ubifs_opt_args = {'min_io_size':'-m',
-                    'leb_size':'-e',
-                    'default_compr':'-x',
-                    'sub_page_size':'-s',
-                    'fanout':'-f',
-                    'key_hash':'-k',
-                    'orph_lebs':'-p',
-                    'log_lebs':'-l'}
+def print_ubi_params(ubi):
+    ubi_params = get_ubi_params(ubi)
+    for volume in ubi_params:
+        ubi_flags = ubi_params[volume]['flags']
+        ubi_args = ubi_params[volume]['args']
+        sorted_keys = sorted(ubi_params[volume]['args'])
 
-
-    ubi_opt_args = {'min_io_size':'-m',
-                    'peb_size':'-p',
-                    'sub_page_size':'-s',
-                    'vid_hdr_offset':'-O',
-                    'version':'-x',
-                    'image_seq':'-Q',
-                    'alignment':'-a',
-                    'vol_id':'-n',
-                    'name':'-N'}
-
-    ubifs_args = {'min_io_size':0,
-            'leb_size':0,
-            'default_compr':'lzo',
-            'sub_page_size':0,
-            'fanout':0,
-            'key_hash':'r5',
-            'orph_lebs':0,
-            'log_lebs':0}
-
-    ubi_args = {'min_io_size':0,
-            'peb_size':0,
-            'vid_hdr_offset':0,
-            'sub_page_size':0,
-            'version':0,
-            'image_seq':0,
-            'alignment':0,
-            'vol_id':0,
-            'name':''}
-
-    for image in ubi.images:
-
-        for volume in image.volumes:
-            # Create file object backed by UBI blocks.
-            ufsfile = leb_virtual_file(uubi, image.volumes[volume])
-            # Create UBIFS object
-            uubifs = ubifs(ufsfile)
-
-            for key, value in uubifs.superblock_node:
-                if key == 'key_hash':
-                    value = PRINT_UBIFS_KEY_HASH[value]
-                elif key == 'default_compr':
-                    value = PRINT_UBIFS_COMPR[value]
-
-                if key in ubifs_args:
-                    ubifs_args[key] = value
-                if key in ubi_args:
-                    ubi_args[key] = value
-            
-            for key, value in image.volumes[volume].vol_rec:
-                if key == 'name':
-                    value = value.rstrip('\x00')
-                if key in ubifs_args:
-                    ubifs_args[key] = value
-                if key in ubi_args:
-                    ubi_args[key] = value
-
-            ubi_args['vid_hdr_offset'] = image.vid_hdr_offset
-            ubi_args['sub_page_size'] = ubi_args['vid_hdr_offset']
-            ubifs_args['sub_page_size'] = ubi_args['vid_hdr_offset']
-            ubi_args['image_seq'] = image.image_seq
-            ubi_args['peb_size'] = ubi.peb_size
-            ubi_args['vol_id'] = image.volumes[volume].vol_id
-
-            print '\nVolume %s' % volume
-            for key in ubifs_args:
-                if len(key)< 8:
-                    name = '%s\t' % key
-                else:
-                    name = key
-                print '\t%s\t%s %s' % (name, ubifs_opt_args[key], ubifs_args[key])
-
-            for key in ubi_args:
-                if len(key)< 8:
-                    name = '%s\t' % key
-                else:
-                    name = key
-                print '\t%s\t%s %s' % (name, ubi_opt_args[key], ubi_args[key])
+        print '\nVolume %s' % volume
+        for key in sorted_keys:
+            if len(key)< 8:
+                name = '%s\t' % key
+            else:
+                name = key
+            print '\t%s\t%s %s' % (name, ubi_flags[key], ubi_args[key])
 
 if __name__ == '__main__':
-    description = """Gather information from the UBI image useful for using mkfs.ubi,ubinize, ubiformat, etc. and print to screen.
+    description = """Gather information from the UBI image useful for using mkfs.ubi, ubinize, ubiformat, etc. and print to screen.
 Some may be duplicates, be sure to check which ones apply."""
     usage = 'ubi_utils_info.py [options] filepath'
     parser = argparse.ArgumentParser(usage=usage, description=description)
@@ -150,5 +73,5 @@ Some may be duplicates, be sure to check which ones apply."""
     # Create UBI object
     uubi = ubi(ufile)
     # Print info.
-    get_ubi_params(uubi)
+    print_ubi_params(uubi)
     sys.exit()

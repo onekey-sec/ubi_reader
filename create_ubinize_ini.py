@@ -31,8 +31,8 @@ from ubi.defines import UBI_VTBL_AUTORESIZE_FLG, PRINT_VOL_TYPE_LIST
 def create_ubinize_ini(ubi, out_path):
     for image in ubi.images:
         config = ConfigParser.ConfigParser()
-        f = open('%s-%s.ini' %  (os.path.join(output_dir, out_path), image.image_seq), 'w')
-        print 'Wrote to: %s-%s.ini' % (os.path.join(output_dir, out_path), image.image_seq)
+        f = open(out_path, 'w')
+        print 'Writing to: %s' % out_path
 
         for volume in image.volumes:
             config.add_section(volume)
@@ -67,6 +67,9 @@ Warning: vol_size may not accurately reflect on device size."""
     
     parser.add_argument('-p', '--peb-size', type=int, dest='block_size',
                         help='Specify PEB size.')
+    
+    parser.add_argument('-o', '--output-file', dest='output_path',
+                        help='Specify output file path.')
 
     parser.add_argument('filepath', help='File to get info from.')
 
@@ -81,6 +84,12 @@ Warning: vol_size may not accurately reflect on device size."""
         if not os.path.exists(path):
             parser.error("filepath doesn't exist.")
 
+    if args.output_path:
+        output_path = args.output_path
+    else:
+        img_name = os.path.splitext(os.path.basename(path))[0]
+        output_path = os.path.join(output_dir, '%s.ini' % img_name)
+
     # Determine block size if not provided
     if args.block_size:
         block_size = args.block_size
@@ -91,7 +100,6 @@ Warning: vol_size may not accurately reflect on device size."""
     ufile = ubi_file(path, block_size)
     # Create UBI object
     uubi = ubi(ufile)
-    # Create output file path and run ini creation.
-    out_path = os.path.splitext(os.path.basename(path))[0]
-    create_ubinize_ini(uubi, out_path)
+
+    create_ubinize_ini(uubi, output_path)
     sys.exit()

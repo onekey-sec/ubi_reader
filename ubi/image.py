@@ -24,6 +24,7 @@ class description(object):
     def __init__(self, blocks, layout_info):
         self._image_seq = blocks[layout_info[0]].ec_hdr.image_seq
         self.vid_hdr_offset = blocks[layout_info[0]].ec_hdr.vid_hdr_offset
+        self.version = blocks[layout_info[0]].ec_hdr.version
         self._start_peb = min(layout_info[2])
         self._end_peb = max(layout_info[2])
         self._volumes = get_volumes(blocks, layout_info)
