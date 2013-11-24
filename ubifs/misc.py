@@ -38,10 +38,10 @@ def parse_key(key):
     Int:ino_num    -- Inode number.
     Int:khash      -- Key hash.
     """
-    lkey, hkey = struct.unpack('<II',key[0:UBIFS_SK_LEN])
-    ino_num = lkey & UBIFS_S_KEY_HASH_MASK
-    key_type = hkey >> UBIFS_S_KEY_BLOCK_BITS
-    khash = hkey
+    hkey, lkey = struct.unpack('<II',key[0:UBIFS_SK_LEN])
+    ino_num = hkey & UBIFS_S_KEY_HASH_MASK
+    key_type = lkey >> UBIFS_S_KEY_BLOCK_BITS
+    khash = lkey
 
     #if key_type < UBIFS_KEY_TYPES_CNT:
     return {'type':key_type, 'ino_num':ino_num, 'khash': khash}

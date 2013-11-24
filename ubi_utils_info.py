@@ -27,19 +27,26 @@ from ubi import ubi, get_peb_size
 
 def print_ubi_params(ubi):
     ubi_params = get_ubi_params(ubi)
-    for volume in ubi_params:
-        ubi_flags = ubi_params[volume]['flags']
-        ubi_args = ubi_params[volume]['args']
-        sorted_keys = sorted(ubi_params[volume]['args'])
+    for img_params in ubi_params:
+        for volume in ubi_params[img_params]:
+            ubi_flags = ubi_params[img_params][volume]['flags']
+            ubi_args = ubi_params[img_params][volume]['args']
+            ini_params = ubi_params[img_params][volume]['ini']
+            sorted_keys = sorted(ubi_params[img_params][volume]['args'])
+    
+            print '\nVolume %s' % volume
+            for key in sorted_keys:
+                if len(key)< 8:
+                    name = '%s\t' % key
+                else:
+                    name = key
+                print '\t%s\t%s %s' % (name, ubi_flags[key], ubi_args[key])
 
-        print '\nVolume %s' % volume
-        for key in sorted_keys:
-            if len(key)< 8:
-                name = '%s\t' % key
-            else:
-                name = key
-            print '\t%s\t%s %s' % (name, ubi_flags[key], ubi_args[key])
-
+            print '\n\t#ubinize.ini#'            
+            print '\t[%s]' % ini_params['name']
+            for key in ini_params:
+                if key != 'name':
+                    print '\t%s=%s' % (key, ini_params[key])
 if __name__ == '__main__':
     description = """Gather information from the UBI image useful for using mkfs.ubi, ubinize, ubiformat, etc. and print to screen.
 Some may be duplicates, be sure to check which ones apply."""

@@ -22,6 +22,7 @@ import os
 from ubi_io import leb_virtual_file
 from ubifs import ubifs, walk, output
 from ubifs.defines import PRINT_UBIFS_KEY_HASH, PRINT_UBIFS_COMPR
+from ubi.defines import PRINT_VOL_TYPE_LIST, UBI_VTBL_AUTORESIZE_FLG
 
 output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'output')
 
@@ -55,7 +56,6 @@ def get_ubi_params(ubi):
     Returns:
     Dict       -- Dict keyed to volume with Dict of args and flags.
     """
-    ubi_params = {}
     ubi_flags = {'min_io_size':'-m',
                     'max_bud_bytes':'-j',
                     'leb_size':'-e',
@@ -75,11 +75,32 @@ def get_ubi_params(ubi):
                     'vol_id':'-n',
                     'name':'-N'}
 
+    ubi_params = {}
     ubi_args = {}
+    ini_params = {}
     for image in ubi.images:
-
+        img_seq = image.image_seq
+        ubi_params[img_seq] = {}
+        ubi_args[img_seq] = {}
+        ini_params[img_seq] = {}
         for volume in image.volumes:
-            ubi_args[volume] = {}
+            ubi_args[img_seq][volume] = {}
+            ini_params[img_seq][volume] = {}
+
+            # Get ubinize.ini settings
+            ini_params[img_seq][volume]['vol_type'] = PRINT_VOL_TYPE_LIST[image.volumes[volume].vol_rec.vol_type]
+
+            if image.volumes[volume].vol_rec.flags == UBI_VTBL_AUTORESIZE_FLG:
+                ini_params[img_seq][volume]['flags'] = 'autoresize'
+            else:
+                ini_params[img_seq][volume]['flags'] = image.volumes[volume].vol_rec.flags
+
+            ini_params[img_seq][volume]['vol_id'] = image.volumes[volume].vol_id
+            ini_params[img_seq][volume]['vol_name'] = image.volumes[volume].name.rstrip('\x00')
+            ini_params[img_seq][volume]['alignment'] = image.volumes[volume].vol_rec.alignment
+
+            ini_params[img_seq][volume]['vol_size'] = image.volumes[volume].vol_rec.reserved_pebs * ubi.leb_size
+
             # Create file object backed by UBI blocks.
             ufsfile = leb_virtual_file(ubi, image.volumes[volume])
             # Create UBIFS object
@@ -91,23 +112,23 @@ def get_ubi_params(ubi):
                     value = PRINT_UBIFS_COMPR[value]
 
                 if key in ubi_flags:
-                    ubi_args[volume][key] = value
+                    ubi_args[img_seq][volume][key] = value
             
             for key, value in image.volumes[volume].vol_rec:
                 if key == 'name':
                     value = value.rstrip('\x00')
 
                 if key in ubi_flags:
-                    ubi_args[volume][key] = value
+                    ubi_args[img_seq][volume][key] = value
 
-            ubi_args[volume]['version'] = image.version
-            ubi_args[volume]['vid_hdr_offset'] = image.vid_hdr_offset
-            ubi_args[volume]['sub_page_size'] = ubi_args[volume]['vid_hdr_offset']
-            ubi_args[volume]['sub_page_size'] = ubi_args[volume]['vid_hdr_offset']
-            ubi_args[volume]['image_seq'] = image.image_seq
-            ubi_args[volume]['peb_size'] = ubi.peb_size
-            ubi_args[volume]['vol_id'] = image.volumes[volume].vol_id
+            ubi_args[img_seq][volume]['version'] = image.version
+            ubi_args[img_seq][volume]['vid_hdr_offset'] = image.vid_hdr_offset
+            ubi_args[img_seq][volume]['sub_page_size'] = ubi_args[img_seq][volume]['vid_hdr_offset']
+            ubi_args[img_seq][volume]['sub_page_size'] = ubi_args[img_seq][volume]['vid_hdr_offset']
+            ubi_args[img_seq][volume]['image_seq'] = image.image_seq
+            ubi_args[img_seq][volume]['peb_size'] = ubi.peb_size
+            ubi_args[img_seq][volume]['vol_id'] = image.volumes[volume].vol_id
 
-            ubi_params[volume] = {'flags':ubi_flags, 'args':ubi_args[volume]}
+            ubi_params[img_seq][volume] = {'flags':ubi_flags, 'args':ubi_args[img_seq][volume], 'ini':ini_params[img_seq][volume]}
 
     return ubi_params

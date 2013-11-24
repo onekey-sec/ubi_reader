@@ -71,13 +71,14 @@ the UBI images and volumes found in the file. If PEB Number is provided, it will
 out the header contents of that PEB. If PEB Number not found, will print the first block.
 
 
-__create\_ubinize\_ini.py__
+__create\_build\_script.py__
 
-    $ create_ubinize_ini.py [options] /path/to/image.ubi
+    $ create_build_script.py [options] /path/to/image.ubi
 
-Analyze provided image and creates the .ini configuration file for use with ubinize. You'll
-need to provide _image_ path, and make sure the _vol\_size_ is correct for you application,
-as a new UBI image may end up being resized to fill a partition after installation.
+Analyze provided image and creates the .ini configuration file and a shell script that accepts
+a path(s) to a folder(s) to build a similiar configured UBI image. If Image contains multiple
+volumes, script will accept multiple paths. Compare to .ini file for which path corrisponds
+to which input.
 
 __ubi\_utils\_info.py__
 
