@@ -43,7 +43,7 @@ def print_ubi_params(ubi):
                 print '\t%s\t%s %s' % (name, ubi_flags[key], ubi_args[key])
 
             print '\n\t#ubinize.ini#'            
-            print '\t[%s]' % ini_params['name']
+            print '\t[%s]' % ini_params['vol_name']
             for key in ini_params:
                 if key != 'name':
                     print '\t%s=%s' % (key, ini_params[key])
