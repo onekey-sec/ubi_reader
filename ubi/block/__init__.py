@@ -71,7 +71,6 @@ class description(object):
             self.leb_num = self.vid_hdr.lnum
 
         self.is_vtbl = bool(self.vtbl_recs) or False 
-        #self.block_data = block_buf[self.ec_hdr.data_offset:]
         self.is_valid = not self.ec_hdr.errors and not self.vid_hdr.errors
 
 
@@ -115,7 +114,7 @@ def extract_blocks(ubi):
     for i in range(ubi.file.start_offset, ubi.file.end_offset, ubi.file.block_size):
         buf = ubi.file.read(ubi.file.block_size)
 
-        if buf.startswith(UBI_EC_HDR_MAGIC) or peb_count > start_peb:
+        if buf.startswith(UBI_EC_HDR_MAGIC):
             blk = description(buf)
             blk.file_offset = i
             blk.peb_num = ubi.first_peb_num + peb_count

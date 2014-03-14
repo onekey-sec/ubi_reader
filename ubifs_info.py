@@ -61,4 +61,5 @@ if __name__ == '__main__':
     uubifs.log.write_node(uubifs.superblock_node)
     # Write first master node.
     uubifs.log.write_node(uubifs.master_node)
+    uubifs.log.write_node(uubifs.master_node2)
     sys.exit()

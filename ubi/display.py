@@ -70,7 +70,7 @@ def block(block, tab='\t'):
 
     if not block.ec_hdr.errors:
         print '\n'
-        print '\t%sError Count Header' % (tab)
+        print '\t%sErase Count Header' % (tab)
         print '\t%s---------------------' % (tab)
         ec_hdr(block.ec_hdr, '\t\t%s' % tab)
 
@@ -95,7 +95,7 @@ def ec_hdr(ec_hdr, tab=''):
         if key == 'errors':
             value = ','.join(value)
 
-        print '%s%s: %s' % (tab, key, value)
+        print '%s%s: %r' % (tab, key, value)
 
 
 def vid_hdr(vid_hdr, tab=''):

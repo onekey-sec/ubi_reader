@@ -91,13 +91,13 @@ def get_ubi_params(ubi):
             ini_params[img_seq][volume]['vol_type'] = PRINT_VOL_TYPE_LIST[image.volumes[volume].vol_rec.vol_type]
 
             if image.volumes[volume].vol_rec.flags == UBI_VTBL_AUTORESIZE_FLG:
-                ini_params[img_seq][volume]['flags'] = 'autoresize'
+                ini_params[img_seq][volume]['vol_flags'] = 'autoresize'
             else:
-                ini_params[img_seq][volume]['flags'] = image.volumes[volume].vol_rec.flags
+                ini_params[img_seq][volume]['vol_flags'] = image.volumes[volume].vol_rec.flags
 
             ini_params[img_seq][volume]['vol_id'] = image.volumes[volume].vol_id
             ini_params[img_seq][volume]['vol_name'] = image.volumes[volume].name.rstrip('\x00')
-            ini_params[img_seq][volume]['alignment'] = image.volumes[volume].vol_rec.alignment
+            ini_params[img_seq][volume]['vol_alignment'] = image.volumes[volume].vol_rec.alignment
 
             ini_params[img_seq][volume]['vol_size'] = image.volumes[volume].vol_rec.reserved_pebs * ubi.leb_size
 

@@ -48,6 +48,7 @@ class ubifs():
         self._min_io_size = self._sb_node.min_io_size
         self._leb_size = self._sb_node.leb_size
         self._mst_node = extract.mst_node(self, 1, UBIFS_COMMON_HDR_SZ)
+        self._mst_node = extract.mst_node(self, 2, UBIFS_COMMON_HDR_SZ)
 
 
     def _get_file(self):
@@ -73,6 +74,16 @@ class ubifs():
         """
         return self._mst_node
     master_node = property(_get_master_node)
+
+
+    def _get_master_node2(self):
+        """Master Node Object 2
+
+        Returns:
+        Obj:Master Node
+        """
+        return self._mst_node
+    master_node2 = property(_get_master_node2)
 
 
     def _get_leb_size(self):
