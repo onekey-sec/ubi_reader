@@ -21,9 +21,10 @@ import os
 import sys
 import argparse
 
-from ubi_io import ubi_file
-from ubifs import ubifs, get_leb_size
-from ui.common import extract_files, output_dir
+from modules.ubi_io import ubi_file
+from modules.ubifs import ubifs, get_leb_size
+from modules.ubifs.output import extract_files
+from settings import output_dir
 
 if __name__ == '__main__':
     description = """Extract file contents of UBIFS image."""
@@ -101,4 +102,4 @@ if __name__ == '__main__':
     # Run extract all files
     print 'Writing to: %s' % output_path
     extract_files(uubifs, output_path, perms)
-    sys.exit()
+    sys.exit(0)

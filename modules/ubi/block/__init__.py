@@ -18,9 +18,9 @@
 #############################################################
 
 import re
-from ubi import display
-from ubi.defines import *
-from ubi.headers import *
+from modules.ubi import display
+from modules.ubi.defines import UBI_EC_HDR_SZ, UBI_VID_HDR_SZ, UBI_INTERNAL_VOL_START, UBI_EC_HDR_MAGIC
+from modules.ubi.headers import ec_hdr, vid_hdr, vtbl_recs
 
 # build block object out of data
 # takes raw data divided up by ec magic number
@@ -58,15 +58,15 @@ class description(object):
         self.vtbl_recs = []
 
         # TODO better understanding of block types/errors
-        self.ec_hdr = extract_ec_hdr(block_buf[0:UBI_EC_HDR_SZ])
+        self.ec_hdr = ec_hdr(block_buf[0:UBI_EC_HDR_SZ])
 
         if not self.ec_hdr.errors:
-            self.vid_hdr = extract_vid_hdr(block_buf[self.ec_hdr.vid_hdr_offset:self.ec_hdr.vid_hdr_offset+UBI_VID_HDR_SZ])
+            self.vid_hdr = vid_hdr(block_buf[self.ec_hdr.vid_hdr_offset:self.ec_hdr.vid_hdr_offset+UBI_VID_HDR_SZ])
 
             self.is_internal_vol = self.vid_hdr.vol_id >= UBI_INTERNAL_VOL_START
 
             if self.vid_hdr.vol_id >= UBI_INTERNAL_VOL_START:
-                self.vtbl_recs = extract_vtbl_rec(block_buf[self.ec_hdr.data_offset:])
+                self.vtbl_recs = vtbl_recs(block_buf[self.ec_hdr.data_offset:])
 
             self.leb_num = self.vid_hdr.lnum
 

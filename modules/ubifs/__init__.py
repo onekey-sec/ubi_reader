@@ -19,10 +19,9 @@
 import re
 import struct
 
-from ubifs.defines import *
-from ubifs import nodes
-from ubifs.nodes import extract
-from ubifs.log import log
+from modules.debug import error
+from modules.ubifs.defines import *
+from modules.ubifs import nodes
 
 class ubifs():
     """UBIFS object
@@ -42,13 +41,39 @@ class ubifs():
         Str:key   -- Hex string representation of key.
     """
     def __init__(self, ubifs_file):
-        self.log = log()
+        self.__name__ = 'UBIFS'
         self._file = ubifs_file
-        self._sb_node = extract.sb_node(self, UBIFS_COMMON_HDR_SZ)
-        self._min_io_size = self._sb_node.min_io_size
-        self._leb_size = self._sb_node.leb_size
-        self._mst_node = extract.mst_node(self, 1, UBIFS_COMMON_HDR_SZ)
-        self._mst_node = extract.mst_node(self, 2, UBIFS_COMMON_HDR_SZ)
+        try:
+            self.file.reset()
+            sb_chdr = nodes.common_hdr(self.file.read(UBIFS_COMMON_HDR_SZ))
+            if sb_chdr.node_type == UBIFS_SB_NODE:
+                self.file.seek(UBIFS_COMMON_HDR_SZ)
+                buf = self.file.read(UBIFS_SB_NODE_SZ)
+                self._sb_node = nodes.sb_node(buf)
+                self._min_io_size = self._sb_node.min_io_size
+                self._leb_size = self._sb_node.leb_size
+            else:
+                raise Exception('Wrong node type.')
+        except Exception, e:
+            error(self, 'Fatal', 'Super block error: %s' % e)
+
+        self._mst_nodes = [None, None]
+        for i in xrange(0, 2):
+            try:
+                mst_offset = self.leb_size * (UBIFS_MST_LNUM + i) 
+                self.file.seek(mst_offset)
+                mst_chdr = nodes.common_hdr(self.file.read(UBIFS_COMMON_HDR_SZ))
+                if mst_chdr.node_type == UBIFS_MST_NODE:
+                    self.file.seek(mst_offset + UBIFS_COMMON_HDR_SZ)
+                    buf = self.file.read(UBIFS_MST_NODE_SZ)
+                    self._mst_nodes[i] = nodes.mst_node(buf)
+                else:
+                    raise Exception('Wrong node type.')
+            except Exception, e:
+                error(self, 'Fatal', 'Master block %s error: %s' % (i, e))
+
+        if not self._mst_nodes[0] or not self._mst_nodes[1]:
+            error(self, 'Fatal', 'Less than 2 Master blocks found.')
 
 
     def _get_file(self):
@@ -72,7 +97,7 @@ class ubifs():
         Returns:
         Obj:Master Node
         """
-        return self._mst_node
+        return self._mst_nodes[0]
     master_node = property(_get_master_node)
 
 
@@ -82,7 +107,7 @@ class ubifs():
         Returns:
         Obj:Master Node
         """
-        return self._mst_node
+        return self._mst_node[1]
     master_node2 = property(_get_master_node2)
 
 
@@ -115,7 +140,7 @@ def get_leb_size(path):
     Returns:
     Int         -- LEB size.
     
-    Searches file superblock and retrieves leb size.
+    Searches file for superblock and retrieves leb size.
     """
 
     f = open(path, 'rb')
@@ -124,7 +149,7 @@ def get_leb_size(path):
     f.seek(0)
     block_size = 0
 
-    for i in range(0, file_size, FILE_CHUNK_SZ):
+    for _ in range(0, file_size, FILE_CHUNK_SZ):
         buf = f.read(FILE_CHUNK_SZ)
 
         for m in re.finditer(UBIFS_NODE_MAGIC, buf):

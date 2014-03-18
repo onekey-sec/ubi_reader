@@ -21,9 +21,9 @@ import os
 import sys
 import argparse
 
-from ubi import ubi, get_peb_size
-from ubi_io import ubi_file
-from ui.common import output_dir
+from modules.ubi import ubi, get_peb_size
+from modules.ubi_io import ubi_file
+from settings import output_dir
 
 
 def extract_ubifs(ubi, output_path):

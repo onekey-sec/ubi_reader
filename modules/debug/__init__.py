@@ -17,35 +17,25 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-import os
 import sys
+error_action = True
+logging_on = True
+logging_on_verbose = True
 
-import ui
+def log(obj, message):
+    if logging_on or logging_on_verbose:
+    # will out to file or console.
+        print obj.__name__, message
 
-class log():
-    def __init__(self):
-        self.log_to_file = False
-        self.log_file = 'ubifs_output.log' 
-        self.exit_on_except = False
-        self.quiet = False
-
-    def _out(self, s):
-        if not self.quiet:
-            if self.log_to_file:
-                with open(os.path.join(ui.common.output_dir, self.log_file), 'a') as f:
-                    f.write('%s\n' % s)
-                f.close()
-            else:
-                print '%s' % s
-    
-        if self.exit_on_except:
-            sys.exit()
-
-    def write(self, s):
-        self._out(s)
-
-    def write_node(self, n):
-        buf = '%s\n' % n
-        for key, value in n:
-            buf += '\t%s: %s\n' % (key, value)
-        self._out(buf)
+def error(obj, level, message):
+    if error_action is 'exit':
+        print obj.__name__, '%s: %s' % (level, message)
+        sys.exit(1)
+    else:
+        if level.lower() == 'warn':
+            print obj.__name__, '%s: %s' % (level, message)
+        elif level.lower() == 'fatal':
+            print obj.__name__, '%s: %s' % (level, message)
+            sys.exit(1)
+        else:
+            print obj.__name__, '%s: %s' % (level, message)

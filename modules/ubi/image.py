@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
-from ubi import display
-from ubi.volume import get_volumes
-from ubi.block import get_blocks_in_list
+import modules.ubi.display
+from modules.ubi.volume import get_volumes
+from modules.ubi.block import get_blocks_in_list
 
 class description(object):
     def __init__(self, blocks, layout_info):
@@ -55,4 +55,4 @@ class description(object):
 
 
     def display(self, tab=''):
-        display.image(self, tab)
+        modules.ubi.display.image(self, tab)

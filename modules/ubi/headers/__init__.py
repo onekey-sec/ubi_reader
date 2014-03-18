@@ -18,8 +18,9 @@
 #############################################################
 
 import struct
-from ubi.defines import *
-from ubi.headers import errors
+from zlib import crc32
+
+from modules.ubi.defines import *
 
 class ec_hdr(object):
     def __init__(self, buf):
@@ -28,13 +29,19 @@ class ec_hdr(object):
             setattr(self, key, fields[key])
         setattr(self, 'errors', [])
 
+        self._check_errors(buf[:-4])
+        
     def __repr__(self):
-        return 'Error Count Header'
+        return 'Erase Count Header'
 
     def __iter__(self):
         for key in dir(self):
             if not key.startswith('_'):
                 yield key, getattr(self, key)
+
+    def _check_errors(self, buf_crc):
+        if self.hdr_crc != (~crc32(buf_crc) & 0xFFFFFFFF):
+            self.errors.append('crc')
 
 
 class vid_hdr(object):
@@ -52,8 +59,31 @@ class vid_hdr(object):
     def __repr__(self):
         return 'VID Header'
 
+    def _check_errors(self, buf_crc):
+        if self.hdr_crc != (~crc32(buf_crc) & 0xFFFFFFFF):
+            self.errors.append('crc')
 
-class vtbl_rec(object):
+
+def vtbl_recs(buf):
+    data_buf = buf
+    vtbl_recs = []
+    vtbl_rec_ret = ''
+
+    for i in range(0, UBI_MAX_VOLUMES):    
+        offset = i*UBI_VTBL_REC_SZ
+        vtbl_rec_buf = data_buf[offset:offset+UBI_VTBL_REC_SZ]
+        
+        if len(vtbl_rec_buf) == UBI_VTBL_REC_SZ:
+            vtbl_rec_ret = _vtbl_rec(vtbl_rec_buf)
+
+            if len(vtbl_rec_ret.errors) == 0:
+                vtbl_rec_ret.rec_index = i
+                vtbl_recs.append(vtbl_rec_ret)
+
+    return vtbl_recs
+
+
+class _vtbl_rec(object):
     def __init__(self, buf):
         fields = dict(zip(VTBL_REC_FIELDS, struct.unpack(VTBL_REC_FORMAT,buf)))
         for key in fields:
@@ -69,39 +99,6 @@ class vtbl_rec(object):
             if not key.startswith('_'):
                 yield key, getattr(self, key)
 
-
-def extract_ec_hdr(buf):
-    ec_hdr_buf = buf
-    ec_hdr_ret = ec_hdr(ec_hdr_buf)
-    
-    errors.ec_hdr(ec_hdr_ret, ec_hdr_buf)
-    return ec_hdr_ret
-
-
-def extract_vid_hdr(buf):
-    vid_hdr_buf = buf
-    vid_hdr_ret = vid_hdr(vid_hdr_buf)
-
-    errors.vid_hdr(vid_hdr_ret, vid_hdr_buf)
-
-    return vid_hdr_ret
-
-
-def extract_vtbl_rec(buf):
-    data_buf = buf
-    vtbl_recs = []
-    vtbl_rec_ret = ''
-
-    for i in range(0, UBI_MAX_VOLUMES):    
-        offset = i*UBI_VTBL_REC_SZ
-        vtbl_rec_buf = data_buf[offset:offset+UBI_VTBL_REC_SZ]
-        
-        if len(vtbl_rec_buf) == UBI_VTBL_REC_SZ:
-            vtbl_rec_ret = vtbl_rec(vtbl_rec_buf)
-            errors.vtbl_rec(vtbl_rec_ret, vtbl_rec_buf)
-
-            if len(vtbl_rec_ret.errors) == 0:
-                vtbl_rec_ret.rec_index = i
-                vtbl_recs.append(vtbl_rec_ret)
-
-    return vtbl_recs
+    def _check_errors(self, buf_crc):
+        if self.hdr_crc != (~crc32(buf_crc) & 0xFFFFFFFF):
+            self.errors.append('crc')

@@ -21,8 +21,8 @@ import os
 import sys
 import argparse
 
-from ubi_io import ubi_file
-from ubifs import ubifs, get_leb_size
+from modules.ubi_io import ubi_file
+from modules.ubifs import ubifs, get_leb_size
 
 
 if __name__ == '__main__':
@@ -62,4 +62,4 @@ if __name__ == '__main__':
     # Write first master node.
     uubifs.log.write_node(uubifs.master_node)
     uubifs.log.write_node(uubifs.master_node2)
-    sys.exit()
+    sys.exit(0)

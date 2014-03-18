@@ -21,8 +21,8 @@ import os
 import sys
 import argparse
 
-from ubi_io import ubi_file
-from ubi import ubi, get_peb_size
+from modules.ubi_io import ubi_file
+from modules.ubi import ubi, get_peb_size
 
 def print_info(ubi, num=None):
     # Roll through all Objects pretty contained information
@@ -52,7 +52,6 @@ def print_info(ubi, num=None):
             print 'Block out of range, printing first UBI block'
             ubi.blocks[ubi.first_peb_num].display()
     return
-
 
 if __name__ == '__main__':
     description = 'Show info about provided UBI image.'

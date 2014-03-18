@@ -18,12 +18,12 @@
 #############################################################
 
 import re
-from ubi.volume import get_volumes
-from ubi.block import sort, get_blocks_in_list, extract_blocks
-from ubi.defines import *
-from ubi import display
-from ubi.image import description as image
-from ubi.block import layout
+from modules.debug import error, log
+from modules.ubi.block import sort, extract_blocks
+from modules.ubi.defines import UBI_EC_HDR_MAGIC, FILE_CHUNK_SZ
+from modules.ubi import display
+from modules.ubi.image import description as image
+from modules.ubi.block import layout
 
 
 class ubi():
@@ -46,15 +46,19 @@ class ubi():
     * More research into these is needed.
     """
     def __init__(self, ubi_file):
+        self.__name__ = 'UBI'
         self._file = ubi_file
         self._first_peb_num = 0
         self._blocks = extract_blocks(self)
         self._block_count = len(self.blocks)
 
         if self._block_count <= 0:
-            raise Exception('No blocks found.')
+            error(self, 'Fatal', 'No blocks found.')
 
         layout_list, data_list, int_vol_list, unknown_list = sort.by_type(self.blocks)
+
+        if len(layout_list) < 2:
+            error(self, 'Fatal', 'Less than 2 layout blocks found.')
 
         self._layout_blocks_list = layout_list
         self._data_blocks_list = data_list
@@ -73,6 +77,7 @@ class ubi():
         self._images = []
         for i in range(0, len(layout_infos)):
             self._images.append(image(self.blocks, layout_infos[i]))
+
 
     def _get_file(self):
         """UBI File object

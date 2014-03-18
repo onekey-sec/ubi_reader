@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #############################################################
-# ubi_reader/ubi
+# ubi_reader
 # (c) 2013 Jason Pruitt (jrspruitt@gmail.com)
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,36 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
-from zlib import crc32
-from ubi.defines import *
 
-def ec_hdr(ec_hdr, buf):
-    if ec_hdr.hdr_crc != (~crc32(buf[:-4]) & 0xFFFFFFFF):
-        ec_hdr.errors.append('crc')
+import os
 
-    return ec_hdr
+output_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'output')
+debug_on = True
 
-def vid_hdr(vid_hdr, buf):
-    vid_hdr.errors = []
-        
-    if vid_hdr.hdr_crc != (~crc32(buf[:-4]) & 0xFFFFFFFF):
-        vid_hdr.errors.append('crc')
 
-    return vid_hdr
-
-def vtbl_rec(vtbl_rec, buf):
-    likely_vtbl = True
-
-    if vtbl_rec.name_len != len(vtbl_rec.name.strip('\x00')):
-        likely_vtbl = False
-
-    elif vtbl_rec.vol_type not in [1,2]:
-        likely_vtbl = False
-
-    if vtbl_rec.crc != (~crc32(buf[:-4]) & 0xFFFFFFFF):
-        vtbl_rec.errors.append('crc')
-
-    if not likely_vtbl:
-        vtbl_rec.errors = ['False']
-        
-    return vtbl_rec

@@ -19,7 +19,8 @@
 import lzo
 import struct
 import zlib
-from ubifs.defines import *
+from modules.ubifs.defines import *
+from modules.debug import error
 
 # For happy printing
 ino_types = ['file', 'dir','lnk','blk','chr','fifo','sock']
@@ -59,9 +60,15 @@ def decompress(ctype, unc_len, data):
     Uncompressed Data.
     """
     if ctype == UBIFS_COMPR_LZO:
-        return lzo.decompress(''.join(('\xf0', struct.pack('>I', unc_len), data)))
+        try:
+            return lzo.decompress(''.join(('\xf0', struct.pack('>I', unc_len), data)))
+        except Exception, e:
+            error(decompress, 'Warn', 'LZO Error: %s' % e)
     elif ctype == UBIFS_COMPR_ZLIB:
-        return zlib.decompress(data, -11)
+        try:
+            return zlib.decompress(data, -11)
+        except Exception, e:
+            error(decompress, 'Warn', 'ZLib Error: %s' % e)
     else:
         return data
 

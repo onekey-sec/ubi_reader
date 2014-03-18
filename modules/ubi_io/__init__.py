@@ -17,7 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-from ubi.block import sort
+from modules.debug import error, log, logging_on_verbose
+from modules.ubi.block import sort
 
 class ubi_file(object):
     """UBI image file object
@@ -48,22 +49,37 @@ class ubi_file(object):
     """
 
     def __init__(self, path, block_size, start_offset=0, end_offset=None):
-        self._fhandle = open(path, 'rb')
+        self.__name__ = 'UBI_File'
+        try:
+            log(self, 'Open Path: %s' % path)
+            self._fhandle = open(path, 'rb')
+        except Exception, e:
+            error(self, 'Fatal', 'Open file: %s' % e)
+
+        self._fhandle.seek(0,2)
+        file_size = self.tell()
+        log(self, 'File Size: %s' % file_size)
+
         self._start_offset = start_offset
+        log(self, 'Start Offset: %s' % (self._start_offset))
 
         if end_offset:
             self._end_offset = end_offset
         else:
-            self._fhandle.seek(0,2)
-            self._end_offset = self.tell() 
+            self._end_offset = file_size 
+        log(self, 'End Offset: %s' % (self._end_offset))
 
         self._block_size = block_size
-        
-        if start_offset >= self._end_offset:
-            raise Exception('Start offset larger than file size!')
+        log(self, 'Block Size: %s' % block_size)
+
+        if start_offset > self._end_offset:
+            error(self, 'Fatal', 'Start offset larger than end offset.')
+
+        if end_offset > file_size:
+            error(self, 'Fatal', 'End offset larger than file size.')
 
         self._fhandle.seek(self._start_offset)
-
+        self._last_read_addr = self._fhandle.tell()
 
     def _set_start(self, i):
         self._start_offset = i
@@ -87,12 +103,15 @@ class ubi_file(object):
 
 
     def read(self, size):
+        self._last_read_addr = self.tell()
         return self._fhandle.read(size)
 
 
     def tell(self):
         return self._fhandle.tell()
 
+    def last_read_addr(self):
+        return self._last_read_addr
 
     def reset(self):
         self._fhandle.seek(self.start_offset)
@@ -138,30 +157,43 @@ class ubi_file(object):
 
 
 class leb_virtual_file():
-    def __init__(self, ubi, volume):
+    def __init__(self, ubi, block_list):
+        self.__name__ = 'leb_virtual_file'
+        self.is_valid = False
         self._ubi = ubi
-        self._volume = volume
-        self._blocks = sort.by_leb(self._volume.get_blocks(self._ubi.blocks))
-        self._seek = 0
-        self.leb_data_size = len(self._blocks) * self._ubi.leb_size
-        self._last_leb = -1
-        self._last_buf = ''
+        self._last_read_addr = 0
+
+        if not len(block_list):
+            error(self, 'Info', 'Empty block list')
+        else:
+            self._blocks = sort.by_leb(block_list)
+            self._seek = 0
+            self._last_leb = -1
+            self._last_buf = ''
+            self.is_valid = True
 
 
     def read(self, i):
         buf = ''
         leb = int(self.tell() / self._ubi.leb_size)
         offset = self.tell() % self._ubi.leb_size
+        self._last_read_addr = self._ubi.blocks[self._blocks[leb]].file_offset + self._ubi.blocks[self._blocks[leb]].ec_hdr.data_offset + offset
+
+        if logging_on_verbose:
+            log(self, 'read loc: %s, size: %s' % (self._last_read_addr, i))
 
         if leb == self._last_leb:
             self.seek(self.tell() + i)
             return self._last_buf[offset:offset+i]
         else:
-            buf = self._ubi.file.read_block_data(self._ubi.blocks[self._blocks[leb]])
-            self._last_buf = buf
-            self._last_leb = leb
-            self.seek(self.tell() + i)
-            return buf[offset:offset+i]
+            try:
+                buf = self._ubi.file.read_block_data(self._ubi.blocks[self._blocks[leb]])
+                self._last_buf = buf
+                self._last_leb = leb
+                self.seek(self.tell() + i)
+                return buf[offset:offset+i]
+            except Exception, e:
+                error(self, 'Fatal', 'read loc: %s, size: %s, LEB: %s, offset: %s, error: %s' % (self._last_read_addr, i, leb, offset, e))
 
 
     def reset(self):
@@ -175,10 +207,16 @@ class leb_virtual_file():
     def tell(self):
         return self._seek
 
+    def last_read_addr(self):
+        """Start address of last physical file read"""
+        return self._last_read_addr
 
     def reader(self):
         last_leb = 0
         for block in self._blocks:
+            if logging_on_verbose:
+                log('%s' % (self._blocks[block]))
+
             while 0 != (self._ubi.blocks[block].leb_num - last_leb):
                 last_leb += 1
                 yield '\xff'*self._ubi.leb_size

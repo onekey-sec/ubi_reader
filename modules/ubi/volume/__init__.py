@@ -17,15 +17,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-from ubi import display
-from ubi.block import sort, get_blocks_in_list
+import modules.ubi.display
+from modules.ubi.block import sort, get_blocks_in_list
 
 class description(object):
     """UBI Volume object
 
     Attributes:
     Int:vol_id      -- Volume ID
-    Str:vol_name    -- Name of volume.
+    Str:name    -- Name of volume.
     Obj:vol_rec     -- Volume record object
     Int:block_count -- Number of block associated with volume.
 
@@ -78,7 +78,7 @@ class description(object):
 
 
     def display(self, tab=''):
-        display.volume(self, tab)
+        modules.ubi.display.volume(self, tab)
 
     def reader(self, ubi):
         last_leb = 0

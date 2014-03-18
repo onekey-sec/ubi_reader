@@ -20,10 +20,37 @@
 import os
 import struct
 
-from ubifs.defines import *
-from ubifs.misc import decompress
+from modules.ubifs.defines import *
+from modules.ubifs import walk
+from modules.ubifs.misc import decompress
+from modules.debug import error, log, logging_on_verbose
 
-def dents(ubifs, inodes, dent_node, path='', perms=False):
+def _extract_log(obj, message):
+    if logging_on_verbose:
+        log(obj, message)
+
+
+def extract_files(ubifs, out_path, perms=False):
+    """Extract UBIFS contents to_path/
+
+    Arguments:
+    Obj:ubifs    -- UBIFS object.
+    Str:out_path  -- Path to extract contents to.
+    """
+    try:
+        inodes = {}
+        walk.index(ubifs, ubifs.master_node.root_lnum, ubifs.master_node.root_offs, inodes)
+
+        for dent in inodes[1]['dent']:
+            extract_dents(ubifs, inodes, dent, out_path, perms)
+
+    except Exception, e:
+        import traceback
+        traceback.print_exc()
+        error(extract_files, 'Fatal', '%s' % e)
+
+
+def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
     inode = inodes[dent_node.inum]
     dent_path = os.path.join(path, dent_node.name)
         
@@ -32,39 +59,39 @@ def dents(ubifs, inodes, dent_node, path='', perms=False):
             if not os.path.exists(dent_path):
                 os.mkdir(dent_path)
                 if perms:
-                    set_file_perms(dent_path, inode)
+                    _set_file_perms(dent_path, inode)
         except Exception, e:
-            ubifs.log.write('DIR Fail: %s' % e)
+            error(extract_dents, 'Warn', 'DIR Fail: %s' % e)
 
         if 'dent' in inode:
             for dnode in inode['dent']:
-                dents(ubifs, inodes, dnode, dent_path, perms)
+                extract_dents(ubifs, inodes, dnode, dent_path, perms)
 
     elif dent_node.type == UBIFS_ITYPE_REG:
         try:
             if inode['ino'].nlink > 1:
                 if 'hlink' not in inode:
                     inode['hlink'] = dent_path
-                    buf = process_reg_file(ubifs, inode, dent_path)
-                    write_reg_file(dent_path, buf)
+                    buf = _process_reg_file(ubifs, inode, dent_path)
+                    _write_reg_file(dent_path, buf)
                 else:
                     os.link(inode['hlink'] ,dent_path)
             else:
-                buf = process_reg_file(ubifs, inode, dent_path)
-                write_reg_file(dent_path, buf)
+                buf = _process_reg_file(ubifs, inode, dent_path)
+                _write_reg_file(dent_path, buf)
                 
             if perms:
-                set_file_perms(dent_path, inode)
+                _set_file_perms(dent_path, inode)
 
         except Exception, e:
-            ubifs.log.write('FILE Fail: %s' % e)
+            error(extract_dents, 'Warn', 'FILE Fail: %s' % e)
 
     elif dent_node.type == UBIFS_ITYPE_LNK:
         try:
             # probably will need to decompress ino data if > UBIFS_MIN_COMPR_LEN
             os.symlink('%s' % inode['ino'].data, dent_path)
         except Exception, e:
-            ubifs.log.write('SYMLINK Fail: %s : %s' % (inode['ino'].data, dent_path)) 
+            error(extract_dents, 'Warn', 'SYMLINK Fail: %s : %s' % (inode['ino'].data, dent_path)) 
 
     elif dent_node.type in [UBIFS_ITYPE_BLK, UBIFS_ITYPE_CHR]:
         try:
@@ -72,48 +99,45 @@ def dents(ubifs, inodes, dent_node, path='', perms=False):
             if perms:
                 os.mknod(dent_path, inode['ino'].mode, dev)
                 if perms:
-                    set_file_perms(path, inode)
+                    _set_file_perms(path, inode)
             else:
                 # Just create dummy file.
-                write_reg_file(dent_path, str(dev))
+                _write_reg_file(dent_path, str(dev))
                 if perms:
-                    set_file_perms(dent_path, inode)
+                    _set_file_perms(dent_path, inode)
                 
         except Exception, e:
-            ubifs.log.write('DEV Fail: %s : %s' % (dent_path, e))
+            error(extract_dents, 'Warn', 'DEV Fail: %s : %s' % (dent_path, e))
 
     elif dent_node.type == UBIFS_ITYPE_FIFO:
         try:
             os.mkfifo(dent_path, inode['ino'].mode)
             if perms:
-                set_file_perms(dent_path, inode)
+                _set_file_perms(dent_path, inode)
         except Exception, e:
-            ubifs.log.write('FIFO Fail: %s : %s' % (dent_path, e))
+            error(extract_dents, 'Warn', 'FIFO Fail: %s : %s' % (dent_path, e))
 
     elif dent_node.type == UBIFS_ITYPE_SOCK:
         try:
             # Just create dummy file.
-            write_reg_file(dent_path, '')
+            _write_reg_file(dent_path, '')
             if perms:
-                set_file_perms(dent_path, inode)
+                _set_file_perms(dent_path, inode)
         except Exception, e:
-            ubifs.log.write('SOCK Fail: %s' % (dent_path))
+            error(extract_dents, 'Warn', 'SOCK Fail: %s : %s' % (dent_path, e))
 
 
-def set_file_perms(path, inode):
-    try:
-        os.chmod(path, inode['ino'].mode)
-        os.chown(path, inode['ino'].uid, inode['ino'].gid)
-    except:
-        raise Exception('Failed File Permissions: %s' % (path)) 
+def _set_file_perms(path, inode):
+    os.chmod(path, inode['ino'].mode)
+    os.chown(path, inode['ino'].uid, inode['ino'].gid)
 
     
-def write_reg_file(path, data):
+def _write_reg_file(path, data):
     with open(path, 'wb') as f:
         f.write(data)
 
 
-def process_reg_file(ubifs, inode, path):
+def _process_reg_file(ubifs, inode, path):
     try:
         buf = ''
         if 'data' in inode:
@@ -136,7 +160,7 @@ def process_reg_file(ubifs, inode, path):
                 last_khash = data.key['khash']
 
     except Exception, e:
-        raise Exception('inode num:%s :%s' % (inode['ino'].key['ino_num'], e))
+        error(_process_reg_file, 'Warn', 'inode num:%s :%s' % (inode['ino'].key['ino_num'], e))
     
     # Pad end of file with \x00 if needed.
     if inode['ino'].size > len(buf):

@@ -20,12 +20,15 @@ import os
 import sys
 import argparse
 
-from ubi import ubi, get_peb_size
-from ubifs import ubifs
-from ubi_io import ubi_file, leb_virtual_file
-from ui.common import extract_files, output_dir
+from modules.ubi import ubi, get_peb_size
+from modules.ubifs import ubifs
+from modules.ubifs.output import extract_files
+from modules.ubi_io import ubi_file, leb_virtual_file
+from settings import output_dir
 
 if __name__ == '__main__':
+    import time
+    start = time.time()
     description = 'Extract contents of UBI image.'
     usage = 'ubi_extract_files.py [options] filepath'
     parser = argparse.ArgumentParser(usage=usage, description=description)
@@ -87,7 +90,6 @@ if __name__ == '__main__':
     ufile = ubi_file(path, block_size)
     # Create UBI object
     uubi = ubi(ufile)
-
     # Traverse items found extracting files.
     for image in uubi.images:
         for volume in image.volumes:
@@ -99,15 +101,24 @@ if __name__ == '__main__':
                 parser.error('Volume output directory is not empty. %s' % vol_out_path)
 
             # Create file object backed by UBI blocks.
-            ufsfile = leb_virtual_file(uubi, image.volumes[volume])
-            # Create UBIFS object
-            uubifs = ubifs(ufsfile)
-            # Set up logging.
-            uubifs.log.log_file = log_file
-            uubifs.log.log_to_file = log_to_file
-            uubifs.log.quiet = quiet
-            # Run extract all files.
-            print 'Writing to: %s' % vol_out_path
-            extract_files(uubifs, vol_out_path, perms)
+            # Skip volume if empty.
+            vol_blocks = image.volumes[volume].get_blocks(uubi.blocks)
+            if not len(vol_blocks):
+                print '%s volume empty' % image.volumes[volume].name
+                continue
 
+            ufsfile = leb_virtual_file(uubi, vol_blocks)
+
+            if ufsfile.is_valid:
+                # Create UBIFS object
+                uubifs = ubifs(ufsfile)
+                # Set up logging.
+                #uubifs.log.log_file = log_file
+                #uubifs.log.log_to_file = log_to_file
+                #uubifs.log.quiet = quiet
+                # Run extract all files.
+                print 'Writing to: %s' % vol_out_path
+                extract_files(uubifs, vol_out_path, perms)
+
+    print time.time() - start
     sys.exit(0)

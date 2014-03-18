@@ -17,7 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-from ubi.block import sort
+import sys
+from modules.ubi.block import sort
 
 
 def group_pairs(blocks, layout_blocks_list):
@@ -30,18 +31,21 @@ def group_pairs(blocks, layout_blocks_list):
     Returns:
     List -- Layout block pair indexes grouped in a list
     """
-    layouts_grouped = [[blocks[layout_blocks_list[0]].peb_num]]
+    try:
+        layouts_grouped = [[blocks[layout_blocks_list[0]].peb_num]]
 
-    for l in layout_blocks_list[1:]:
-        for lnd in layouts_grouped:
-            if blocks[l].vtbl_recs[0].name == blocks[lnd[0]].vtbl_recs[0].name:
-                lnd.append(blocks[l].peb_num)
-                break
+        for l in layout_blocks_list[1:]:
+            for lnd in layouts_grouped:
+                if blocks[l].vtbl_recs[0].name == blocks[lnd[0]].vtbl_recs[0].name:
+                    lnd.append(blocks[l].peb_num)
+                    break
+            else:
+                    layouts_grouped.append([blocks[l].peb_num])
 
-        else:
-                layouts_grouped.append([blocks[l].peb_num])
-
-    return layouts_grouped
+        return layouts_grouped
+    except Exception, e:
+        print e
+        sys.exit(1)
 
 
 def associate_blocks(blocks, layout_pairs, start_peb_num):

@@ -21,9 +21,102 @@ import os
 import sys
 import argparse
 
-from ui.common import get_ubi_params
-from ubi_io import ubi_file
-from ubi import ubi, get_peb_size
+
+from modules.ubi import ubi, get_peb_size
+from modules.ubi_io import leb_virtual_file, ubi_file
+from modules.ubi.defines import PRINT_VOL_TYPE_LIST, UBI_VTBL_AUTORESIZE_FLG
+from modules.ubifs import ubifs
+from modules.ubifs.defines import PRINT_UBIFS_KEY_HASH, PRINT_UBIFS_COMPR
+
+def get_ubi_params(ubi):
+    """Get UBI utils params
+
+    Arguments:
+    Obj:ubi    -- UBI object.
+
+    Returns:
+    Dict       -- Dict keyed to volume with Dict of args and flags.
+    """
+    ubi_flags = {'min_io_size':'-m',
+                    'max_bud_bytes':'-j',
+                    'leb_size':'-e',
+                    'default_compr':'-x',
+                    'sub_page_size':'-s',
+                    'fanout':'-f',
+                    'key_hash':'-k',
+                    'orph_lebs':'-p',
+                    'log_lebs':'-l',
+                    'max_leb_cnt': '-c',
+                    'peb_size':'-p',
+                    'sub_page_size':'-s',
+                    'vid_hdr_offset':'-O',
+                    'version':'-x',
+                    'image_seq':'-Q',
+                    'alignment':'-a',
+                    'vol_id':'-n',
+                    'name':'-N'}
+
+    ubi_params = {}
+    ubi_args = {}
+    ini_params = {}
+
+    for image in ubi.images:
+        img_seq = image.image_seq
+        ubi_params[img_seq] = {}
+        ubi_args[img_seq] = {}
+        ini_params[img_seq] = {}
+
+        for volume in image.volumes:
+            ubi_args[img_seq][volume] = {}
+            ini_params[img_seq][volume] = {}
+
+            # Get ubinize.ini settings
+            ini_params[img_seq][volume]['vol_type'] = PRINT_VOL_TYPE_LIST[image.volumes[volume].vol_rec.vol_type]
+
+            if image.volumes[volume].vol_rec.flags == UBI_VTBL_AUTORESIZE_FLG:
+                ini_params[img_seq][volume]['vol_flags'] = 'autoresize'
+            else:
+                ini_params[img_seq][volume]['vol_flags'] = image.volumes[volume].vol_rec.flags
+
+            ini_params[img_seq][volume]['vol_id'] = image.volumes[volume].vol_id
+            ini_params[img_seq][volume]['vol_name'] = image.volumes[volume].name.rstrip('\x00')
+            ini_params[img_seq][volume]['vol_alignment'] = image.volumes[volume].vol_rec.alignment
+
+            ini_params[img_seq][volume]['vol_size'] = image.volumes[volume].vol_rec.reserved_pebs * ubi.leb_size
+
+            # Create file object backed by UBI blocks.
+            ufsfile = leb_virtual_file(ubi, image.volumes[volume])
+            # Create UBIFS object
+            uubifs = ubifs(ufsfile)
+
+            for key, value in uubifs.superblock_node:
+                if key == 'key_hash':
+                    value = PRINT_UBIFS_KEY_HASH[value]
+                elif key == 'default_compr':
+                    value = PRINT_UBIFS_COMPR[value]
+
+                if key in ubi_flags:
+                    ubi_args[img_seq][volume][key] = value
+            
+            for key, value in image.volumes[volume].vol_rec:
+                if key == 'name':
+                    value = value.rstrip('\x00')
+
+                if key in ubi_flags:
+                    ubi_args[img_seq][volume][key] = value
+
+            ubi_args[img_seq][volume]['version'] = image.version
+            ubi_args[img_seq][volume]['vid_hdr_offset'] = image.vid_hdr_offset
+            ubi_args[img_seq][volume]['sub_page_size'] = ubi_args[img_seq][volume]['vid_hdr_offset']
+            ubi_args[img_seq][volume]['sub_page_size'] = ubi_args[img_seq][volume]['vid_hdr_offset']
+            ubi_args[img_seq][volume]['image_seq'] = image.image_seq
+            ubi_args[img_seq][volume]['peb_size'] = ubi.peb_size
+            ubi_args[img_seq][volume]['vol_id'] = image.volumes[volume].vol_id
+
+            ubi_params[img_seq][volume] = {'flags':ubi_flags, 'args':ubi_args[img_seq][volume], 'ini':ini_params[img_seq][volume]}
+
+    return ubi_params
+
 
 def print_ubi_params(ubi):
     ubi_params = get_ubi_params(ubi)
@@ -47,6 +140,8 @@ def print_ubi_params(ubi):
             for key in ini_params:
                 if key != 'name':
                     print '\t%s=%s' % (key, ini_params[key])
+
+
 if __name__ == '__main__':
     description = """Gather information from the UBI image useful for using mkfs.ubi, ubinize, ubiformat, etc. and print to screen.
 Some may be duplicates, be sure to check which ones apply."""
@@ -81,4 +176,4 @@ Some may be duplicates, be sure to check which ones apply."""
     uubi = ubi(ufile)
     # Print info.
     print_ubi_params(uubi)
-    sys.exit()
+    sys.exit(0)
