@@ -45,8 +45,6 @@ def extract_files(ubifs, out_path, perms=False):
             extract_dents(ubifs, inodes, dent, out_path, perms)
 
     except Exception, e:
-        import traceback
-        traceback.print_exc()
         error(extract_files, 'Fatal', '%s' % e)
 
 

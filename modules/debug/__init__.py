@@ -18,7 +18,11 @@
 #############################################################
 
 import sys
+import traceback
+
 error_action = True
+fatal_traceback = True
+ignore_block_errors = True
 logging_on = True
 logging_on_verbose = True
 
@@ -27,15 +31,28 @@ def log(obj, message):
     # will out to file or console.
         print obj.__name__, message
 
+def verbose_log(obj, message):
+    if logging_on_verbose:
+        log(obj, message)
+
+def verbose_display(displayable_obj):
+    if logging_on_verbose:
+        displayable_obj.display('\t')
+
 def error(obj, level, message):
     if error_action is 'exit':
         print obj.__name__, '%s: %s' % (level, message)
+        if fatal_traceback:
+            traceback.print_exc()
         sys.exit(1)
+
     else:
         if level.lower() == 'warn':
             print obj.__name__, '%s: %s' % (level, message)
         elif level.lower() == 'fatal':
             print obj.__name__, '%s: %s' % (level, message)
+            if fatal_traceback:
+                traceback.print_exc()
             sys.exit(1)
         else:
             print obj.__name__, '%s: %s' % (level, message)

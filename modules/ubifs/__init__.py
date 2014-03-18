@@ -19,7 +19,7 @@
 import re
 import struct
 
-from modules.debug import error
+from modules.debug import error, log, verbose_display
 from modules.ubifs.defines import *
 from modules.ubifs import nodes
 
@@ -30,15 +30,12 @@ class ubifs():
     Str:path           -- File path to UBIFS image. 
     
     Attributes:
+    Obj:file           -- File object
     Int:leb_size       -- Size of Logical Erase Blocks.
     Int:min_io         -- Size of min I/O from vid_hdr_offset.
     Obj:sb_node        -- Superblock node of UBIFS image LEB0
     Obj:mst_node       -- Master Node of UBIFS image LEB1
-    Obj:log            -- Log object for errors.
-
-    Methods:
-    key_search    -- Search nodes for matching key.
-        Str:key   -- Hex string representation of key.
+    Obj:mst_node2      -- Master Node 2 of UBIFS image LEB2
     """
     def __init__(self, ubifs_file):
         self.__name__ = 'UBIFS'
@@ -46,12 +43,17 @@ class ubifs():
         try:
             self.file.reset()
             sb_chdr = nodes.common_hdr(self.file.read(UBIFS_COMMON_HDR_SZ))
+            log(self , '%s file addr: %s' % (sb_chdr, self.file.last_read_addr()))
+            verbose_display(sb_chdr)
+
             if sb_chdr.node_type == UBIFS_SB_NODE:
                 self.file.seek(UBIFS_COMMON_HDR_SZ)
                 buf = self.file.read(UBIFS_SB_NODE_SZ)
                 self._sb_node = nodes.sb_node(buf)
                 self._min_io_size = self._sb_node.min_io_size
-                self._leb_size = self._sb_node.leb_size
+                self._leb_size = self._sb_node.leb_size       
+                log(self , '%s file addr: %s' % (self._sb_node, self.file.last_read_addr()))
+                verbose_display(self._sb_node)
             else:
                 raise Exception('Wrong node type.')
         except Exception, e:
@@ -63,10 +65,15 @@ class ubifs():
                 mst_offset = self.leb_size * (UBIFS_MST_LNUM + i) 
                 self.file.seek(mst_offset)
                 mst_chdr = nodes.common_hdr(self.file.read(UBIFS_COMMON_HDR_SZ))
+                log(self , '%s file addr: %s' % (mst_chdr, self.file.last_read_addr()))
+                verbose_display(mst_chdr)
+
                 if mst_chdr.node_type == UBIFS_MST_NODE:
                     self.file.seek(mst_offset + UBIFS_COMMON_HDR_SZ)
                     buf = self.file.read(UBIFS_MST_NODE_SZ)
                     self._mst_nodes[i] = nodes.mst_node(buf)
+                    log(self , '%s%s file addr: %s' % (self._mst_nodes[i], i, self.file.last_read_addr()))
+                    verbose_display(self._mst_nodes[i])
                 else:
                     raise Exception('Wrong node type.')
             except Exception, e:

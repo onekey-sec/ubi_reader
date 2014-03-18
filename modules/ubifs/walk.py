@@ -19,14 +19,7 @@
 
 from modules.ubifs import nodes
 from modules.ubifs.defines import *
-from modules.debug import error, log, logging_on_verbose
-
-def _verbose_log(obj, message):
-    log(obj, message)
-
-def _verbose_display(node):
-    if logging_on_verbose:
-        node.display('\t')
+from modules.debug import error, log, verbose_log, verbose_display
 
 def index(ubifs, lnum, offset, inodes={}):
     """Walk the index gathering Inode, Dir Entry, and File nodes.
@@ -46,14 +39,12 @@ def index(ubifs, lnum, offset, inodes={}):
     try:
         ubifs.file.seek((ubifs.leb_size * lnum) + offset)
         buf = ubifs.file.read(UBIFS_COMMON_HDR_SZ)
-        chdr = nodes.common_hdr(buf)
+        chdr = nodes.common_hdr(buf)        
+        log(index , '%s file addr: %s' % (chdr, ubifs.file.last_read_addr()))
+        verbose_display(chdr)
+
         node_buf = ubifs.file.read(chdr.len - UBIFS_COMMON_HDR_SZ)
         file_offset = ubifs.file.last_read_addr()
-        
-        if logging_on_verbose:
-            _verbose_log(index, 'common_hdr LEB: %s offset: %s' % (lnum, offset))
-            _verbose_display(chdr)
-            _verbose_log(index, 'node LEB: %s offset: %s' % (lnum, offset + UBIFS_COMMON_HDR_SZ))
 
     except Exception, e:
         error(index, 'Fatal', 'buf read, %s' % (e))
@@ -61,14 +52,13 @@ def index(ubifs, lnum, offset, inodes={}):
 
     if chdr.node_type == UBIFS_IDX_NODE:
         idxn = nodes.idx_node(node_buf)
-        _verbose_display(idxn)
+        log(index, '%s file addr: %s' % (idxn, file_offset))
+        verbose_display(idxn)
         branch_idx = 0
         for branch in idxn.branches:
-            if logging_on_verbose:
-                _verbose_log(index, '-------------------')
-                _verbose_log(index, 'Last read addr: %s' % (file_offset + UBIFS_IDX_NODE_SZ + (branch_idx * UBIFS_BRANCH_SZ)))
-                _verbose_log(index, 'branch LEB: %s, offset: %s, index: %s' % (lnum, (offset + UBIFS_COMMON_HDR_SZ + UBIFS_IDX_NODE_SZ + (branch_idx * UBIFS_BRANCH_SZ)), branch_idx))
-                _verbose_display(branch)
+            verbose_log(index, '-------------------')
+            log(index, '%s file addr: %s' % (branch, file_offset + UBIFS_IDX_NODE_SZ + (branch_idx * UBIFS_BRANCH_SZ)))
+            verbose_display(branch)
 
             index(ubifs, branch.lnum, branch.offs, inodes)
             branch_idx += 1
@@ -76,7 +66,8 @@ def index(ubifs, lnum, offset, inodes={}):
     elif chdr.node_type == UBIFS_INO_NODE:
         inon = nodes.ino_node(node_buf)
         ino_num = inon.key['ino_num']
-        _verbose_display(inon)
+        log(index, '%s file addr: %s, ino num: %s' % (inon, file_offset, ino_num))
+        verbose_display(inon)
 
         if not ino_num in inodes:
             inodes[ino_num] = {}
@@ -86,7 +77,8 @@ def index(ubifs, lnum, offset, inodes={}):
     elif chdr.node_type == UBIFS_DATA_NODE:
         datn = nodes.data_node(node_buf, (ubifs.leb_size * lnum) + UBIFS_COMMON_HDR_SZ + offset + UBIFS_DATA_NODE_SZ)
         ino_num = datn.key['ino_num']
-        _verbose_display(datn)
+        log(index, '%s file addr: %s, ino num: %s' % (datn, file_offset, ino_num))
+        verbose_display(datn)
 
         if not ino_num in inodes:
             inodes[ino_num] = {}
@@ -99,7 +91,8 @@ def index(ubifs, lnum, offset, inodes={}):
     elif chdr.node_type == UBIFS_DENT_NODE:
         dn = nodes.dent_node(node_buf)
         ino_num = dn.key['ino_num']
-        _verbose_display(dn)
+        log(index, '%s file addr: %s, ino num: %s' % (dn, file_offset, ino_num))
+        verbose_display(dn)
 
         if not ino_num in inodes:
             inodes[ino_num] = {}

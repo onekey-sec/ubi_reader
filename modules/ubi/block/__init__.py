@@ -18,6 +18,7 @@
 #############################################################
 
 import re
+from modules.debug import error, log, verbose_display, ignore_block_errors
 from modules.ubi import display
 from modules.ubi.defines import UBI_EC_HDR_SZ, UBI_VID_HDR_SZ, UBI_INTERNAL_VOL_START, UBI_EC_HDR_MAGIC
 from modules.ubi.headers import ec_hdr, vid_hdr, vtbl_recs
@@ -60,18 +61,18 @@ class description(object):
         # TODO better understanding of block types/errors
         self.ec_hdr = ec_hdr(block_buf[0:UBI_EC_HDR_SZ])
 
-        if not self.ec_hdr.errors:
+        if not self.ec_hdr.errors or ignore_block_errors:
             self.vid_hdr = vid_hdr(block_buf[self.ec_hdr.vid_hdr_offset:self.ec_hdr.vid_hdr_offset+UBI_VID_HDR_SZ])
 
-            self.is_internal_vol = self.vid_hdr.vol_id >= UBI_INTERNAL_VOL_START
-
-            if self.vid_hdr.vol_id >= UBI_INTERNAL_VOL_START:
-                self.vtbl_recs = vtbl_recs(block_buf[self.ec_hdr.data_offset:])
-
-            self.leb_num = self.vid_hdr.lnum
-
+            if not self.vid_hdr.errors or ignore_block_errors:
+                self.is_internal_vol = self.vid_hdr.vol_id >= UBI_INTERNAL_VOL_START
+    
+                if self.vid_hdr.vol_id >= UBI_INTERNAL_VOL_START:
+                    self.vtbl_recs = vtbl_recs(block_buf[self.ec_hdr.data_offset:])
+    
+                self.leb_num = self.vid_hdr.lnum
         self.is_vtbl = bool(self.vtbl_recs) or False 
-        self.is_valid = not self.ec_hdr.errors and not self.vid_hdr.errors
+        self.is_valid = not self.ec_hdr.errors and not self.vid_hdr.errors or ignore_block_errors
 
 
     def __repr__(self):
@@ -106,12 +107,11 @@ def extract_blocks(ubi):
     Dict -- Of block objects keyed by PEB number.
     """
     blocks = {}
-    start_peb = 0
     ubi.file.seek(ubi.file.start_offset)
     peb_count = 0
     cur_offset = 0
 
-    for i in range(ubi.file.start_offset, ubi.file.end_offset, ubi.file.block_size):
+    for i in xrange(ubi.file.start_offset, ubi.file.end_offset, ubi.file.block_size):
         buf = ubi.file.read(ubi.file.block_size)
 
         if buf.startswith(UBI_EC_HDR_MAGIC):
@@ -120,12 +120,13 @@ def extract_blocks(ubi):
             blk.peb_num = ubi.first_peb_num + peb_count
             blk.size = ubi.file.block_size
             blocks[blk.peb_num] = blk
-            peb_count += 1            
+            peb_count += 1
+            log(extract_blocks, blk)
+            log(extract_blocks, 'file addr: %s' % (ubi.file.last_read_addr()))
+            verbose_display(blk)      
         else:
             cur_offset += ubi.file.block_size
             ubi.first_peb_num = cur_offset/ubi.file.block_size
             ubi.file.start_offset = cur_offset
 
     return blocks
-
-

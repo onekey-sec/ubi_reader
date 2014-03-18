@@ -197,7 +197,6 @@ class branch(object):
             else:
                 setattr(self, key, fields[key])
         setattr(self, 'errors', [])
-        setattr(self, 'test', '%r' % buf[0:4])
 
     def __repr__(self):
         return 'UBIFS Branch'

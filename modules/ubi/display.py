@@ -119,6 +119,8 @@ def vid_hdr(vid_hdr, tab=''):
 
 
 def vol_rec(vol_rec, tab=''):
+    print '%sVolume Record' % (tab)
+    tab += '\t'
     for key, value in vol_rec:
         if key == 'errors':
             value = ','.join(value)

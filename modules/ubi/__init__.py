@@ -43,7 +43,6 @@ class ubi():
     List:int_vol_blocks_list  -- List of internal volumes minus layout.
     List:unknown_blocks_list  -- List of blocks with unknown types. *
     Dict:blocks               -- Dict keyed by PEB number of all blocks.
-    * More research into these is needed.
     """
     def __init__(self, ubi_file):
         self.__name__ = 'UBI'
@@ -71,7 +70,6 @@ class ubi():
 
         layout_pairs = layout.group_pairs(self.blocks, self.layout_blocks_list)
 
-        # Plus 2 to adjust for layout blocks
         layout_infos = layout.associate_blocks(self.blocks, layout_pairs, self.first_peb_num)
 
         self._images = []

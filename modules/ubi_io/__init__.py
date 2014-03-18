@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-from modules.debug import error, log, logging_on_verbose
+from modules.debug import error, log, verbose_log
 from modules.ubi.block import sort
 
 class ubi_file(object):
@@ -81,6 +81,7 @@ class ubi_file(object):
         self._fhandle.seek(self._start_offset)
         self._last_read_addr = self._fhandle.tell()
 
+
     def _set_start(self, i):
         self._start_offset = i
     def _get_start(self):
@@ -104,6 +105,7 @@ class ubi_file(object):
 
     def read(self, size):
         self._last_read_addr = self.tell()
+        verbose_log(self, 'read loc: %s, size: %s' % (self._last_read_addr, size))
         return self._fhandle.read(size)
 
 
@@ -173,27 +175,26 @@ class leb_virtual_file():
             self.is_valid = True
 
 
-    def read(self, i):
+    def read(self, size):
         buf = ''
         leb = int(self.tell() / self._ubi.leb_size)
         offset = self.tell() % self._ubi.leb_size
         self._last_read_addr = self._ubi.blocks[self._blocks[leb]].file_offset + self._ubi.blocks[self._blocks[leb]].ec_hdr.data_offset + offset
 
-        if logging_on_verbose:
-            log(self, 'read loc: %s, size: %s' % (self._last_read_addr, i))
+        verbose_log(self, 'read loc: %s, size: %s' % (self._last_read_addr, size))
 
         if leb == self._last_leb:
-            self.seek(self.tell() + i)
-            return self._last_buf[offset:offset+i]
+            self.seek(self.tell() + size)
+            return self._last_buf[offset:offset+size]
         else:
             try:
                 buf = self._ubi.file.read_block_data(self._ubi.blocks[self._blocks[leb]])
                 self._last_buf = buf
                 self._last_leb = leb
-                self.seek(self.tell() + i)
-                return buf[offset:offset+i]
+                self.seek(self.tell() + size)
+                return buf[offset:offset+size]
             except Exception, e:
-                error(self, 'Fatal', 'read loc: %s, size: %s, LEB: %s, offset: %s, error: %s' % (self._last_read_addr, i, leb, offset, e))
+                error(self, 'Fatal', 'read loc: %s, size: %s, LEB: %s, offset: %s, error: %s' % (self._last_read_addr, size, leb, offset, e))
 
 
     def reset(self):
@@ -214,9 +215,6 @@ class leb_virtual_file():
     def reader(self):
         last_leb = 0
         for block in self._blocks:
-            if logging_on_verbose:
-                log('%s' % (self._blocks[block]))
-
             while 0 != (self._ubi.blocks[block].leb_num - last_leb):
                 last_leb += 1
                 yield '\xff'*self._ubi.leb_size

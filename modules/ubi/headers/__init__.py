@@ -76,7 +76,7 @@ def vtbl_recs(buf):
         if len(vtbl_rec_buf) == UBI_VTBL_REC_SZ:
             vtbl_rec_ret = _vtbl_rec(vtbl_rec_buf)
 
-            if len(vtbl_rec_ret.errors) == 0:
+            if len(vtbl_rec_ret.errors) == 0 and vtbl_rec_ret.name_len:
                 vtbl_rec_ret.rec_index = i
                 vtbl_recs.append(vtbl_rec_ret)
 
