@@ -63,7 +63,7 @@ class ubi():
         self._data_blocks_list = data_list
         self._int_vol_blocks_list = int_vol_list
         self._unknown_blocks_list = unknown_list
-        
+
         arbitrary_block = self.blocks.itervalues().next()
         self._min_io_size = arbitrary_block.ec_hdr.vid_hdr_offset
         self._leb_size = self.file.block_size - arbitrary_block.ec_hdr.data_offset

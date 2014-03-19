@@ -18,13 +18,12 @@
 #############################################################
 
 import re
-from modules.debug import error, log, verbose_display, ignore_block_errors
+from modules.debug import error, log, verbose_display, verbose_log, ignore_block_errors
 from modules.ubi import display
 from modules.ubi.defines import UBI_EC_HDR_SZ, UBI_VID_HDR_SZ, UBI_INTERNAL_VOL_START, UBI_EC_HDR_MAGIC
 from modules.ubi.headers import ec_hdr, vid_hdr, vtbl_recs
 
-# build block object out of data
-# takes raw data divided up by ec magic number
+
 class description(object):
     """UBI Block description Object
 
@@ -79,7 +78,7 @@ class description(object):
         return 'Block: PEB# %s: LEB# %s' % (self.peb_num, self.leb_num)
 
     def display(self, tab=''):
-        display.block(self, tab)
+        return display.block(self, tab)
 
 
 def get_blocks_in_list(blocks, idx_list):
@@ -122,7 +121,7 @@ def extract_blocks(ubi):
             blocks[blk.peb_num] = blk
             peb_count += 1
             log(extract_blocks, blk)
-            log(extract_blocks, 'file addr: %s' % (ubi.file.last_read_addr()))
+            verbose_log(extract_blocks, 'file addr: %s' % (ubi.file.last_read_addr()))
             verbose_display(blk)      
         else:
             cur_offset += ubi.file.block_size

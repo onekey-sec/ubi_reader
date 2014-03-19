@@ -17,7 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-import modules.ubi.display
+from modules.debug import log
+from modules.ubi import display
 from modules.ubi.block import sort, get_blocks_in_list
 
 class description(object):
@@ -43,6 +44,7 @@ class description(object):
         self._vol_rec = vol_rec
         self._name = self._vol_rec.name
         self._block_list = block_list
+        log(description, 'Create Volume: %s, ID: %s, Block Cnt: %s' % (self.name, self.vol_id, len(self.block_list)))
 
     def __repr__(self):
         return 'Volume: %s' % (self.name)
@@ -78,7 +80,7 @@ class description(object):
 
 
     def display(self, tab=''):
-        modules.ubi.display.volume(self, tab)
+        return display.volume(self, tab)
 
     def reader(self, ubi):
         last_leb = 0

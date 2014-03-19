@@ -23,11 +23,7 @@ import struct
 from modules.ubifs.defines import *
 from modules.ubifs import walk
 from modules.ubifs.misc import decompress
-from modules.debug import error, log, logging_on_verbose
-
-def _extract_log(obj, message):
-    if logging_on_verbose:
-        log(obj, message)
+from modules.debug import error, log, verbose_log, use_dummy_socket_file
 
 
 def extract_files(ubifs, out_path, perms=False):
@@ -56,6 +52,8 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
         try:
             if not os.path.exists(dent_path):
                 os.mkdir(dent_path)
+                log(extract_dents, 'Make Dir: %s' % (dent_path))
+
                 if perms:
                     _set_file_perms(dent_path, inode)
         except Exception, e:
@@ -74,6 +72,7 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
                     _write_reg_file(dent_path, buf)
                 else:
                     os.link(inode['hlink'] ,dent_path)
+                    log(extract_dents, 'Make Link: %s > %s' % (dent_path, inode['hlink']))
             else:
                 buf = _process_reg_file(ubifs, inode, dent_path)
                 _write_reg_file(dent_path, buf)
@@ -88,18 +87,21 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
         try:
             # probably will need to decompress ino data if > UBIFS_MIN_COMPR_LEN
             os.symlink('%s' % inode['ino'].data, dent_path)
+            log(extract_dents, 'Make Symlink: %s > %s' % (dent_path, inode['ino'].data))
         except Exception, e:
             error(extract_dents, 'Warn', 'SYMLINK Fail: %s : %s' % (inode['ino'].data, dent_path)) 
 
     elif dent_node.type in [UBIFS_ITYPE_BLK, UBIFS_ITYPE_CHR]:
         try:
             dev = struct.unpack('<II', inode['ino'].data)[0]
-            if perms:
+            if True:
                 os.mknod(dent_path, inode['ino'].mode, dev)
+                log(extract_dents, 'Make Device Node: %s' % (dent_path))
+
                 if perms:
                     _set_file_perms(path, inode)
             else:
-                # Just create dummy file.
+                log(extract_dents, 'Create dummy node.')
                 _write_reg_file(dent_path, str(dev))
                 if perms:
                     _set_file_perms(dent_path, inode)
@@ -110,6 +112,8 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
     elif dent_node.type == UBIFS_ITYPE_FIFO:
         try:
             os.mkfifo(dent_path, inode['ino'].mode)
+            log(extract_dents, 'Make FIFO: %s' % (path))
+
             if perms:
                 _set_file_perms(dent_path, inode)
         except Exception, e:
@@ -117,10 +121,10 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
 
     elif dent_node.type == UBIFS_ITYPE_SOCK:
         try:
-            # Just create dummy file.
-            _write_reg_file(dent_path, '')
-            if perms:
-                _set_file_perms(dent_path, inode)
+            if use_dummy_socket_file:
+                _write_reg_file(dent_path, '')
+                if perms:
+                    _set_file_perms(dent_path, inode)
         except Exception, e:
             error(extract_dents, 'Warn', 'SOCK Fail: %s : %s' % (dent_path, e))
 
@@ -128,11 +132,13 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
 def _set_file_perms(path, inode):
     os.chmod(path, inode['ino'].mode)
     os.chown(path, inode['ino'].uid, inode['ino'].gid)
+    verbose_log(_set_file_perms, 'perms:%s, owner: %s.%s, path: %s' % (inode['ino'].mode, inode['ino'].uid, inode['ino'].gid, path))
 
     
 def _write_reg_file(path, data):
     with open(path, 'wb') as f:
         f.write(data)
+    log(_write_reg_file, 'Make File: %s' % (path))
 
 
 def _process_reg_file(ubifs, inode, path):
@@ -156,6 +162,7 @@ def _process_reg_file(ubifs, inode, path):
                 d = ubifs.file.read(data.compr_len)
                 buf += decompress(compr_type, data.size, d)
                 last_khash = data.key['khash']
+                verbose_log(_process_reg_file, 'ino num: %s, compression: %s, path: %s' % (inode['ino'].key['ino_num'], compr_type, path))
 
     except Exception, e:
         error(_process_reg_file, 'Warn', 'inode num:%s :%s' % (inode['ino'].key['ino_num'], e))

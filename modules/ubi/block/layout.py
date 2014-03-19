@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-import sys
+from modules.debug import error, log
 from modules.ubi.block import sort
-
 
 def group_pairs(blocks, layout_blocks_list):
     """Sort a list of layout blocks into pairs
@@ -42,10 +41,10 @@ def group_pairs(blocks, layout_blocks_list):
             else:
                     layouts_grouped.append([blocks[l].peb_num])
 
+        log(group_pairs, layouts_grouped)
         return layouts_grouped
     except Exception, e:
-        print e
-        sys.exit(1)
+        error(group_pairs, 'Fatal', e)
 
 
 def associate_blocks(blocks, layout_pairs, start_peb_num):

@@ -20,11 +20,14 @@
 import sys
 import traceback
 
-error_action = True
-fatal_traceback = True
-ignore_block_errors = True
-logging_on = True
-logging_on_verbose = True
+error_action = True             # if 'exit' on any error exit program.
+fatal_traceback = True          # Print traceback on fatal errors.
+
+ignore_block_errors = True      # Ignore block errors.
+logging_on = True               # Print debug info on.
+logging_on_verbose = False       # Print verbose debug info on.
+
+use_dummy_socket_file = False   # Create regular file place holder.
 
 def log(obj, message):
     if logging_on or logging_on_verbose:
@@ -37,7 +40,7 @@ def verbose_log(obj, message):
 
 def verbose_display(displayable_obj):
     if logging_on_verbose:
-        displayable_obj.display('\t')
+        print displayable_obj.display('\t')
 
 def error(obj, level, message):
     if error_action is 'exit':

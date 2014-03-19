@@ -171,6 +171,7 @@ def by_type(blocks, slist=None):
 
         if blocks[i].is_vtbl and blocks[i].is_valid:
             layout.append(i)
+            print 'layout append %s' % i
 
         elif blocks[i].is_internal_vol and blocks[i].is_valid:
             int_vol.append(i)
