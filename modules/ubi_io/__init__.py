@@ -42,7 +42,8 @@ class ubi_file(object):
     read_block_data -- Returns LEB data only from provided block.
         Obj:block
     reader          -- Generator that returns data from file.
-    reset           -- Reset file position to start_offset
+    reset           -- Reset file position to start_offset.
+    is_valid        -- If the object intialized okay.
 
     Handles all the actual file interactions, read, seek,
     extract blocks, etc.
@@ -50,6 +51,7 @@ class ubi_file(object):
 
     def __init__(self, path, block_size, start_offset=0, end_offset=None):
         self.__name__ = 'UBI_File'
+        self.is_valid = False
         try:
             log(self, 'Open Path: %s' % path)
             self._fhandle = open(path, 'rb')
@@ -80,7 +82,7 @@ class ubi_file(object):
 
         self._fhandle.seek(self._start_offset)
         self._last_read_addr = self._fhandle.tell()
-
+        self.is_valid = True
 
     def _set_start(self, i):
         self._start_offset = i

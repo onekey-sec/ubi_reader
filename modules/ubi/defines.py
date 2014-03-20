@@ -33,6 +33,10 @@
 #############################################################
 
 import struct
+
+# Magic number
+UBI_EC_HDR_MAGIC = '\x55\x42\x49\x23'
+
 # Initial CRC32 checksum value.
 UBI_CRC32_INIT = 4294967295 #0xFFFFFFFF
 
@@ -43,7 +47,6 @@ UBI_MAX_VOLUMES = 128
 UBI_INTERNAL_VOL_START = 2147479551
 
 # Error Count header.
-UBI_EC_HDR_MAGIC = '\x55\x42\x49\x23' # UBI#
 EC_HDR_FORMAT = '>4sB3sQIII32sI'
 EC_HDR_FIELDS = ['magic',           # Magic string UBI#
                  'version',         # UBI version meant to accept this image.

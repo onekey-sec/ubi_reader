@@ -24,7 +24,7 @@ from modules.ubi import ubi, get_peb_size
 from modules.ubifs import ubifs
 from modules.ubifs.output import extract_files
 from modules.ubi_io import ubi_file, leb_virtual_file
-from settings import output_dir
+from modules.settings import output_dir
 
 if __name__ == '__main__':
     import time
