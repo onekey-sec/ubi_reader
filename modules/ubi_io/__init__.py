@@ -84,13 +84,14 @@ class ubi_file(object):
         self._last_read_addr = self._fhandle.tell()
         self.is_valid = True
 
+
     def _set_start(self, i):
         self._start_offset = i
     def _get_start(self):
         return self._start_offset
     start_offset = property(_get_start, _set_start)
 
-    
+
     def _get_end(self):
         return self._end_offset
     end_offset = property(_get_end)
@@ -100,7 +101,7 @@ class ubi_file(object):
         return self._block_size
     block_size = property(_get_block_size)
 
-        
+
     def seek(self, offset):
         self._fhandle.seek(offset)
 
@@ -114,8 +115,10 @@ class ubi_file(object):
     def tell(self):
         return self._fhandle.tell()
 
+
     def last_read_addr(self):
         return self._last_read_addr
+
 
     def reset(self):
         self._fhandle.seek(self.start_offset)
@@ -158,6 +161,7 @@ class ubi_file(object):
         self.seek(block.file_offset + block.ec_hdr.data_offset)
         buf = self._fhandle.read(block.size - block.ec_hdr.data_offset - block.vid_hdr.data_pad)
         return buf
+
 
 
 class leb_virtual_file():
@@ -210,9 +214,11 @@ class leb_virtual_file():
     def tell(self):
         return self._seek
 
+
     def last_read_addr(self):
         """Start address of last physical file read"""
         return self._last_read_addr
+
 
     def reader(self):
         last_leb = 0

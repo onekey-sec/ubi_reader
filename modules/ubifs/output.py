@@ -20,10 +20,11 @@
 import os
 import struct
 
+from modules import settings
 from modules.ubifs.defines import *
 from modules.ubifs import walk
 from modules.ubifs.misc import decompress
-from modules.debug import error, log, verbose_log, use_dummy_socket_file
+from modules.debug import error, log, verbose_log
 
 
 def extract_files(ubifs, out_path, perms=False):
@@ -121,7 +122,7 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
 
     elif dent_node.type == UBIFS_ITYPE_SOCK:
         try:
-            if use_dummy_socket_file:
+            if settings.use_dummy_socket_file:
                 _write_reg_file(dent_path, '')
                 if perms:
                     _set_file_perms(dent_path, inode)

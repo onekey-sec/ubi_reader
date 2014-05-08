@@ -44,6 +44,7 @@ class ubi():
     List:unknown_blocks_list  -- List of blocks with unknown types. *
     Dict:blocks               -- Dict keyed by PEB number of all blocks.
     """
+
     def __init__(self, ubi_file):
         self.__name__ = 'UBI'
         self._file = ubi_file
@@ -209,6 +210,7 @@ class ubi():
         Str:tab    -- '\t' for spacing this object.
         """
         display.ubi(self, tab)
+
 
 
 def get_peb_size(path):

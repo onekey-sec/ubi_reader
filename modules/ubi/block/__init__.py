@@ -18,7 +18,8 @@
 #############################################################
 
 import re
-from modules.debug import error, log, verbose_display, verbose_log, ignore_block_errors
+from modules import settings
+from modules.debug import error, log, verbose_display, verbose_log
 from modules.ubi import display
 from modules.ubi.defines import UBI_EC_HDR_SZ, UBI_VID_HDR_SZ, UBI_INTERNAL_VOL_START, UBI_EC_HDR_MAGIC
 from modules.ubi.headers import ec_hdr, vid_hdr, vtbl_recs
@@ -60,10 +61,10 @@ class description(object):
         # TODO better understanding of block types/errors
         self.ec_hdr = ec_hdr(block_buf[0:UBI_EC_HDR_SZ])
 
-        if not self.ec_hdr.errors or ignore_block_errors:
+        if not self.ec_hdr.errors or settings.ignore_block_errors:
             self.vid_hdr = vid_hdr(block_buf[self.ec_hdr.vid_hdr_offset:self.ec_hdr.vid_hdr_offset+UBI_VID_HDR_SZ])
 
-            if not self.vid_hdr.errors or ignore_block_errors:
+            if not self.vid_hdr.errors or settings.ignore_block_errors:
                 self.is_internal_vol = self.vid_hdr.vol_id >= UBI_INTERNAL_VOL_START
     
                 if self.vid_hdr.vol_id >= UBI_INTERNAL_VOL_START:
@@ -71,14 +72,16 @@ class description(object):
     
                 self.leb_num = self.vid_hdr.lnum
         self.is_vtbl = bool(self.vtbl_recs) or False 
-        self.is_valid = not self.ec_hdr.errors and not self.vid_hdr.errors or ignore_block_errors
+        self.is_valid = not self.ec_hdr.errors and not self.vid_hdr.errors or settings.ignore_block_errors
 
 
     def __repr__(self):
         return 'Block: PEB# %s: LEB# %s' % (self.peb_num, self.leb_num)
 
+
     def display(self, tab=''):
         return display.block(self, tab)
+
 
 
 def get_blocks_in_list(blocks, idx_list):
@@ -93,7 +96,9 @@ def get_blocks_in_list(blocks, idx_list):
                      from provided list of indexes in
                      order of idx_list.
     """
+
     return {i:blocks[i] for i in idx_list}
+
 
 
 def extract_blocks(ubi):
@@ -105,6 +110,7 @@ def extract_blocks(ubi):
     Returns:
     Dict -- Of block objects keyed by PEB number.
     """
+
     blocks = {}
     ubi.file.seek(ubi.file.start_offset)
     peb_count = 0
