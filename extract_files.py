@@ -24,68 +24,37 @@ import argparse
 from shutil import rmtree
 
 from modules.ubi import ubi, get_peb_size
-from modules.ubifs import ubifs
+from modules.ubifs import ubifs, get_leb_size
 from modules.ubifs.output import extract_files
 from modules.ubi_io import ubi_file, leb_virtual_file
 from modules import settings
 from modules.debug import error, log
 from modules.utils import guess_filetype
 
-cur_output_dir = ''
-
-def make_output_dir():
-    if not os.path.exists(settings.output_dir):
+def create_output_dir(outpath):
+    if os.path.exists(outpath):
+        if os.listdir(outpath):
+            error(create_output_dir, 'Fatal', 'Output directory is not empty. %s' % outpath)
+    else:
         try:
-            os.mkdir(settings.output_dir)
-            log(make_cur_output_dir, ' Created path: %s' % settings.output_dir)
+            os.makedirs(outpath)
         except Exception, e:
             print e
 
 
-def make_cur_output_dir(path):
-    cur_output_dir = os.path.join(settings.output_dir, path)
-    if not os.path.exists(cur_output_dir):
-        try:
-            os.mkdir(cur_output_dir)
-            log(make_cur_output_dir, ' Created path: %s' % cur_output_dir)
-        except Exception, e:
-            print e
-
-
-def rm_cur_output_dir():
-    path = cur_output_dir
-    if os.path.exists(path):
+def rm_output_dir(outpath):
+    if os.path.exists(outpath):
         try:
             rmtree(path)
-            log(rm_cur_output_dir, 'Removing path: %s' % cur_output_dir)
-        except Exception, e:
-            print e
-
-
-def extract_ubifs(ufile, outpath, perms):
-    if ufile.is_valid:
-        ubifs_obj = ubifs(ufile)
-        print 'Extracting files to: %s' % outpath
-        extract_files(ubifs_obj, outpath, perms)
-    else:
-        error(extract_ubifs, 'Warn', 'UBI file is not valid. Skipping.')
-
-
-def create_vol_dir(vol_outpath):
-    if os.path.exists(vol_outpath):
-        if os.listdir(vol_outpath):
-            error(create_vol_dir, 'Fatal', 'Volume output directory is not empty. %s' % vol_outpath)
-    else:
-        try:
-            os.makedirs(vol_outpath)
+            log(rm_output_dir, 'Removing path: %s' % outpath)
         except Exception, e:
             print e
 
 
 if __name__=='__main__':
     start = time.time()
-    description = 'Extract contents of UBI/UBIFS image.'
-    usage = 'ubi_extract_files.py [options] filepath'
+    description = 'Extract contents of a UBI or UBIFS image.'
+    usage = 'extract_files.py [options] filepath'
     parser = argparse.ArgumentParser(usage=usage, description=description)
 
     parser.add_argument('-k', '--keep-permissions', action='store_true', dest='permissions',
@@ -131,10 +100,10 @@ if __name__=='__main__':
     if not filetype:
         parser.error('Could not determine file type.')
 
+    img_name = os.path.basename(path) #os.path.splitext()[0]
     if args.output_path:
-        output_path = args.output_path
+        output_path = os.path.abspath(os.path.join(args.output_path, img_name))
     else:
-        img_name = os.path.splitext(os.path.basename(path))[0]
         output_path = os.path.join(settings.output_dir, img_name)
 
     settings.logging_on = args.log
@@ -144,7 +113,12 @@ if __name__=='__main__':
     if args.block_size:
         block_size = args.block_size
     else:
-        block_size = get_peb_size(path)
+        if filetype == 'UBI':
+            block_size = get_peb_size(path)
+        elif filetype == 'UBIFS':
+            block_size = get_leb_size(path)
+        else:
+            parser.error('Block size could not be determined.')
 
     perms = args.permissions
 
@@ -163,16 +137,15 @@ if __name__=='__main__':
                 # Get blocks associated with this volume.
                 vol_blocks = image.volumes[volume].get_blocks(ubi_obj.blocks)
 
-                # Skip volume if empty.
-                if not len(vol_blocks):
-                    print '%s volume empty' % image.volumes[volume].name
-                    continue
-
                 # Create volume data output path.
                 vol_outpath = os.path.join(output_path, volume)
                 
                 # Create volume output path directory.
-                create_vol_dir(vol_outpath)
+                create_output_dir(vol_outpath)
+
+                # Skip volume if empty.
+                if not len(vol_blocks):
+                    continue
 
                 # Create LEB backed virtual file with volume blocks.
                 # Necessary to prevent having to load entire UBI image
@@ -180,13 +153,20 @@ if __name__=='__main__':
                 lebv_file = leb_virtual_file(ubi_obj, vol_blocks)
 
                 # Extract files from UBI image.
-                extract_ubifs(lebv_file, vol_outpath, perms)
+                ubifs_obj = ubifs(lebv_file)
+                print 'Extracting files to: %s' % vol_outpath
+                extract_files(ubifs_obj, vol_outpath, perms)
+
 
     elif filetype == 'UBIFS':
         # Create UBIFS object
         ubifs_obj = ubifs(ufile_obj)
 
+        # Create directory for files.
+        create_output_dir(output_path)
+
         # Extract files from UBIFS image.
+        print 'Extracting files to: %s' % output_path
         extract_files(ubifs_obj, output_path, perms)
 
     else:

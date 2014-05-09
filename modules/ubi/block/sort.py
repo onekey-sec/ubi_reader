@@ -86,7 +86,6 @@ def by_leb(blocks):
 
         slist[blocks[block].leb_num] = block
     return slist
-    return sorted(blocks.iterkeys(), key=lambda x: blocks[x].leb_num)
 
 
 def by_vol_id(blocks, slist=None):
@@ -171,7 +170,6 @@ def by_type(blocks, slist=None):
 
         if blocks[i].is_vtbl and blocks[i].is_valid:
             layout.append(i)
-            print 'layout append %s' % i
 
         elif blocks[i].is_internal_vol and blocks[i].is_valid:
             int_vol.append(i)

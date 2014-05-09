@@ -22,7 +22,7 @@ import os
 output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'output')
 
 error_action = True             # if 'exit' on any error exit program.
-fatal_traceback = True          # Print traceback on fatal errors.
+fatal_traceback = False          # Print traceback on fatal errors.
 
 ignore_block_errors = False      # Ignore block errors.
 logging_on = False               # Print debug info on.
