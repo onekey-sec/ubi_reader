@@ -17,107 +17,122 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+def ubifs(ubifs, tab=''):
+    buf = '%sUBIFS Image\n' % (tab)
+    buf += '%s---------------------\n' % (tab)
+    buf += '%sMin I/O: %s\n' % (tab, ubifs.min_io_size)
+    buf += '%sLEB Size: %s\n' % (tab, ubifs.leb_size)
+    return buf
+
 def common_hdr(chdr, tab=''):
-    buf = '%s%s' % (tab, chdr)
+    buf = '%s%s\n' % (tab, chdr)
+    buf += '%s---------------------\n' % (tab)
     tab += '\t'
     for key, value in chdr:
         if key == 'display':
             continue
         elif key == 'errors':
-            buf += '%s%s: %s' % (tab, key, ','.join(value))
+            buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         else:
-            buf += '%s%s: %s' % (tab, key, value)
+            buf += '%s%s: %s\n' % (tab, key, value)
     return buf
 
 def sb_node(node, tab=''):
-    buf = '%s%s' % (tab, node)
+    buf = '%s%s\n' % (tab, node)
+    buf += '%s---------------------\n' % (tab)
     tab += '\t'
     for key, value in node:
         if key == 'display':
             continue
         elif key == 'errors':
-            buf += '%s%s: %s' % (tab, key, ','.join(value))
+            buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         elif key == 'uuid':
-            buf += '%s%s: %r' % (tab, key, value)
+            buf += '%s%s: %r\n' % (tab, key, value)
         else:
-            buf += '%s%s: %s' % (tab, key, value)
+            buf += '%s%s: %s\n' % (tab, key, value)
     return buf
 
 
 def mst_node(node, tab=''):
-    buf = '%s%s' % (tab, node)
+    buf = '%s%s\n' % (tab, node)
+    buf += '%s---------------------\n' % (tab)
     tab += '\t'
     for key, value in node:
         if key == 'display':
             continue
         elif key == 'errors':
-            buf += '%s%s: %s' % (tab, key, ','.join(value))
+            buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         else:
-            buf += '%s%s: %s' % (tab, key, value)
+            buf += '%s%s: %s\n' % (tab, key, value)
     return buf
 
 
 def dent_node(node, tab=''):
-    buf = '%s%s' % (tab, node)
+    buf = '%s%s\n' % (tab, node)
+    buf += '%s---------------------\n' % (tab)
     tab += '\t'
     for key, value in node:
         if key == 'display':
             continue
         elif key == 'errors':
-            buf += '%s%s: %s' % (tab, key, ','.join(value))
+            buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         else:
-            buf += '%s%s: %s' % (tab, key, value)
+            buf += '%s%s: %s\n' % (tab, key, value)
     return buf
 
 
 def data_node(node, tab=''):
-    buf = '%s%s' % (tab, node)
+    buf = '%s%s\n' % (tab, node)
+    buf += '%s---------------------\n' % (tab)
     tab += '\t'
     for key, value in node:
         if key in ['display', 'data']:
             continue
         elif key == 'errors':
-            buf += '%s%s: %s' % (tab, key, ','.join(value))
+            buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         else:
-            buf += '%s%s: %s' % (tab, key, value)
+            buf += '%s%s: %s\n' % (tab, key, value)
     return buf
 
 
 def idx_node(node, tab=''):
-    buf = '%s%s' % (tab, node)
+    buf = '%s%s\n' % (tab, node)
+    buf += '%s---------------------\n' % (tab)
     tab += '\t'
     for key, value in node:
         if key == 'display':
             continue
         elif key == 'errors':
-            buf += '%s%s: %s' % (tab, key, ','.join(value))
+            buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         else:
-            buf += '%s%s: %s' % (tab, key, value)
+            buf += '%s%s: %s\n' % (tab, key, value)
     return buf
 
 
 def ino_node(node, tab=''):
-    buf = '%s%s' % (tab, node)
+    buf = '%s%s\n' % (tab, node)
+    buf += '%s---------------------\n' % (tab)
     tab += '\t'
     for key, value in node:
         if key == 'display':
             continue
         elif key == 'errors':
-            buf += '%s%s: %s' % (tab, key, ','.join(value))
+            buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         else:
-            buf += '%s%s: %s' % (tab, key, value)
+            buf += '%s%s: %s\n' % (tab, key, value)
     return buf
 
 
 def branch(node, tab=''):
-    buf = '%s%s' % (tab, node)
+    buf = '%s%s\n' % (tab, node)
+    buf += '%s---------------------\n' % (tab)
     tab += '\t'
     for key, value in node:
         if key == 'display':
             continue
         elif key == 'errors':
-            buf += '%s%s: %s' % (tab, key, ','.join(value))
+            buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         else:
-            buf += '%s%s: %s' % (tab, key, value)
+            buf += '%s%s: %s\n' % (tab, key, value)
     return buf
 

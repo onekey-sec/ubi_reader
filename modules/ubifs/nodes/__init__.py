@@ -48,7 +48,7 @@ class common_hdr(object):
                 yield key, getattr(self, key)
 
     def display(self, tab=''):
-        display.common_hdr(self, tab)
+        return display.common_hdr(self, tab)
 
 
 class ino_node(object):
@@ -81,7 +81,7 @@ class ino_node(object):
                 yield key, getattr(self, key)
 
     def display(self, tab=''):
-        display.ino_node(self, tab)
+        return display.ino_node(self, tab)
 
 
 class dent_node(object):
@@ -114,7 +114,7 @@ class dent_node(object):
                 yield key, getattr(self, key)
 
     def display(self, tab=''):
-        display.dent_node(self, tab)
+        return display.dent_node(self, tab)
 
 
 class data_node(object):
@@ -148,7 +148,7 @@ class data_node(object):
                 yield key, getattr(self, key)
 
     def display(self, tab=''):
-        display.data_node(self, tab)
+        return display.data_node(self, tab)
 
 
 class idx_node(object):
@@ -180,7 +180,7 @@ class idx_node(object):
                 yield key, getattr(self, key)
 
     def display(self, tab=''):
-        display.idx_node(self, tab)
+        return display.idx_node(self, tab)
 
 
 class branch(object):
@@ -207,7 +207,7 @@ class branch(object):
                 yield key, getattr(self, key)
 
     def display(self, tab=''):
-        display.branch(self, tab)
+        return display.branch(self, tab)
     
 
 class sb_node(object):
@@ -234,7 +234,7 @@ class sb_node(object):
                 yield key, getattr(self, key)
 
     def display(self, tab=''):
-        display.sb_node(self, tab)
+        return display.sb_node(self, tab)
 
 
 class mst_node(object):
@@ -262,4 +262,4 @@ class mst_node(object):
                 yield key, getattr(self, key)
 
     def display(self, tab=''):
-        display.mst_node(self, tab)
+        return display.mst_node(self, tab)

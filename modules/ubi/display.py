@@ -20,75 +20,75 @@
 from modules.ubi.defines import PRINT_COMPAT_LIST, PRINT_VOL_TYPE_LIST, UBI_VTBL_AUTORESIZE_FLG
 
 def ubi(ubi, tab=''):
-    buf = '%sUBI File' % (tab) 
-    buf += '%s---------------------' % (tab)
-    buf += '\t%sMin I/O: %s' % (tab, ubi.min_io_size)
-    buf += '\t%sLEB Size: %s' % (tab, ubi.leb_size)
-    buf += '\t%sPEB Size: %s' % (tab, ubi.peb_size)
-    buf += '\t%sTotal Block Count: %s' % (tab, ubi.block_count)
-    buf += '\t%sData Block Count: %s' % (tab, len(ubi.data_blocks_list))
-    buf += '\t%sLayout Block Count: %s' % (tab, len(ubi.layout_blocks_list))
-    buf += '\t%sInternal Volume Block Count: %s' % (tab, len(ubi.int_vol_blocks_list))
-    buf += '\t%sUnknown Block Count: %s' % (tab, len(ubi.unknown_blocks_list))
-    buf += '\t%sFirst UBI PEB Number: %s' % (tab, ubi.first_peb_num)
+    buf = '%sUBI File\n' % (tab) 
+    buf += '%s---------------------\n' % (tab)
+    buf += '\t%sMin I/O: %s\n' % (tab, ubi.min_io_size)
+    buf += '\t%sLEB Size: %s\n' % (tab, ubi.leb_size)
+    buf += '\t%sPEB Size: %s\n' % (tab, ubi.peb_size)
+    buf += '\t%sTotal Block Count: %s\n' % (tab, ubi.block_count)
+    buf += '\t%sData Block Count: %s\n' % (tab, len(ubi.data_blocks_list))
+    buf += '\t%sLayout Block Count: %s\n' % (tab, len(ubi.layout_blocks_list))
+    buf += '\t%sInternal Volume Block Count: %s\n' % (tab, len(ubi.int_vol_blocks_list))
+    buf += '\t%sUnknown Block Count: %s\n' % (tab, len(ubi.unknown_blocks_list))
+    buf += '\t%sFirst UBI PEB Number: %s\n' % (tab, ubi.first_peb_num)
     return buf
 
 
 def image(image, tab=''):
-    buf = '%s%s' % (tab, image)
-    buf += '%s---------------------' % (tab)
-    buf += '\t%sImage Sequence Num: %s' % (tab, image.image_seq)
+    buf = '%s%s\n' % (tab, image)
+    buf += '%s---------------------\n' % (tab)
+    buf += '\t%sImage Sequence Num: %s\n' % (tab, image.image_seq)
     for volume in image.volumes:
-        buf += '\t%sVolume Name:%s' % (tab, volume)
-    buf += '\t%sPEB Range: %s - %s' % (tab, image.peb_range[0], image.peb_range[1])
+        buf += '\t%sVolume Name:%s\n' % (tab, volume)
+    buf += '\t%sPEB Range: %s - %s\n' % (tab, image.peb_range[0], image.peb_range[1])
     return buf
 
 
 def volume(volume, tab=''):
-    buf = '%s%s' % (tab, volume)
-    buf += '%s---------------------' % (tab)
-    buf += '\t%sVol ID: %s' % (tab, volume.vol_id)
-    buf += '\t%sName: %s' % (tab, volume.name)
-    buf += '\t%sBlock Count: %s' % (tab, volume.block_count)
+    buf = '%s%s\n' % (tab, volume)
+    buf += '%s---------------------\n' % (tab)
+    buf += '\t%sVol ID: %s\n' % (tab, volume.vol_id)
+    buf += '\t%sName: %s\n' % (tab, volume.name)
+    buf += '\t%sBlock Count: %s\n' % (tab, volume.block_count)
 
     buf += '\n'
-    buf += '\t%sVolume Record' % (tab) 
-    buf += '\t%s---------------------' % (tab)
-    vol_rec(volume.vol_rec, '\t\t%s' % tab)
+    buf += '\t%sVolume Record\n' % (tab) 
+    buf += '\t%s---------------------\n' % (tab)
+    buf += vol_rec(volume.vol_rec, '\t\t%s' % tab)
 
     buf += '\n'
     return buf
 
 
 def block(block, tab='\t'):
-    buf = '%s%s' % (tab, block)
-    buf += '%s---------------------' % (tab)
-    buf += '\t%sFile Offset: %s' %  (tab, block.file_offset)
-    buf += '\t%sPEB #: %s' % (tab, block.peb_num)
-    buf += '\t%sLEB #: %s' % (tab, block.leb_num)
-    buf += '\t%sBlock Size: %s' % (tab, block.size)
-    buf += '\t%sInternal Volume: %s' % (tab, block.is_internal_vol)
-    buf += '\t%sIs Volume Table: %s' % (tab, block.is_vtbl)
-    buf += '\t%sIs Valid: %s' % (tab, block.is_valid)
+    buf = '%s%s\n' % (tab, block)
+    buf += '%s---------------------\n' % (tab)
+    buf += '\t%sFile Offset: %s\n' %  (tab, block.file_offset)
+    buf += '\t%sPEB #: %s\n' % (tab, block.peb_num)
+    buf += '\t%sLEB #: %s\n' % (tab, block.leb_num)
+    buf += '\t%sBlock Size: %s\n' % (tab, block.size)
+    buf += '\t%sInternal Volume: %s\n' % (tab, block.is_internal_vol)
+    buf += '\t%sIs Volume Table: %s\n' % (tab, block.is_vtbl)
+    buf += '\t%sIs Valid: %s\n' % (tab, block.is_valid)
 
     if not block.ec_hdr.errors:
         buf += '\n'
-        buf += '\t%sErase Count Header' % (tab)
-        buf += '\t%s---------------------' % (tab)
-        ec_hdr(block.ec_hdr, '\t\t%s' % tab)
+        buf += '\t%sErase Count Header\n' % (tab)
+        buf += '\t%s---------------------\n' % (tab)
+        ec_hdr(block.ec_hdr, '\t\t%s\n' % tab)
 
     if block.vid_hdr and not block.vid_hdr.errors:
         buf += '\n'        
-        buf += '\t%sVID Header Header' % (tab)
-        buf += '\t%s---------------------' % (tab)
-        vid_hdr(block.vid_hdr, '\t\t%s' % tab)
+        buf += '\t%sVID Header Header\n' % (tab)
+        buf += '\t%s---------------------\n' % (tab)
+        vid_hdr(block.vid_hdr, '\t\t%s\n' % tab)
 
     if block.vtbl_recs:
         buf += '\n'
-        buf += '\t%sVolume Records' % (tab) 
-        buf += '\t%s---------------------' % (tab)
+        buf += '\t%sVolume Records\n' % (tab) 
+        buf += '\t%s---------------------\n' % (tab)
         for vol in block.vtbl_recs:
-            vol_rec(vol, '\t\t%s' % tab)
+            buf += vol_rec(vol, '\t\t%s\n' % tab)
 
     buf += '\n'
     return buf
@@ -127,8 +127,7 @@ def vid_hdr(vid_hdr, tab=''):
 
 
 def vol_rec(vol_rec, tab=''):
-    buf = '%sVolume Record' % (tab)
-    tab += '\t'
+    buf = ''
     for key, value in vol_rec:
         if key == 'errors':
             value = ','.join(value)
@@ -142,5 +141,5 @@ def vol_rec(vol_rec, tab=''):
         elif key == 'name':
             value = value.strip('\x00')
 
-        buf += '%s%s: %s' % (tab, key, value)
+        buf += '%s%s: %s\n' % (tab, key, value)
     return buf

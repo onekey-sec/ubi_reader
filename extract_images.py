@@ -39,7 +39,7 @@ def create_output_dir(outpath):
 
 if __name__=='__main__':
     start = time.time()
-    description = 'Extract UBI or UBIFS images from file.'
+    description = 'Extract UBI or UBIFS images from file containing UBI data in it.'
     usage = 'extract_images.py [options] filepath'
     parser = argparse.ArgumentParser(usage=usage, description=description)
 
@@ -115,6 +115,7 @@ if __name__=='__main__':
 
     # Create UBI object
     ubi_obj = ubi(ufile_obj)
+
     # Loop through found images in file.
     for image in ubi_obj.images:
         if image_type == 'UBI':

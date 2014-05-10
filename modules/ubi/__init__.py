@@ -209,4 +209,4 @@ class ubi():
         Argument:
         Str:tab    -- '\t' for spacing this object.
         """
-        display.ubi(self, tab)
+        return display.ubi(self, tab)

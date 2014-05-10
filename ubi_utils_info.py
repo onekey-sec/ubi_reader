@@ -20,9 +20,10 @@
 import os
 import sys
 import argparse
+import ConfigParser
 
-
-from modules.ubi import ubi, get_peb_size
+from modules.ubi import ubi
+from modules.utils import guess_peb_size
 from modules.ubi_io import leb_virtual_file, ubi_file
 from modules.ubi.defines import PRINT_VOL_TYPE_LIST, UBI_VTBL_AUTORESIZE_FLG
 from modules.ubifs import ubifs
@@ -141,6 +142,59 @@ def print_ubi_params(ubi):
                 if key != 'name':
                     print '\t%s=%s' % (key, ini_params[key])
 
+def make_files(ubi, output_path):
+    ubi_params = get_ubi_params(ubi)
+
+    for img_params in ubi_params:
+        config = ConfigParser.ConfigParser()
+        output_img_path = os.path.join(output_path, 'img-%s' % img_params)
+
+        if not os.path.exists(output_img_path):
+            os.mkdir(output_img_path)
+
+        ini_path = os.path.join(output_img_path, 'img-%s.ini' % img_params)
+        ubi_file = os.path.join('img-%s.ubi' % img_params)
+        script_path = os.path.join(output_img_path, 'create_ubi_img-%s.sh' % img_params)
+        ubifs_files =[]               
+        buf = '#!/bin/sh\n'
+        print 'Writing to: %s' % script_path 
+
+        with open(script_path, 'w') as fscr:
+            with open(ini_path, 'w') as fini:
+                print 'Writing to: %s' % ini_path
+                vol_idx = 0
+
+                for volume in ubi_params[img_params]:
+                    ubifs_files.append(os.path.join('img-%s_%s.ubifs' % (img_params, vol_idx)))
+                    ini_params = ubi_params[img_params][volume]['ini']
+                    ini_file = 'img-%s.ini' % img_params     
+                    config.add_section(volume)
+                    config.set(volume, 'mode', 'ubi')
+                    config.set(volume, 'image', ubifs_files[vol_idx])
+        
+                    for i in ini_params:
+                        config.set(volume, i, ini_params[i])
+
+                    ubi_flags = ubi_params[img_params][volume]['flags']
+                    ubi_args = ubi_params[img_params][volume]['args']
+            
+                    leb = '%s %s' % (ubi_flags['leb_size'], ubi_args['leb_size'])
+                    peb = '%s %s' % (ubi_flags['peb_size'], ubi_args['peb_size'])
+                    min_io = '%s %s' % (ubi_flags['min_io_size'], ubi_args['min_io_size'])
+                    leb_cnt = '%s %s' % (ubi_flags['max_leb_cnt'], ubi_args['max_leb_cnt'])
+                    vid_hdr = '%s %s' % (ubi_flags['vid_hdr_offset'], ubi_args['vid_hdr_offset'])
+                    sub_page = '%s %s' % (ubi_flags['sub_page_size'], ubi_args['sub_page_size'])
+    
+                    buf += '/usr/sbin/mkfs.ubifs %s %s %s -r $%s %s\n' % (min_io, leb, leb_cnt, (vol_idx+1), ubifs_files[vol_idx])
+
+                    vol_idx += 1
+
+                config.write(fini)
+
+            buf += '/usr/sbin/ubinize %s %s %s %s -o %s %s\n' % (peb, min_io, sub_page, vid_hdr, ubi_file, ini_file)
+            fscr.write(buf)
+        os.chmod(script_path, 0755)
+
 
 if __name__ == '__main__':
     description = """Gather information from the UBI image useful for using mkfs.ubi, ubinize, ubiformat, etc. and print to screen.
@@ -168,7 +222,7 @@ Some may be duplicates, be sure to check which ones apply."""
     if args.block_size:
         block_size = args.block_size
     else:
-        block_size = get_peb_size(path)
+        block_size = guess_peb_size(path)
 
     # Create file object
     ufile = ubi_file(path, block_size)

@@ -21,7 +21,7 @@ import struct
 
 from modules.debug import error, log, verbose_display
 from modules.ubifs.defines import *
-from modules.ubifs import nodes
+from modules.ubifs import nodes, display
 
 class ubifs():
     """UBIFS object
@@ -114,7 +114,7 @@ class ubifs():
         Returns:
         Obj:Master Node
         """
-        return self._mst_node[1]
+        return self._mst_nodes[1]
     master_node2 = property(_get_master_node2)
 
 
@@ -136,3 +136,11 @@ class ubifs():
         """
         return self._min_io_size
     min_io_size = property(_get_min_io_size)
+    
+    def display(self, tab=''):
+        """Print information about this object.
+        
+        Argument:
+        Str:tab    -- '\t' for spacing this object.
+        """
+        return display.ubifs(self, tab)
