@@ -17,30 +17,164 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-import os
+import re
 from modules.debug import error, log
-from modules.ubi.defines import UBI_EC_HDR_MAGIC
-from modules.ubifs.defines import UBIFS_NODE_MAGIC
+from modules.ubi.defines import UBI_EC_HDR_MAGIC, FILE_CHUNK_SZ
+from modules.ubifs.defines import UBIFS_NODE_MAGIC, UBIFS_SB_NODE_SZ, UBIFS_SB_NODE, UBIFS_COMMON_HDR_SZ
+from modules.ubifs import nodes
 
-outputdir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'output')
-cur_outputdir = ''
+def guess_start_offset(path):
+    file_offset = 0
 
-def guess_filetype(path, start_offset=None):
-    if not os.path.exists(path):
-        error(guess_filetype, 'Fatal', 'Path not found: %s' % path)
+    f = open(path, 'rb')
+    f.seek(0,2)
+    file_size = f.tell()+1
+    f.seek(0)
 
+    for _ in range(0, file_size, FILE_CHUNK_SZ):
+        buf = f.read(FILE_CHUNK_SZ)
+        ubi_loc = buf.find(UBI_EC_HDR_MAGIC)
+        ubifs_loc = buf.find(UBIFS_NODE_MAGIC)
+
+        if ubi_loc == -1 and ubifs_loc == -1:
+            file_offset += FILE_CHUNK_SZ
+            continue
+        else:
+            if ubi_loc == -1:
+                ubi_loc = file_size + 1
+            elif ubifs_loc == -1:
+                ubifs_loc = file_size + 1
+
+            if ubi_loc < ubifs_loc:
+                return  file_offset + ubi_loc
+
+            elif ubifs_loc < ubi_loc:
+                return file_offset + ubifs_loc
+            else:
+                error(guess_start_offset, 'Fatal', 'Could not determine start offset.')
+
+    f.close()
+
+
+    
+def guess_filetype(path, start_offset=0):
     with open(path, 'rb') as f:
-        if start_offset:
-            f.seek(start_offset)
+        f.seek(start_offset)
         buf = f.read(4)
 
         if buf == UBI_EC_HDR_MAGIC:
+            ftype = UBI_EC_HDR_MAGIC
             log(guess_filetype, 'File looks like a UBI image.')
-            return 'UBI'
 
         elif buf == UBIFS_NODE_MAGIC:
+            ftype = UBIFS_NODE_MAGIC
             log(guess_filetype, 'File looks like a UBIFS image.')
-            return 'UBIFS'
         else:
-            return None
+            ftype = None
+            error(guess_filetype, 'Fatal', 'Could not determine file type.')
     
+    return ftype
+
+
+
+def guess_leb_size(path):
+    """Get LEB size from superblock
+
+    Arguments:
+    Str:path    -- Path to file.
+    
+    Returns:
+    Int         -- LEB size.
+    
+    Searches file for superblock and retrieves leb size.
+    """
+
+    f = open(path, 'rb')
+    f.seek(0,2)
+    file_size = f.tell()+1
+    f.seek(0)
+    block_size = None
+
+    for _ in range(0, file_size, FILE_CHUNK_SZ):
+        buf = f.read(FILE_CHUNK_SZ)
+
+        for m in re.finditer(UBIFS_NODE_MAGIC, buf):
+            start = m.start()
+            chdr = nodes.common_hdr(buf[start:start+UBIFS_COMMON_HDR_SZ])
+
+            if chdr and chdr.node_type == UBIFS_SB_NODE:
+                sb_start = start + UBIFS_COMMON_HDR_SZ
+                sb_end = sb_start + UBIFS_SB_NODE_SZ
+
+                if chdr.len != len(buf[sb_start:sb_end]):
+                    f.seek(sb_start)
+                    buf = f.read(UBIFS_SB_NODE_SZ)
+                else:
+                    buf = buf[sb_start:sb_end]
+
+                sbn = nodes.sb_node(buf)
+                block_size = sbn.leb_size
+                f.close()
+                return block_size
+
+    f.close()
+    return block_size
+
+
+
+def guess_peb_size(path):
+    """Determine the most likely block size
+
+    Arguments:
+    Str:path    -- Path to file.
+    
+    Returns:
+    Int         -- PEB size.
+    
+    Searches file for Magic Number, picks most 
+        common length between them.
+    """
+    file_offset = 0
+    offsets = []
+    f = open(path, 'rb')
+    f.seek(0,2)
+    file_size = f.tell()+1
+    f.seek(0)
+
+    for _ in range(0, file_size, FILE_CHUNK_SZ):
+        buf = f.read(FILE_CHUNK_SZ)
+        for m in re.finditer(UBI_EC_HDR_MAGIC, buf):
+            start = m.start()
+
+            if not file_offset:
+                file_offset = start
+                idx = start
+            else:
+                idx = start+file_offset
+
+            offsets.append(idx)
+
+        file_offset += FILE_CHUNK_SZ
+    f.close()
+
+    occurances = {}
+    for i in range(0, len(offsets)):
+        try:
+            diff = offsets[i] - offsets[i-1]
+        except:
+            diff = offsets[i]
+
+        if diff not in occurances:
+            occurances[diff] = 0
+
+        occurances[diff] += 1
+
+    most_frequent = 0
+    block_size = None
+
+    for offset in occurances:
+        if occurances[offset] > most_frequent:
+            most_frequent = occurances[offset]
+            block_size = offset
+
+    return block_size

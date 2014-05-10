@@ -71,7 +71,7 @@ class description(object):
                     self.vtbl_recs = vtbl_recs(block_buf[self.ec_hdr.data_offset:])
     
                 self.leb_num = self.vid_hdr.lnum
-        self.is_vtbl = bool(self.vtbl_recs) or False 
+        self.is_vtbl = bool(self.vtbl_recs) or False
         self.is_valid = not self.ec_hdr.errors and not self.vid_hdr.errors or settings.ignore_block_errors
 
 
@@ -115,8 +115,9 @@ def extract_blocks(ubi):
     ubi.file.seek(ubi.file.start_offset)
     peb_count = 0
     cur_offset = 0
-
-    for i in xrange(ubi.file.start_offset, ubi.file.end_offset, ubi.file.block_size):
+    
+    # range instead of xrange, as xrange breaks > 4GB end_offset.
+    for i in range(ubi.file.start_offset, ubi.file.end_offset, ubi.file.block_size):
         buf = ubi.file.read(ubi.file.block_size)
 
         if buf.startswith(UBI_EC_HDR_MAGIC):

@@ -21,15 +21,16 @@ import os
 import sys
 import time
 import argparse
-from shutil import rmtree
 
-from modules.ubi import ubi, get_peb_size
-from modules.ubifs import ubifs, get_leb_size
-from modules.ubifs.output import extract_files
-from modules.ubi_io import ubi_file, leb_virtual_file
 from modules import settings
+from modules.ubi import ubi
+from modules.ubi.defines import UBI_EC_HDR_MAGIC
+from modules.ubifs import ubifs
+from modules.ubifs.output import extract_files
+from modules.ubifs.defines import UBIFS_NODE_MAGIC
+from modules.ubi_io import ubi_file, leb_virtual_file
 from modules.debug import error, log
-from modules.utils import guess_filetype
+from modules.utils import guess_filetype, guess_start_offset, guess_leb_size, guess_peb_size
 
 def create_output_dir(outpath):
     if os.path.exists(outpath):
@@ -38,17 +39,9 @@ def create_output_dir(outpath):
     else:
         try:
             os.makedirs(outpath)
+            log(create_output_dir, 'Created output path: %s' % outpath)
         except Exception, e:
-            print e
-
-
-def rm_output_dir(outpath):
-    if os.path.exists(outpath):
-        try:
-            rmtree(path)
-            log(rm_output_dir, 'Removing path: %s' % outpath)
-        except Exception, e:
-            print e
+            error(create_output_dir, 'Fatal', '%s' % e)
 
 
 if __name__=='__main__':
@@ -75,7 +68,10 @@ if __name__=='__main__':
     parser.add_argument('-s', '--start-offset', type=int, dest='start_offset',
                         help='Specify offset of UBI/UBIFS data in file. (default: 0)')
 
-    parser.add_argument('-o', '--output-dir', dest='output_path',
+    parser.add_argument('-n', '--end-offset', type=int, dest='end_offset',
+                        help='Specify end offset of UBI/UBIFS data in file.')
+
+    parser.add_argument('-o', '--output-dir', dest='outpath',
                         help='Specify output directory path.')
 
     parser.add_argument('filepath', help='File to extract contents of.')
@@ -94,17 +90,22 @@ if __name__=='__main__':
     if args.start_offset:
         start_offset = args.start_offset
     else:
-        start_offset = 0
+        start_offset = guess_start_offset(path)
+
+    if args.end_offset:
+        end_offset = args.end_offset
+    else:
+        end_offset = None
 
     filetype = guess_filetype(path, start_offset)
     if not filetype:
         parser.error('Could not determine file type.')
 
-    img_name = os.path.basename(path) #os.path.splitext()[0]
-    if args.output_path:
-        output_path = os.path.abspath(os.path.join(args.output_path, img_name))
+    img_name = os.path.basename(path)
+    if args.outpath:
+        outpath = os.path.abspath(os.path.join(args.outpath, img_name))
     else:
-        output_path = os.path.join(settings.output_dir, img_name)
+        outpath = os.path.join(settings.output_dir, img_name)
 
     settings.logging_on = args.log
 
@@ -113,24 +114,30 @@ if __name__=='__main__':
     if args.block_size:
         block_size = args.block_size
     else:
-        if filetype == 'UBI':
-            block_size = get_peb_size(path)
-        elif filetype == 'UBIFS':
-            block_size = get_leb_size(path)
-        else:
+        if filetype == UBI_EC_HDR_MAGIC:
+            block_size = guess_peb_size(path)
+        elif filetype == UBIFS_NODE_MAGIC:
+            block_size = guess_leb_size(path)
+
+        if not block_size:
             parser.error('Block size could not be determined.')
 
     perms = args.permissions
 
     # Create file object.
-    ufile_obj = ubi_file(path, block_size, start_offset)
+    ufile_obj = ubi_file(path, block_size, start_offset, end_offset)
 
-    if filetype == 'UBI':
+    if filetype == UBI_EC_HDR_MAGIC:
         # Create UBI object
         ubi_obj = ubi(ufile_obj)
 
         # Loop through found images in file.
         for image in ubi_obj.images:
+
+            # Create path for specific image
+            # In case multiple images in data
+            img_outpath = os.path.join(outpath, '%s' % image.image_seq)
+
             # Loop through volumes in each image.
             for volume in image.volumes:
                     
@@ -138,7 +145,7 @@ if __name__=='__main__':
                 vol_blocks = image.volumes[volume].get_blocks(ubi_obj.blocks)
 
                 # Create volume data output path.
-                vol_outpath = os.path.join(output_path, volume)
+                vol_outpath = os.path.join(img_outpath, volume)
                 
                 # Create volume output path directory.
                 create_output_dir(vol_outpath)
@@ -158,16 +165,16 @@ if __name__=='__main__':
                 extract_files(ubifs_obj, vol_outpath, perms)
 
 
-    elif filetype == 'UBIFS':
+    elif filetype == UBIFS_NODE_MAGIC:
         # Create UBIFS object
         ubifs_obj = ubifs(ufile_obj)
 
         # Create directory for files.
-        create_output_dir(output_path)
+        create_output_dir(outpath)
 
         # Extract files from UBIFS image.
-        print 'Extracting files to: %s' % output_path
-        extract_files(ubifs_obj, output_path, perms)
+        print 'Extracting files to: %s' % outpath
+        extract_files(ubifs_obj, outpath, perms)
 
     else:
-        pass
+        print 'Something went wrong to get here.'

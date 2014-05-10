@@ -51,6 +51,8 @@ class vid_hdr(object):
             setattr(self, key, fields[key])
         setattr(self, 'errors', [])
 
+        self._check_errors(buf[:-4])
+
     def __iter__(self):
         for key in dir(self):
             if not key.startswith('_'):
@@ -91,6 +93,8 @@ class _vtbl_rec(object):
         setattr(self, 'errors', [])
         setattr(self, 'rec_index', -1)
 
+        self._check_errors(buf[:-4])
+
     def __repr__(self):
         return 'Volume Table Record: %s' % getattr(self, 'name')
 
@@ -100,5 +104,5 @@ class _vtbl_rec(object):
                 yield key, getattr(self, key)
 
     def _check_errors(self, buf_crc):
-        if self.hdr_crc != (~crc32(buf_crc) & 0xFFFFFFFF):
+        if self.crc != (~crc32(buf_crc) & 0xFFFFFFFF):
             self.errors.append('crc')
