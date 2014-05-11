@@ -1,12 +1,9 @@
 # UBI Reader
 
 
-UBI Reader is a program capable of reading UBI and UBIFS images.
-It will provide various information about images, volumes, physical erase
-blocks, along with UBIFS superblock and master nodes. It is capable of walking
-the UBIFS index node, gathering associated directory entry, data and inode nodes,
-ordered by inode number. Also possible is extracting the directory tree with in
-with all associated files.
+UBI Reader is a Python module and collection of scripts capable of extracting
+the contents of UBI and UBIFS images, along with analyzing these images to
+determine the parameter settings to recreate them using the mtd-utils tools.
 
 ## Install:
 
@@ -26,85 +23,58 @@ python-lzo is the only non-standard module, possibly included in your disto repo
 
 
 ## Usage:
-All scripts save output into the ubi_reader/output/ directory, depending on information
-available to the script, names can vary from input file name to volume names or what order
-the image was found.
+For basic usage, the scripts need no options and if applicable will save output
+to ubi_reader/output/. More advanced usage can set start and end offset, specify
+an output directory, or for debugging can print out what it is doing to the
+terminal.
 
 Run program with -h or --help for explanation of options.
 
-### UBI Images:
+## Extracting File Contents:
+    ./extract\_files.py \[options\] path/to/file
 
-__ubi_extract.py__
+The script accepts a file with UBI or UBIFS data in it, so should work with a NAND
+dump. It will search for the first occurance of UBI or UBIFS data and attempt to
+extract the contents. If file includes special files, you will may need to run as
+fakeroot and set the (-k, --keep-permissions) option, for it to create these files.
+With out it, it'll skip them and show a warning that these files were not created.
 
-    $ ubi_extract.py [options] /path/to/image.ubi
+## Extracting Images:
+    ./extract\_images.py \[options\] path/to/file
 
-Extract a UBI image from file. This is useful with a NAND dump or other such binary data.
-Will extract any images found, as long as they have different image_seq numbers.
-It is possible to specify keyword args start_offset and end\_offset in the ubi\_file() call.
+This script will extract the whole UBI or UBIFS image from a NAND dump, or the UBIFS
+image from a UBI image. You can specify what type of image to extract by setting the
+(-u, --image-type) option to "UBI" or "UBIFS". Default is "UBIFS".
 
+## MTD-Utils Parameters:
+    ./ubi\_utils\_info.py \[options\] path/to/file
 
-__ubi_extract_ubifs.py__
+The script will analyze a UBI image and create a Linux shell script and UBI config
+file that can be used for building new UBI images to the same specifications. For
+just a printed list of the options and values, use the (-r, --show-only) option.
 
-    $ ubi_extract_ubifs.py [options] /path/to/image.ubi
+## Display Information:
+    ./display_info.py \[options\] path/to/file
 
-Extract UBIFS image from file. Like ubi_extract.py, but provides the additional step of
-stripping out UBI information and saving the UBIFS image.
+Depending on the image type found, this script displays some UBI information along with
+the header info from the layout block, including volume table records. If it is a UBIFS
+image, the Super Node, and both Master Nodes are displayed. Using the (-u, --ubifs-info)
+option, it will get the UBIFS info from inside a UBI file instead.
 
+## Options:
+Some general option flags are
+* -l, --log: This prints to screen actions being taken while running.
+* -v, --verbose: This basically prints everything about anything happening.
+* -p, --peb-size int: Specify PEB size of the UBI image, instead of having it guess.
+* -e, --leb-size int: Specify LEB size of UBIFS image, instead of having it guess.
+* -s, --start-offset int: Tell script to start looking for UBI/UBIFS data at given address.
+* -n, --end-offset int: Tell script to ignore data after given address in data.
+* -o, --output-dir path: Specify where files should be written to, instead of ubi_reader/output
 
-__ubi\_extract\_files.py__
-
-    $ ubi_extract_files.py [options] /path/to/image.ubi
-
-Extract contents of a UBI image, saving to output. If this is not run as root, depending
-on files and types of files being extracted and their permissions, not all actions may
-be taken, and you'll see a lot of warnings. To preserve all permissions and for things
-such as device files run as root. Internally this creates a virtual UBIFS image to read
-from. As such, it is faster to extract the UBIFS image, and use ubifs\_extract\_files.py
-but this will save a step, and doesn't take up file system space.
-
-__ubi_info.py__
-
-    $ ubi_info.py [options] /path/to/image.ubi
-
-With no Physical Erase Block number provided, this will print all found information about
-the UBI images and volumes found in the file. If PEB Number is provided, it will print
-out the header contents of that PEB. If PEB Number not found, will print the first block.
-
-
-__create\_build\_script.py__
-
-    $ create_build_script.py [options] /path/to/image.ubi
-
-Analyze provided image and creates the .ini configuration file and a shell script that accepts
-a path(s) to a folder(s) to build a similiar configured UBI image. If Image contains multiple
-volumes, script will accept multiple paths. Compare to .ini file for which path corrisponds
-to which input.
-
-__ubi\_utils\_info.py__
-
-    $ ubi_utils_info.py [options] /path/to/image.ubi
-
-Analyze provided image, and print to console the names, option flags and values of any relevant
-information for use with programs such as mkfs.ubi, ubinize, ubimkvol, ubiformat, etc. Make
-sure to check with the relevant application, as some option flags are duplicates.
-
-
-### UBIFS Images:
-__ubifs\_extract\_files.py__
-
-    $ ubifs_extract_files.py [options] /path/to/image.ubifs
-
-Same as ubi\_extract\_files.py but works on UBIFS images.
-
-__ubifs\_info.py__
-
-    $ ubifs_info.py [options] /path/to/image.ubifs
-
-Prints the Superblock node and Master node.
 
 ### Known Issues
 
-* Will not create a SOCK file type, instead just saves an empty text file with its name.
+* Socket files will be ignored, you can changes modules/settings.py to have it created dummy files in their place.
 
 * For NAND dumps and the like, this will not fix anything ECC would take care of, so some bad data
 may be extracted.

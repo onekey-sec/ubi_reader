@@ -54,7 +54,7 @@ if __name__=='__main__':
                         help='Specify PEB size.')
     
     parser.add_argument('-u', '--image-type', dest='image_type',
-                        help='Specify image type to extract UBI or UBIFS. (default: UBI)')
+                        help='Specify image type to extract UBI or UBIFS. (default: UBIFS)')
 
     parser.add_argument('-s', '--start-offset', type=int, dest='start_offset',
                         help='Specify offset of UBI data in file. (default: 0)')
@@ -113,7 +113,7 @@ if __name__=='__main__':
     if args.image_type:
         image_type = args.image_type.upper()
     else:
-        image_type = 'UBI'
+        image_type = 'UBIFS'
 
     # Create file object.
     ufile_obj = ubi_file(path, block_size, start_offset, end_offset)

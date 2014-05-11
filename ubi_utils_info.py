@@ -296,3 +296,4 @@ if __name__=='__main__':
         create_output_dir(outpath)
         # Create build scripts.
         make_files(ubi_obj, outpath)
+
