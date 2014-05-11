@@ -31,7 +31,7 @@ terminal.
 Run program with -h or --help for explanation of options.
 
 ## Extracting File Contents:
-    ./extract\_files.py \[options\] path/to/file
+    ./extract_files.py [options] path/to/file
 
 The script accepts a file with UBI or UBIFS data in it, so should work with a NAND
 dump. It will search for the first occurance of UBI or UBIFS data and attempt to
@@ -40,21 +40,21 @@ fakeroot and set the (-k, --keep-permissions) option, for it to create these fil
 With out it, it'll skip them and show a warning that these files were not created.
 
 ## Extracting Images:
-    ./extract\_images.py \[options\] path/to/file
+    ./extract_images.py [options] path/to/file
 
 This script will extract the whole UBI or UBIFS image from a NAND dump, or the UBIFS
 image from a UBI image. You can specify what type of image to extract by setting the
 (-u, --image-type) option to "UBI" or "UBIFS". Default is "UBIFS".
 
 ## MTD-Utils Parameters:
-    ./ubi\_utils\_info.py \[options\] path/to/file
+    ./ubi_utils_info.py [options] path/to/file
 
 The script will analyze a UBI image and create a Linux shell script and UBI config
 file that can be used for building new UBI images to the same specifications. For
 just a printed list of the options and values, use the (-r, --show-only) option.
 
 ## Display Information:
-    ./display_info.py \[options\] path/to/file
+    ./display_info.py [options] path/to/file
 
 Depending on the image type found, this script displays some UBI information along with
 the header info from the layout block, including volume table records. If it is a UBIFS
