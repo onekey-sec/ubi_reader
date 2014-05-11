@@ -24,9 +24,10 @@ import argparse
 
 from modules import settings
 from modules.ubi import ubi
+from modules.ubi.defines import UBI_EC_HDR_MAGIC
 from modules.ubi_io import ubi_file
 from modules.debug import error, log
-from modules.utils import guess_start_offset, guess_peb_size
+from modules.utils import guess_filetype, guess_start_offset, guess_peb_size
 
 def create_output_dir(outpath):
     if not os.path.exists(outpath):
@@ -80,12 +81,16 @@ if __name__=='__main__':
     if args.start_offset:
         start_offset = args.start_offset
     else:
-        start_offset = 0 #guess_start_offset(path)
+        start_offset = guess_start_offset(path)
 
     if args.end_offset:
         end_offset = args.end_offset
     else:
         end_offset = None
+
+    filetype = guess_filetype(path, start_offset)
+    if filetype != UBI_EC_HDR_MAGIC:
+        parser.error('File does not look like UBI data.')
 
     img_name = os.path.basename(path)
     if args.outpath:

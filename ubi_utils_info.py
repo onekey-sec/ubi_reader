@@ -19,18 +19,33 @@
 
 import os
 import sys
+import time
 import argparse
 import ConfigParser
 
+from modules import settings
 from modules.ubi import ubi
-from modules.utils import guess_peb_size
-from modules.ubi_io import leb_virtual_file, ubi_file
-from modules.ubi.defines import PRINT_VOL_TYPE_LIST, UBI_VTBL_AUTORESIZE_FLG
+from modules.ubi.defines import UBI_EC_HDR_MAGIC, PRINT_VOL_TYPE_LIST, UBI_VTBL_AUTORESIZE_FLG
 from modules.ubifs import ubifs
 from modules.ubifs.defines import PRINT_UBIFS_KEY_HASH, PRINT_UBIFS_COMPR
+from modules.ubi_io import ubi_file, leb_virtual_file
+from modules.debug import error, log
+from modules.utils import guess_filetype, guess_start_offset, guess_peb_size
 
-def get_ubi_params(ubi):
-    """Get UBI utils params
+def create_output_dir(outpath):
+    if os.path.exists(outpath):
+        if os.listdir(outpath):
+            error(create_output_dir, 'Fatal', 'Output directory is not empty. %s' % outpath)
+    else:
+        try:
+            os.makedirs(outpath)
+            log(create_output_dir, 'Created output path: %s' % outpath)
+        except Exception, e:
+            error(create_output_dir, 'Fatal', '%s' % e)
+
+
+def get_ubi_params(ubi_obj):
+    """Get ubi_obj utils params
 
     Arguments:
     Obj:ubi    -- UBI object.
@@ -61,7 +76,7 @@ def get_ubi_params(ubi):
     ubi_args = {}
     ini_params = {}
 
-    for image in ubi.images:
+    for image in ubi_obj.images:
         img_seq = image.image_seq
         ubi_params[img_seq] = {}
         ubi_args[img_seq] = {}
@@ -83,14 +98,14 @@ def get_ubi_params(ubi):
             ini_params[img_seq][volume]['vol_name'] = image.volumes[volume].name.rstrip('\x00')
             ini_params[img_seq][volume]['vol_alignment'] = image.volumes[volume].vol_rec.alignment
 
-            ini_params[img_seq][volume]['vol_size'] = image.volumes[volume].vol_rec.reserved_pebs * ubi.leb_size
+            ini_params[img_seq][volume]['vol_size'] = image.volumes[volume].vol_rec.reserved_pebs * ubi_obj.leb_size
 
             # Create file object backed by UBI blocks.
-            ufsfile = leb_virtual_file(ubi, image.volumes[volume])
+            lebv_file = leb_virtual_file(ubi_obj, image.volumes[volume].get_blocks(ubi_obj.blocks))
             # Create UBIFS object
-            uubifs = ubifs(ufsfile)
+            ubifs_obj = ubifs(lebv_file)
 
-            for key, value in uubifs.superblock_node:
+            for key, value in ubifs_obj.superblock_node:
                 if key == 'key_hash':
                     value = PRINT_UBIFS_KEY_HASH[value]
                 elif key == 'default_compr':
@@ -111,7 +126,7 @@ def get_ubi_params(ubi):
             ubi_args[img_seq][volume]['sub_page_size'] = ubi_args[img_seq][volume]['vid_hdr_offset']
             ubi_args[img_seq][volume]['sub_page_size'] = ubi_args[img_seq][volume]['vid_hdr_offset']
             ubi_args[img_seq][volume]['image_seq'] = image.image_seq
-            ubi_args[img_seq][volume]['peb_size'] = ubi.peb_size
+            ubi_args[img_seq][volume]['peb_size'] = ubi_obj.peb_size
             ubi_args[img_seq][volume]['vol_id'] = image.volumes[volume].vol_id
 
             ubi_params[img_seq][volume] = {'flags':ubi_flags, 'args':ubi_args[img_seq][volume], 'ini':ini_params[img_seq][volume]}
@@ -119,8 +134,8 @@ def get_ubi_params(ubi):
     return ubi_params
 
 
-def print_ubi_params(ubi):
-    ubi_params = get_ubi_params(ubi)
+def print_ubi_params(ubi_obj):
+    ubi_params = get_ubi_params(ubi_obj)
     for img_params in ubi_params:
         for volume in ubi_params[img_params]:
             ubi_flags = ubi_params[img_params][volume]['flags']
@@ -142,19 +157,20 @@ def print_ubi_params(ubi):
                 if key != 'name':
                     print '\t%s=%s' % (key, ini_params[key])
 
-def make_files(ubi, output_path):
+
+def make_files(ubi, outpath):
     ubi_params = get_ubi_params(ubi)
 
     for img_params in ubi_params:
         config = ConfigParser.ConfigParser()
-        output_img_path = os.path.join(output_path, 'img-%s' % img_params)
+        img_outpath = os.path.join(outpath, 'img-%s' % img_params)
 
-        if not os.path.exists(output_img_path):
-            os.mkdir(output_img_path)
+        if not os.path.exists(img_outpath):
+            os.mkdir(img_outpath)
 
-        ini_path = os.path.join(output_img_path, 'img-%s.ini' % img_params)
+        ini_path = os.path.join(img_outpath, 'img-%s.ini' % img_params)
         ubi_file = os.path.join('img-%s.ubi' % img_params)
-        script_path = os.path.join(output_img_path, 'create_ubi_img-%s.sh' % img_params)
+        script_path = os.path.join(img_outpath, 'create_ubi_img-%s.sh' % img_params)
         ubifs_files =[]               
         buf = '#!/bin/sh\n'
         print 'Writing to: %s' % script_path 
@@ -195,39 +211,88 @@ def make_files(ubi, output_path):
             fscr.write(buf)
         os.chmod(script_path, 0755)
 
-
-if __name__ == '__main__':
-    description = """Gather information from the UBI image useful for using mkfs.ubi, ubinize, ubiformat, etc. and print to screen.
-Some may be duplicates, be sure to check which ones apply."""
+if __name__=='__main__':
+    start = time.time()
+    description = 'Determine settings for recreating UBI image.'
     usage = 'ubi_utils_info.py [options] filepath'
     parser = argparse.ArgumentParser(usage=usage, description=description)
+
+    parser.add_argument('-r', '--show-only', action='store_true', dest='show_only',
+                      help='Print parameters to screen only. (default: false)')
+
+    parser.add_argument('-l', '--log', action='store_true', dest='log',
+                      help='Print extraction information to screen.')
+
+    parser.add_argument('-v', '--verbose-log', action='store_true', dest='verbose',
+                      help='Prints nearly everything about anything to screen.')
     
     parser.add_argument('-p', '--peb-size', type=int, dest='block_size',
                         help='Specify PEB size.')
 
-    parser.add_argument('filepath', help='File to get info from.')
+    parser.add_argument('-s', '--start-offset', type=int, dest='start_offset',
+                        help='Specify offset of UBI data in file. (default: 0)')
+
+    parser.add_argument('-n', '--end-offset', type=int, dest='end_offset',
+                        help='Specify end offset of UBI data in file.')
+
+    parser.add_argument('-o', '--output-dir', dest='outpath',
+                        help='Specify output directory path.')
+
+    parser.add_argument('filepath', help='File to extract contents of.')
 
     if len(sys.argv) == 1:
         parser.print_help()
-        sys.exit()
-    
+        sys.exit(1)
+
     args = parser.parse_args()
 
     if args.filepath:
         path = args.filepath
         if not os.path.exists(path):
-            parser.error("filepath doesn't exist.")
+            parser.error("File path doesn't exist.")
 
-    # Determine block size if not provided
+    if args.start_offset:
+        start_offset = args.start_offset
+    else:
+        start_offset = guess_start_offset(path)
+
+    if args.end_offset:
+        end_offset = args.end_offset
+    else:
+        end_offset = None
+
+    filetype = guess_filetype(path, start_offset)
+    if filetype != UBI_EC_HDR_MAGIC:
+        parser.error('File does not look like UBI data.')
+
+    img_name = os.path.basename(path)
+    if args.outpath:
+        outpath = os.path.abspath(os.path.join(args.outpath, img_name))
+    else:
+        outpath = os.path.join(settings.output_dir, img_name)
+
+    settings.logging_on = args.log
+
+    settings.logging_on_verbose = args.verbose
+
     if args.block_size:
         block_size = args.block_size
     else:
         block_size = guess_peb_size(path)
 
-    # Create file object
-    ufile = ubi_file(path, block_size)
+        if not block_size:
+            parser.error('Block size could not be determined.')
+
+    # Create file object.
+    ufile_obj = ubi_file(path, block_size, start_offset, end_offset)
+
     # Create UBI object
-    uubi = ubi(ufile)
+    ubi_obj = ubi(ufile_obj)
+
     # Print info.
-    print_ubi_params(uubi)
-    sys.exit(0)
+    print_ubi_params(ubi_obj)
+
+    if not args.show_only:
+        create_output_dir(outpath)
+        # Create build scripts.
+        make_files(ubi_obj, outpath)
