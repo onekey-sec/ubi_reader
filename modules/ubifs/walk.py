@@ -39,7 +39,7 @@ def index(ubifs, lnum, offset, inodes={}):
     try:
         ubifs.file.seek((ubifs.leb_size * lnum) + offset)
         buf = ubifs.file.read(UBIFS_COMMON_HDR_SZ)
-        chdr = nodes.common_hdr(buf)        
+        chdr = nodes.common_hdr(buf)
         log(index , '%s file addr: %s' % (chdr, ubifs.file.last_read_addr()))
         verbose_display(chdr)
 
@@ -47,7 +47,7 @@ def index(ubifs, lnum, offset, inodes={}):
         file_offset = ubifs.file.last_read_addr()
 
     except Exception, e:
-        error(index, 'Fatal', 'buf read, %s' % (e))
+        error(index, 'Fatal', 'leb: %s, ubifs offset: %s, error: %s' % (lnum, ((ubifs.leb_size * lnum) + offset), e))
 
 
     if chdr.node_type == UBIFS_IDX_NODE:

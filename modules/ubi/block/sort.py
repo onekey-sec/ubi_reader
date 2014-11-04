@@ -85,6 +85,7 @@ def by_leb(blocks):
             slist_len = len(slist)
 
         slist[blocks[block].leb_num] = block
+
     return slist
 
 

@@ -74,7 +74,7 @@ Some general option flags are
 
 ### Known Issues
 
-* Socket files will be ignored, you can changes modules/settings.py to have it created dummy files in their place.
+* Socket files will be ignored, you can change modules/settings.py to have it created dummy files in their place.
 
 * For NAND dumps and the like, this will not fix anything ECC would take care of, so some bad data
 may be extracted.
@@ -86,4 +86,6 @@ may be extracted.
 ### TODO
 
 * Organize, document, the usual.
+
+* Arbitrary block analyzer script.
 
