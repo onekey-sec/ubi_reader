@@ -34,11 +34,11 @@ def group_pairs(blocks, layout_blocks_list):
     image_dict={}
     for block_id in layout_blocks_list:
         image_seq=blocks[block_id].ec_hdr.image_seq
-        print image_seq
         if image_seq not in image_dict:
             image_dict[image_seq]=[block_id]
         else:
             image_dict[image_seq].append(block_id)
+        log(group_pairs, image_dict.values())
 
     return image_dict.values()
 
