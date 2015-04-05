@@ -23,7 +23,7 @@ python-lzo is the only non-standard module, possibly included in your disto repo
 
 ## Installation:
 
-$ sudo python setup.py install
+    $ sudo python setup.py install
 
 
 ## Usage:
