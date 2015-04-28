@@ -102,7 +102,6 @@ if __name__=='__main__':
     if not filetype:
         parser.error('Could not determine file type.')
 
-    img_name = os.path.basename(path)
     if args.outpath:
         outpath = args.outpath
     else:
