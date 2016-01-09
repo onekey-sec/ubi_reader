@@ -52,11 +52,13 @@ def guess_start_offset(path):
                 return file_offset + ubifs_loc
             else:
                 error(guess_start_offset, 'Fatal', 'Could not determine start offset.')
+    else:
+        error(guess_start_offset, 'Fatal', 'Could not determine start offset.')
 
     f.close()
 
 
-    
+
 def guess_filetype(path, start_offset=0):
     with open(path, 'rb') as f:
         f.seek(start_offset)
