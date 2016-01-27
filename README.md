@@ -9,20 +9,22 @@ determine the parameter settings to recreate them using the mtd-utils tools.
 
 Python is required.
 
-python-lzo is the only non-standard module, possibly included in your disto repo, if not.
+python-lzo is the only non-standard module, it may or may not be available for your distro.
 
     $ sudo apt-get install liblzo2-dev
 
-    If its available in your repos.
+    If it is available.
     $ sudo apt-get install python-lzo
 
-    Else
+    Else you will need to install from sources.
     $ git clone https://github.com/jd-boyd/python-lzo.git
     $ cd python-lzo
     $ python setup.py install
 
 ## Installation:
 
+    $ git clone https://github.com/jrspruitt/ubi_reader
+    $ cd ubi_reader
     $ sudo python setup.py install
 
 
