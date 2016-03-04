@@ -46,7 +46,7 @@ def index(ubifs, lnum, offset, inodes={}):
         node_buf = ubifs.file.read(chdr.len - UBIFS_COMMON_HDR_SZ)
         file_offset = ubifs.file.last_read_addr()
 
-    except Exception, e:
+    except Exception as e:
         error(index, 'Fatal', 'leb: %s, ubifs offset: %s, error: %s' % (lnum, ((ubifs.leb_size * lnum) + offset), e))
 
 
@@ -86,6 +86,7 @@ def index(ubifs, lnum, offset, inodes={}):
         if not 'data' in inodes[ino_num]:
             inodes[ino_num]['data']= []
 
+        print("%s" % datn)
         inodes[ino_num]['data'].append(datn)
 
     elif chdr.node_type == UBIFS_DENT_NODE:
