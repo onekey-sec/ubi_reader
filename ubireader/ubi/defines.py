@@ -35,7 +35,7 @@
 import struct
 
 # Magic number
-UBI_EC_HDR_MAGIC = '\x55\x42\x49\x23'
+UBI_EC_HDR_MAGIC = '\x55\x42\x49\x23'.encode()
 
 # Initial CRC32 checksum value.
 UBI_CRC32_INIT = 4294967295 #0xFFFFFFFF
