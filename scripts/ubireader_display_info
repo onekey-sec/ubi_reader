@@ -113,13 +113,13 @@ if __name__=='__main__':
 
         # Display UBI info if not UBIFS request.
         if not ubifs_info:
-            print ubi_obj.display()
+            print(ubi_obj.display())
 
         # Loop through found images in file.
         for image in ubi_obj.images:
             # Display image information if not UBIFS request.
             if not ubifs_info:
-                print '%s' % image.display('\t')
+                print('%s' % image.display('\t'))
 
             # Loop through volumes in each image.
             for volume in image.volumes:
@@ -127,7 +127,7 @@ if __name__=='__main__':
                 if not ubifs_info:
 
                     # Display volume information.
-                    print image.volumes[volume].display('\t\t')
+                    print(image.volumes[volume].display('\t\t'))
 
                 else:
                     # Get blocks associated with this volume.
@@ -144,18 +144,18 @@ if __name__=='__main__':
     
                     # Create UBIFS object and print info.
                     ubifs_obj = ubifs(lebv_file)
-                    print ubifs_obj.display()
-                    print ubifs_obj.superblock_node.display('\t')
-                    print ubifs_obj.master_node.display('\t')
-                    print ubifs_obj.master_node2.display('\t')
+                    print(ubifs_obj.display())
+                    print(ubifs_obj.superblock_node.display('\t'))
+                    print(ubifs_obj.master_node.display('\t'))
+                    print(ubifs_obj.master_node2.display('\t'))
 
     elif filetype == UBIFS_NODE_MAGIC:
         # Create UBIFS object
         ubifs_obj = ubifs(ufile_obj)
-        print ubifs_obj.display()
-        print ubifs_obj.superblock_node.display('\t')
-        print ubifs_obj.master_node.display('\t')
-        print ubifs_obj.master_node2.display('\t')
+        print(ubifs_obj.display())
+        print(ubifs_obj.superblock_node.display('\t'))
+        print(ubifs_obj.master_node.display('\t'))
+        print(ubifs_obj.master_node2.display('\t'))
 
     else:
-        print 'Something went wrong to get here.'
+        print('Something went wrong to get here.')

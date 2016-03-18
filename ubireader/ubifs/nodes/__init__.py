@@ -34,8 +34,11 @@ class common_hdr(object):
     """
     def __init__(self, buf):
 
-        fields = dict(zip(UBIFS_COMMON_HDR_FIELDS, struct.unpack(UBIFS_COMMON_HDR_FORMAT, buf)))
+        fields = dict(list(zip(UBIFS_COMMON_HDR_FIELDS, struct.unpack(UBIFS_COMMON_HDR_FORMAT, buf))))
         for key in fields:
+            if type(fields[key]) == bytes:
+                fields[key] == fields[key].decode()
+
             setattr(self, key, fields[key])
         setattr(self, 'errors', [])
         
@@ -63,13 +66,13 @@ class ino_node(object):
     """
     def __init__(self, buf):
 
-        fields = dict(zip(UBIFS_INO_NODE_FIELDS, struct.unpack(UBIFS_INO_NODE_FORMAT, buf[0:UBIFS_INO_NODE_SZ])))
+        fields = dict(list(zip(UBIFS_INO_NODE_FIELDS, struct.unpack(UBIFS_INO_NODE_FORMAT, buf[0:UBIFS_INO_NODE_SZ]))))
         for key in fields:
             if key == 'key':
                 setattr(self, key, parse_key(fields[key]))
             else:
                 setattr(self, key, fields[key])
-        setattr(self, 'data', buf[UBIFS_INO_NODE_SZ:])
+        setattr(self, 'data', buf[UBIFS_INO_NODE_SZ:].decode())
         setattr(self, 'errors', [])
 
     def __repr__(self):
@@ -95,14 +98,14 @@ class dent_node(object):
     See ubifs/defines.py for object attributes.
     """
     def __init__(self, buf):
-        fields = dict(zip(UBIFS_DENT_NODE_FIELDS, struct.unpack(UBIFS_DENT_NODE_FORMAT, buf[0:UBIFS_DENT_NODE_SZ])))
+        fields = dict(list(zip(UBIFS_DENT_NODE_FIELDS, struct.unpack(UBIFS_DENT_NODE_FORMAT, buf[0:UBIFS_DENT_NODE_SZ]))))
         for key in fields:
             if key == 'key':
                 setattr(self, key, parse_key(fields[key]))
             else:
                 setattr(self, key, fields[key])
 
-        setattr(self, 'name', '%s' % buf[-self.nlen-1:-1])
+        setattr(self, 'name', '%s' % buf[-self.nlen-1:-1].decode())
         setattr(self, 'errors', [])
 
     def __repr__(self):
@@ -129,7 +132,7 @@ class data_node(object):
     """
     def __init__(self, buf, file_offset):
 
-        fields = dict(zip(UBIFS_DATA_NODE_FIELDS, struct.unpack(UBIFS_DATA_NODE_FORMAT, buf[0:UBIFS_DATA_NODE_SZ])))
+        fields = dict(list(zip(UBIFS_DATA_NODE_FIELDS, struct.unpack(UBIFS_DATA_NODE_FORMAT, buf[0:UBIFS_DATA_NODE_SZ]))))
         for key in fields:
             if key == 'key':
                 setattr(self, key, parse_key(fields[key]))
@@ -162,13 +165,13 @@ class idx_node(object):
     See ubifs/defines.py for object attributes.
     """
     def __init__(self, buf):
-        fields = dict(zip(UBIFS_IDX_NODE_FIELDS, struct.unpack(UBIFS_IDX_NODE_FORMAT, buf[0:UBIFS_IDX_NODE_SZ])))
+        fields = dict(list(zip(UBIFS_IDX_NODE_FIELDS, struct.unpack(UBIFS_IDX_NODE_FORMAT, buf[0:UBIFS_IDX_NODE_SZ]))))
         for key in fields:
             setattr(self, key, fields[key])
 
         idxs = UBIFS_IDX_NODE_SZ
         brs = UBIFS_BRANCH_SZ
-        setattr(self, 'branches', [branch(buf[idxs+(brs*i):idxs+(brs*i)+brs]) for i in xrange(0, self.child_cnt)])
+        setattr(self, 'branches', [branch(buf[idxs+(brs*i):idxs+(brs*i)+brs]) for i in range(0, self.child_cnt)])
         setattr(self, 'errors', [])
 
     def __repr__(self):
@@ -190,7 +193,7 @@ class branch(object):
         Bin:buf    binary branch data.
     """
     def __init__(self, buf):
-        fields = dict(zip(UBIFS_BRANCH_FIELDS, struct.unpack(UBIFS_BRANCH_FORMAT,buf)))
+        fields = dict(list(zip(UBIFS_BRANCH_FIELDS, struct.unpack(UBIFS_BRANCH_FORMAT,buf))))
         for key in fields:
             if key == 'key':
                 setattr(self, key, parse_key(fields[key]))
@@ -220,7 +223,7 @@ class sb_node(object):
     See ubifs/defines.py for object attributes.
     """
     def __init__(self, buf):
-        fields = dict(zip(UBIFS_SB_NODE_FIELDS, struct.unpack(UBIFS_SB_NODE_FORMAT, buf)))
+        fields = dict(list(zip(UBIFS_SB_NODE_FIELDS, struct.unpack(UBIFS_SB_NODE_FORMAT, buf))))
         for key in fields:
             setattr(self, key, fields[key])
         setattr(self, 'errors', [])
@@ -248,7 +251,7 @@ class mst_node(object):
     See ubifs/defines.py for object attributes.
     """
     def __init__(self, buf):
-        fields = dict(zip(UBIFS_MST_NODE_FIELDS, struct.unpack(UBIFS_MST_NODE_FORMAT, buf)))
+        fields = dict(list(zip(UBIFS_MST_NODE_FIELDS, struct.unpack(UBIFS_MST_NODE_FORMAT, buf))))
         for key in fields:
             setattr(self, key, fields[key])
         setattr(self, 'errors', [])
