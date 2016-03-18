@@ -35,7 +35,7 @@ import struct
 # Constant defines
 
 # Common Header.
-UBIFS_NODE_MAGIC = '\x31\x18\x10\x06' # Set to LSB
+UBIFS_NODE_MAGIC = '\x31\x18\x10\x06'.encode() # Set to LSB
 
 # Initial CRC32 value.
 UBIFS_CRC32_INIT = 0xFFFFFFFF
