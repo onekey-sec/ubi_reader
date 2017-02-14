@@ -75,20 +75,20 @@ def block(block, tab='\t'):
         buf += '\n'
         buf += '\t%sErase Count Header\n' % (tab)
         buf += '\t%s---------------------\n' % (tab)
-        ec_hdr(block.ec_hdr, '\t\t%s\n' % tab)
+        ec_hdr(block.ec_hdr, '\t\t%s' % tab)
 
     if block.vid_hdr and not block.vid_hdr.errors:
         buf += '\n'        
         buf += '\t%sVID Header Header\n' % (tab)
         buf += '\t%s---------------------\n' % (tab)
-        vid_hdr(block.vid_hdr, '\t\t%s\n' % tab)
+        vid_hdr(block.vid_hdr, '\t\t%s' % tab)
 
     if block.vtbl_recs:
         buf += '\n'
         buf += '\t%sVolume Records\n' % (tab) 
         buf += '\t%s---------------------\n' % (tab)
         for vol in block.vtbl_recs:
-            buf += vol_rec(vol, '\t\t%s\n' % tab)
+            buf += vol_rec(vol, '\t\t%s' % tab)
 
     buf += '\n'
     return buf
@@ -100,7 +100,7 @@ def ec_hdr(ec_hdr, tab=''):
         if key == 'errors':
             value = ','.join(value)
 
-        buf += '%s%s: %r' % (tab, key, value)
+        buf += '%s%s: %r\n' % (tab, key, value)
     return buf
 
 
@@ -122,7 +122,7 @@ def vid_hdr(vid_hdr, tab=''):
             else:
                 value = -1
 
-        buf += '%s%s: %s' % (tab, key, value)
+        buf += '%s%s: %s\n' % (tab, key, value)
     return buf
 
 
