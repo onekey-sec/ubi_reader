@@ -236,6 +236,9 @@ if __name__=='__main__':
     parser.add_argument('-n', '--end-offset', type=int, dest='end_offset',
                         help='Specify end offset of UBI data in file.')
 
+    parser.add_argument('-g', '--guess-offset', type=int, dest='guess_offset',
+                        help='Specify offset to start guessing where UBI data is in file. (default: 0)')
+
     parser.add_argument('-o', '--output-dir', dest='outpath',
                         help='Specify output directory path.')
 
@@ -254,6 +257,8 @@ if __name__=='__main__':
 
     if args.start_offset:
         start_offset = args.start_offset
+    elif args.guess_offset:
+        start_offset = guess_start_offset(path, args.guess_offset)
     else:
         start_offset = guess_start_offset(path)
 

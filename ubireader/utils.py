@@ -23,13 +23,13 @@ from ubireader.ubi.defines import UBI_EC_HDR_MAGIC, FILE_CHUNK_SZ
 from ubireader.ubifs.defines import UBIFS_NODE_MAGIC, UBIFS_SB_NODE_SZ, UBIFS_SB_NODE, UBIFS_COMMON_HDR_SZ
 from ubireader.ubifs import nodes
 
-def guess_start_offset(path):
-    file_offset = 0
+def guess_start_offset(path, guess_offset=0):
+    file_offset = guess_offset
 
     f = open(path, 'rb')
     f.seek(0,2)
     file_size = f.tell()+1
-    f.seek(0)
+    f.seek(guess_offset)
 
     for _ in range(0, file_size, FILE_CHUNK_SZ):
         buf = f.read(FILE_CHUNK_SZ)
@@ -46,9 +46,11 @@ def guess_start_offset(path):
                 ubifs_loc = file_size + 1
 
             if ubi_loc < ubifs_loc:
+                log(guess_start_offset, 'Found UBI magic number at %s' % (file_offset + ubi_loc))
                 return  file_offset + ubi_loc
 
             elif ubifs_loc < ubi_loc:
+                log(guess_start_offset, 'Found UBI magic number at %s' % (file_offset + ubifs_loc))
                 return file_offset + ubifs_loc
             else:
                 error(guess_start_offset, 'Fatal', 'Could not determine start offset.')
@@ -60,6 +62,8 @@ def guess_start_offset(path):
 
 
 def guess_filetype(path, start_offset=0):
+    log(guess_filetype, 'Looking for file type at %s' % start_offset)
+
     with open(path, 'rb') as f:
         f.seek(start_offset)
         buf = f.read(4)
