@@ -250,6 +250,10 @@ if __name__=='__main__':
 
     args = parser.parse_args()
 
+    settings.logging_on = args.log
+
+    settings.logging_on_verbose = args.verbose
+
     if args.filepath:
         path = args.filepath
         if not os.path.exists(path):
@@ -276,10 +280,6 @@ if __name__=='__main__':
         outpath = os.path.abspath(os.path.join(args.outpath, img_name))
     else:
         outpath = os.path.join(settings.output_dir, img_name)
-
-    settings.logging_on = args.log
-
-    settings.logging_on_verbose = args.verbose
 
     if args.block_size:
         block_size = args.block_size

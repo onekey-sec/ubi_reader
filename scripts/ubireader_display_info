@@ -70,6 +70,10 @@ if __name__=='__main__':
 
     args = parser.parse_args()
 
+    settings.logging_on = args.log
+
+    settings.logging_on_verbose = args.verbose
+
     if args.filepath:
         path = args.filepath
         if not os.path.exists(path):
@@ -90,10 +94,6 @@ if __name__=='__main__':
     filetype = guess_filetype(path, start_offset)
     if not filetype:
         parser.error('Could not determine file type.')
-
-    settings.logging_on = args.log
-
-    settings.logging_on_verbose = args.verbose
 
     ubifs_info = args.ubifs_info
 
