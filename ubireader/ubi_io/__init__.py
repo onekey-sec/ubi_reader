@@ -107,6 +107,9 @@ class ubi_file(object):
 
 
     def read(self, size):
+        if self._end_offset < self.tell() + size:
+            error(self.read, 'Fatal', 'Block ends at %s which is greater than file size %s' % (self.tell() + size, self._end_offset))
+
         self._last_read_addr = self.tell()
         verbose_log(self, 'read loc: %s, size: %s' % (self._last_read_addr, size))
         return self._fhandle.read(size)
