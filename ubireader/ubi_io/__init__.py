@@ -192,7 +192,7 @@ class leb_virtual_file():
 
         try:
             self._last_read_addr = self._ubi.blocks[self._blocks[leb]].file_offset + self._ubi.blocks[self._blocks[leb]].ec_hdr.data_offset + offset
-        except KeyError as e:
+        except Exception as e:
             error(self.read, 'Error', 'LEB: %s is corrupted or has no data.' % (leb))
             raise Exception('Bad Read Offset Request')
 
