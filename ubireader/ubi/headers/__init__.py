@@ -98,6 +98,7 @@ class _vtbl_rec(object):
         setattr(self, 'errors', [])
         setattr(self, 'rec_index', -1)
 
+        self.name = self.name[0: self.name_len]
         self._check_errors(buf[:-4])
 
     def __repr__(self):
