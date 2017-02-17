@@ -191,7 +191,11 @@ class leb_virtual_file():
         offset = self.tell() % self._ubi.leb_size
 
         try:
+            if size < 0:
+                raise Exception('Read request size negative.')
+
             self._last_read_addr = self._ubi.blocks[self._blocks[leb]].file_offset + self._ubi.blocks[self._blocks[leb]].ec_hdr.data_offset + offset
+
         except Exception as e:
             error(self.read, 'Error', 'LEB: %s is corrupted or has no data.' % (leb))
             raise Exception('Bad Read Offset Request')
