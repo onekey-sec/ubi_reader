@@ -17,7 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-from zlib import crc32
 from ubireader.ubifs.misc import parse_key
 from ubireader.ubifs.defines import *
 from ubireader.ubifs import display

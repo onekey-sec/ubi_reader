@@ -101,6 +101,9 @@ def ec_hdr(ec_hdr, tab=''):
         if key == 'errors':
             value = ','.join(value)
 
+        elif key == 'hdr_crc':
+            value = hex(value)
+
         buf += '%s%s: %r\n' % (tab, key, value)
     return buf
 
@@ -110,6 +113,9 @@ def vid_hdr(vid_hdr, tab=''):
     for key, value in vid_hdr:
         if key == 'errors':
             value = ','.join(value)
+
+        elif key == 'hdr_crc':
+            value = hex(value)
 
         elif key == 'compat':
             if value in PRINT_COMPAT_LIST:
@@ -123,7 +129,7 @@ def vid_hdr(vid_hdr, tab=''):
             else:
                 value = -1
 
-        buf += '%s%s: %s\n' % (tab, key, value)
+        buf += '%s%s: %r\n' % (tab, key, value)
     return buf
 
 
@@ -132,15 +138,21 @@ def vol_rec(vol_rec, tab=''):
     for key, value in vol_rec:
         if key == 'errors':
             value = ','.join(value)
+
+        elif key == 'crc':
+            value = hex(value)
+
         elif key == 'vol_type':
             if value < len(PRINT_VOL_TYPE_LIST):
                 value = PRINT_VOL_TYPE_LIST[value]
             else:
                 value = -1
+
         elif key == 'flags' and value == UBI_VTBL_AUTORESIZE_FLG:
             value = 'autoresize'
+
         elif key == 'name':
             value = value.strip('\x00')
 
-        buf += '%s%s: %s\n' % (tab, key, value)
+        buf += '%s%s: %r\n' % (tab, key, value)
     return buf

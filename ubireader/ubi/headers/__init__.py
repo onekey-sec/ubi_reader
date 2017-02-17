@@ -20,6 +20,7 @@
 import struct
 from zlib import crc32
 
+from ubireader.debug import log
 from ubireader.ubi.defines import *
 
 class ec_hdr(object):
@@ -40,7 +41,9 @@ class ec_hdr(object):
                 yield key, getattr(self, key)
 
     def _check_errors(self, buf_crc):
-        if self.hdr_crc != (~crc32(buf_crc) & 0xFFFFFFFF):
+        crc_chk = (~crc32(buf_crc) & 0xFFFFFFFF)
+        if self.hdr_crc != crc_chk:
+            log(vid_hdr, 'CRC Failed: expected 0x%x got 0x%x' % (crc_chk, self.hdr_crc))
             self.errors.append('crc')
 
 
@@ -62,7 +65,9 @@ class vid_hdr(object):
         return 'VID Header'
 
     def _check_errors(self, buf_crc):
-        if self.hdr_crc != (~crc32(buf_crc) & 0xFFFFFFFF):
+        crc_chk = (~crc32(buf_crc) & 0xFFFFFFFF)
+        if self.hdr_crc != crc_chk:
+            log(vid_hdr, 'CRC Failed: expected 0x%x got 0x%x' % (crc_chk, self.hdr_crc))
             self.errors.append('crc')
 
 
