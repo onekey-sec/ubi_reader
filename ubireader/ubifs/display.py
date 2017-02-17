@@ -31,10 +31,12 @@ def common_hdr(chdr, tab=''):
     for key, value in chdr:
         if key == 'display':
             continue
+        elif key == 'crc':
+            buf += '%s%s: 0x%x\n' % (tab, key, value)
         elif key == 'errors':
             buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         else:
-            buf += '%s%s: %s\n' % (tab, key, value)
+            buf += '%s%s: %r\n' % (tab, key, value)
     return buf
 
 def sb_node(node, tab=''):
@@ -49,7 +51,7 @@ def sb_node(node, tab=''):
         elif key == 'uuid':
             buf += '%s%s: %r\n' % (tab, key, value)
         else:
-            buf += '%s%s: %s\n' % (tab, key, value)
+            buf += '%s%s: %r\n' % (tab, key, value)
     return buf
 
 
@@ -63,7 +65,7 @@ def mst_node(node, tab=''):
         elif key == 'errors':
             buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         else:
-            buf += '%s%s: %s\n' % (tab, key, value)
+            buf += '%s%s: %r\n' % (tab, key, value)
     return buf
 
 
@@ -77,7 +79,7 @@ def dent_node(node, tab=''):
         elif key == 'errors':
             buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         else:
-            buf += '%s%s: %s\n' % (tab, key, value)
+            buf += '%s%s: %r\n' % (tab, key, value)
     return buf
 
 
@@ -91,7 +93,7 @@ def data_node(node, tab=''):
         elif key == 'errors':
             buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         else:
-            buf += '%s%s: %s\n' % (tab, key, value)
+            buf += '%s%s: %r\n' % (tab, key, value)
     return buf
 
 
@@ -105,7 +107,7 @@ def idx_node(node, tab=''):
         elif key == 'errors':
             buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         else:
-            buf += '%s%s: %s\n' % (tab, key, value)
+            buf += '%s%s: %r\n' % (tab, key, value)
     return buf
 
 
@@ -119,7 +121,7 @@ def ino_node(node, tab=''):
         elif key == 'errors':
             buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         else:
-            buf += '%s%s: %s\n' % (tab, key, value)
+            buf += '%s%s: %r\n' % (tab, key, value)
     return buf
 
 
@@ -133,6 +135,6 @@ def branch(node, tab=''):
         elif key == 'errors':
             buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         else:
-            buf += '%s%s: %s\n' % (tab, key, value)
+            buf += '%s%s: %r\n' % (tab, key, value)
     return buf
 

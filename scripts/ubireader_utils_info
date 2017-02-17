@@ -239,6 +239,12 @@ if __name__=='__main__':
     parser.add_argument('-g', '--guess-offset', type=int, dest='guess_offset',
                         help='Specify offset to start guessing where UBI data is in file. (default: 0)')
 
+    parser.add_argument('-w', '--warn-only-block-read-errors', action='store_true', dest='warn_only_block_read_errors',
+                      help='Attempts to continue extracting files even with bad block reads. Some data will be missing or corrupted! (default: False)')
+
+    parser.add_argument('-i', '--ignore-block-header-errors', action='store_true', dest='ignore_block_header_errors',
+                      help='Forces unused and error containing blocks to be included and also displayed with log/verbose. (default: False)')
+
     parser.add_argument('-o', '--output-dir', dest='outpath',
                         help='Specify output directory path.')
 
@@ -253,6 +259,10 @@ if __name__=='__main__':
     settings.logging_on = args.log
 
     settings.logging_on_verbose = args.verbose
+
+    settings.warn_only_block_read_errors = args.warn_only_block_read_errors
+
+    settings.ignore_block_header_errors = args.ignore_block_header_errors
 
     if args.filepath:
         path = args.filepath
