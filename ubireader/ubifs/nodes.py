@@ -25,9 +25,7 @@ class common_hdr(object):
     """Get common header at given LEB number + offset.
 
     Arguments:
-    Obj:ubifs   -- UBIFS object.
-    Int:lnum    -- LEB number common header is in.
-    Int:offset  -- Offset in LEB of common header.
+    Bin:buf     -- Raw data to extract header information from.
 
     See ubifs/defines.py for object attributes.
     """
@@ -36,6 +34,7 @@ class common_hdr(object):
         fields = dict(zip(UBIFS_COMMON_HDR_FIELDS, struct.unpack(UBIFS_COMMON_HDR_FORMAT, buf)))
         for key in fields:
             setattr(self, key, fields[key])
+
         setattr(self, 'errors', [])
         
     def __repr__(self):
@@ -54,9 +53,7 @@ class ino_node(object):
     """Get inode node at given LEB number + offset.
 
     Arguments:
-    Obj:ubifs   -- UBIFS object.
-    Int:lnum    -- LEB number inode node is in.
-    Int:offset  -- Offset in LEB of inode node.
+    Bin:buf     -- Raw data to extract header information from.
 
     See ubifs/defines.py for object attributes.
     """
@@ -68,6 +65,7 @@ class ino_node(object):
                 setattr(self, key, parse_key(fields[key]))
             else:
                 setattr(self, key, fields[key])
+
         setattr(self, 'data', buf[UBIFS_INO_NODE_SZ:])
         setattr(self, 'errors', [])
 
@@ -87,9 +85,7 @@ class dent_node(object):
     """Get dir entry node at given LEB number + offset.
 
     Arguments:
-    Obj:ubifs   -- UBIFS object.
-    Int:lnum    -- LEB number dir entry node is in.
-    Int:offset  -- Offset in LEB of dir entry node.
+    Bin:buf     -- Raw data to extract header information from.
 
     See ubifs/defines.py for object attributes.
     """
@@ -120,8 +116,7 @@ class data_node(object):
     """Get data node at given LEB number + offset.
 
     Arguments:
-    Obj:ubifs   -- UBIFS object.
-    Int:lnum    -- LEB number data node is in.
+    Bin:buf     -- Raw data to extract header information from.
     Int:offset  -- Offset in LEB of data node.
 
     See ubifs/defines.py for object attributes.
@@ -134,6 +129,7 @@ class data_node(object):
                 setattr(self, key, parse_key(fields[key]))
             else:
                 setattr(self, key, fields[key])
+
         setattr(self, 'offset', file_offset)
         setattr(self, 'compr_len', (len(buf) - UBIFS_DATA_NODE_SZ))
         setattr(self, 'errors', [])
@@ -154,9 +150,7 @@ class idx_node(object):
     """Get index node at given LEB number + offset.
 
     Arguments:
-    Obj:ubifs   -- UBIFS object.
-    Int:lnum    -- LEB number index node is in.
-    Int:offset  -- Offset in LEB of index node.
+    Bin:buf     -- Raw data to extract header information from.
 
     See ubifs/defines.py for object attributes.
     """
@@ -186,15 +180,16 @@ class branch(object):
     """ Create branch from given idx_node data buf.
 
     Arguments:
-        Bin:buf    binary branch data.
+    Bin:buf     -- Raw data to extract header information from.
     """
     def __init__(self, buf):
-        fields = dict(zip(UBIFS_BRANCH_FIELDS, struct.unpack(UBIFS_BRANCH_FORMAT,buf)))
+        fields = dict(zip(UBIFS_BRANCH_FIELDS, struct.unpack(UBIFS_BRANCH_FORMAT, buf)))
         for key in fields:
             if key == 'key':
                 setattr(self, key, parse_key(fields[key]))
             else:
                 setattr(self, key, fields[key])
+
         setattr(self, 'errors', [])
 
     def __repr__(self):
@@ -213,8 +208,7 @@ class sb_node(object):
     """Get superblock node at given LEB number + offset.
 
     Arguments:
-    Obj:ubifs   -- UBIFS object.
-    Int:offset  -- Offset in LEB of superblock node.
+    Bin:buf     -- Raw data to extract header information from.
 
     See ubifs/defines.py for object attributes.
     """
@@ -222,6 +216,7 @@ class sb_node(object):
         fields = dict(zip(UBIFS_SB_NODE_FIELDS, struct.unpack(UBIFS_SB_NODE_FORMAT, buf)))
         for key in fields:
             setattr(self, key, fields[key])
+
         setattr(self, 'errors', [])
 
     def __repr__(self):
@@ -240,9 +235,7 @@ class mst_node(object):
     """Get master node at given LEB number + offset.
 
     Arguments:
-    Obj:ubifs   -- UBIFS object.
-    Int:lnum    -- LEB number master node is in.
-    Int:offset  -- Offset in LEB of master node.
+    Bin:buf     -- Raw data to extract header information from.
 
     See ubifs/defines.py for object attributes.
     """
@@ -250,6 +243,7 @@ class mst_node(object):
         fields = dict(zip(UBIFS_MST_NODE_FIELDS, struct.unpack(UBIFS_MST_NODE_FORMAT, buf)))
         for key in fields:
             setattr(self, key, fields[key])
+
         setattr(self, 'errors', [])
 
     def __repr__(self):
