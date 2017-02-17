@@ -120,7 +120,14 @@ def extract_blocks(ubi):
 
     # range instead of xrange, as xrange breaks > 4GB end_offset.
     for i in range(ubi.file.start_offset, ubi.file.end_offset, ubi.file.block_size):
-        buf = ubi.file.read(ubi.file.block_size)
+        try:
+            buf = ubi.file.read(ubi.file.block_size)
+        except Exception, e:
+            if settings.warn_only_block_read_errors:
+                error(extract_blocks, 'Error', 'PEB: %s: %s' % (ubi.first_peb_num + peb_count, e.message))
+                continue
+            else:
+                error(extract_blocks, 'Fatal', 'PEB: %s: %s' % (ubi.first_peb_num + peb_count, e.message))
 
         if buf.startswith(UBI_EC_HDR_MAGIC):
             blk = description(buf)
