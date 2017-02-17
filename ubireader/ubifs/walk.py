@@ -17,11 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from ubireader import settings
 from ubireader.ubifs import nodes
 from ubireader.ubifs.defines import *
 from ubireader.debug import error, log, verbose_log, verbose_display
 
-def index(ubifs, lnum, offset, inodes={}):
+def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
     """Walk the index gathering Inode, Dir Entry, and File nodes.
 
     Arguments:
@@ -37,6 +38,10 @@ def index(ubifs, lnum, offset, inodes={}):
         'dent'   -- List of directory entry nodes if present.
     """
     try:
+        if len(bad_blocks):
+            if lnum in bad_blocks:
+                return
+
         ubifs.file.seek((ubifs.leb_size * lnum) + offset)
         buf = ubifs.file.read(UBIFS_COMMON_HDR_SZ)
         chdr = nodes.common_hdr(buf)
@@ -47,8 +52,11 @@ def index(ubifs, lnum, offset, inodes={}):
         file_offset = ubifs.file.last_read_addr()
 
     except Exception, e:
-        error(index, 'Fatal', 'leb: %s, ubifs offset: %s, error: %s' % (lnum, ((ubifs.leb_size * lnum) + offset), e))
-
+        if e.message == 'Bad Read Offset Request' and settings.warn_only_block_read_errors:
+            bad_blocks.append(lnum)
+            return
+        else:
+            error(index, 'Fatal', 'leb: %s, ubifs offset: %s, error: %s' % (lnum, ((ubifs.leb_size * lnum) + offset), e))
 
     if chdr.node_type == UBIFS_IDX_NODE:
         idxn = nodes.idx_node(node_buf)
@@ -60,7 +68,7 @@ def index(ubifs, lnum, offset, inodes={}):
             log(index, '%s file addr: %s' % (branch, file_offset + UBIFS_IDX_NODE_SZ + (branch_idx * UBIFS_BRANCH_SZ)))
             verbose_display(branch)
 
-            index(ubifs, branch.lnum, branch.offs, inodes)
+            index(ubifs, branch.lnum, branch.offs, inodes, bad_blocks)
             branch_idx += 1
 
     elif chdr.node_type == UBIFS_INO_NODE:

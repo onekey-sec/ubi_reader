@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from setuptools import setup,find_packages
+from setuptools import setup, find_packages
 
-version = '0.4'
+version = '0.5'
 
 setup(
     name='ubi_reader',

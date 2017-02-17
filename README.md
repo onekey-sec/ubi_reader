@@ -30,7 +30,7 @@ python-lzo is the only non-standard module, it may or may not be available for y
 
 ## Usage:
 For basic usage, the scripts need no options and if applicable will save output
-to ./output/. More advanced usage can set start and end offset, specify
+to ./ubifs-root/. More advanced usage can set start and end offset, specify
 an output directory, or for debugging can print out what it is doing to the
 terminal.
 
@@ -73,10 +73,12 @@ Some general option flags are
 * -v, --verbose: This basically prints everything about anything happening.
 * -p, --peb-size int: Specify PEB size of the UBI image, instead of having it guess.
 * -e, --leb-size int: Specify LEB size of UBIFS image, instead of having it guess.
-* -s, --start-offset int: Tell script to start looking for UBI/UBIFS data at given address.
+* -s, --start-offset int: Tell script to look for UBI/UBIFS data at given address.
 * -n, --end-offset int: Tell script to ignore data after given address in data.
+* -g, --guess-offset: Specify offset to start guessing where UBI data is in file. Useful for NAND dumps with false positives before image.
+* -w, --warn-only-block-read-errors: Attempts to continue extracting files even with bad block reads. Some data will be missing or corrupted!
+* -i, --ignore-block-header-errors: Forces unused and error containing blocks to be included and also displayed with log/verbose.
 * -o, --output-dir path: Specify where files should be written to, instead of ubi_reader/output
-
 
 ### Known Issues
 

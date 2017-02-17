@@ -107,8 +107,9 @@ class ubi_file(object):
 
 
     def read(self, size):
-        if self._end_offset < self.tell() + size:
-            error(self.read, 'Fatal', 'Block ends at %s which is greater than file size %s' % (self.tell() + size, self._end_offset))
+        if self.end_offset < self.tell() + size:
+            error(self.read, 'Error', 'Block ends at %s which is greater than file size %s' % (self.tell() + size, self.end_offset))
+            raise Exception('Bad Read Offset Request')
 
         self._last_read_addr = self.tell()
         verbose_log(self, 'read loc: %s, size: %s' % (self._last_read_addr, size))
@@ -188,7 +189,12 @@ class leb_virtual_file():
         buf = ''
         leb = int(self.tell() / self._ubi.leb_size)
         offset = self.tell() % self._ubi.leb_size
-        self._last_read_addr = self._ubi.blocks[self._blocks[leb]].file_offset + self._ubi.blocks[self._blocks[leb]].ec_hdr.data_offset + offset
+
+        try:
+            self._last_read_addr = self._ubi.blocks[self._blocks[leb]].file_offset + self._ubi.blocks[self._blocks[leb]].ec_hdr.data_offset + offset
+        except KeyError as e:
+            error(self.read, 'Error', 'LEB: %s is corrupted or has no data.' % (leb))
+            raise Exception('Bad Read Offset Request')
 
         verbose_log(self, 'read loc: %s, size: %s' % (self._last_read_addr, size))
 

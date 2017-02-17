@@ -23,7 +23,6 @@ from ubireader import settings
 
 def log(obj, message):
     if settings.logging_on or settings.logging_on_verbose:
-    # will out to file or console.
         print obj.__name__, message
 
 def verbose_log(obj, message):

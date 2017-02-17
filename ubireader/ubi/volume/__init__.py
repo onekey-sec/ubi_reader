@@ -46,6 +46,7 @@ class description(object):
         self._block_list = block_list
         log(description, 'Create Volume: %s, ID: %s, Block Cnt: %s' % (self.name, self.vol_id, len(self.block_list)))
 
+
     def __repr__(self):
         return 'Volume: %s' % (self.name)
 
@@ -82,11 +83,11 @@ class description(object):
     def display(self, tab=''):
         return display.volume(self, tab)
 
+
     def reader(self, ubi):
         last_leb = 0
         for block in sort.by_leb(self.get_blocks(ubi.blocks)):
             if block == 'x':
-            #while 0 != (ubi.blocks[block].leb_num - last_leb):
                 last_leb += 1
                 yield '\xff'*ubi.leb_size
             else:

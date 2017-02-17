@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from ubireader import settings
 from ubireader.ubi.defines import PRINT_COMPAT_LIST, PRINT_VOL_TYPE_LIST, UBI_VTBL_AUTORESIZE_FLG
 
 def ubi(ubi, tab=''):
@@ -71,13 +72,13 @@ def block(block, tab='\t'):
     buf += '\t%sIs Volume Table: %s\n' % (tab, block.is_vtbl)
     buf += '\t%sIs Valid: %s\n' % (tab, block.is_valid)
 
-    if not block.ec_hdr.errors:
+    if not block.ec_hdr.errors or settings.ignore_block_header_errors:
         buf += '\n'
         buf += '\t%sErase Count Header\n' % (tab)
         buf += '\t%s---------------------\n' % (tab)
         buf += ec_hdr(block.ec_hdr, '\t\t%s' % tab)
 
-    if block.vid_hdr and not block.vid_hdr.errors:
+    if (block.vid_hdr and not block.vid_hdr.errors) or settings.ignore_block_header_errors:
         buf += '\n'        
         buf += '\t%sVID Header\n' % (tab)
         buf += '\t%s---------------------\n' % (tab)
