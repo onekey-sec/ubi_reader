@@ -50,5 +50,4 @@ def error(obj, level, message):
             sys.exit(1)
         else:
             print obj.__name__, '%s: %s' % (level, message)
-            if settings.fatal_traceback:
-                traceback.print_exc()
+

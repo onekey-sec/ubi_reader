@@ -192,7 +192,7 @@ class leb_virtual_file():
 
         try:
             if size < 0:
-                raise Exception('Read request size negative.')
+                raise Exception('Bad Read Offset Request')
 
             self._last_read_addr = self._ubi.blocks[self._blocks[leb]].file_offset + self._ubi.blocks[self._blocks[leb]].ec_hdr.data_offset + offset
 

@@ -53,6 +53,10 @@ def extract_files(ubifs, out_path, perms=False):
 
 
 def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
+    if dent_node.inum not in inodes:
+        error(extract_dents, 'Error', 'inum: %s not found in inodes' % (dent_node.inum))
+        return
+
     inode = inodes[dent_node.inum]
     dent_path = os.path.join(path, dent_node.name)
         

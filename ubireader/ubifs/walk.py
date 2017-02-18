@@ -47,7 +47,6 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
         chdr = nodes.common_hdr(buf)
         log(index , '%s file addr: %s' % (chdr, ubifs.file.last_read_addr()))
         verbose_display(chdr)
-
         node_buf = ubifs.file.read(chdr.len - UBIFS_COMMON_HDR_SZ)
         file_offset = ubifs.file.last_read_addr()
 
@@ -55,24 +54,45 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
         if e.message == 'Bad Read Offset Request' and settings.warn_only_block_read_errors:
             bad_blocks.append(lnum)
             return
+
         else:
-            error(index, 'Fatal', 'leb: %s, ubifs offset: %s, error: %s' % (lnum, ((ubifs.leb_size * lnum) + offset), e))
+            error(index, 'Fatal', 'LEB: %s, UBIFS offset: %s, error: %s' % (lnum, ((ubifs.leb_size * lnum) + offset), e))
 
     if chdr.node_type == UBIFS_IDX_NODE:
-        idxn = nodes.idx_node(node_buf)
+        try:
+            idxn = nodes.idx_node(node_buf)
+
+        except Exception as e:
+            if settings.warn_only_block_read_errors:
+                error(index, 'Error', 'Problem at file address: %s extracting idx_node: %s' % (file_offset, e))
+                return
+
+            else:
+                error(index, 'Fatal', 'Problem at file address: %s extracting idx_node: %s' % (file_offset, e))
+
         log(index, '%s file addr: %s' % (idxn, file_offset))
         verbose_display(idxn)
         branch_idx = 0
+
         for branch in idxn.branches:
             verbose_log(index, '-------------------')
             log(index, '%s file addr: %s' % (branch, file_offset + UBIFS_IDX_NODE_SZ + (branch_idx * UBIFS_BRANCH_SZ)))
             verbose_display(branch)
-
             index(ubifs, branch.lnum, branch.offs, inodes, bad_blocks)
             branch_idx += 1
 
     elif chdr.node_type == UBIFS_INO_NODE:
-        inon = nodes.ino_node(node_buf)
+        try:
+            inon = nodes.ino_node(node_buf)
+
+        except Exception as e:
+            if settings.warn_only_block_read_errors:
+                error(index, 'Error', 'Problem at file address: %s extracting ino_node: %s' % (file_offset, e))
+                return
+
+            else:
+                error(index, 'Fatal', 'Problem at file address: %s extracting ino_node: %s' % (file_offset, e))
+
         ino_num = inon.key['ino_num']
         log(index, '%s file addr: %s, ino num: %s' % (inon, file_offset, ino_num))
         verbose_display(inon)
@@ -83,7 +103,17 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
         inodes[ino_num]['ino'] = inon
 
     elif chdr.node_type == UBIFS_DATA_NODE:
-        datn = nodes.data_node(node_buf, (ubifs.leb_size * lnum) + UBIFS_COMMON_HDR_SZ + offset + UBIFS_DATA_NODE_SZ)
+        try:
+            datn = nodes.data_node(node_buf, (ubifs.leb_size * lnum) + UBIFS_COMMON_HDR_SZ + offset + UBIFS_DATA_NODE_SZ)
+
+        except Exception as e:
+            if settings.warn_only_block_read_errors:
+                error(index, 'Error', 'Problem at file address: %s extracting data_node: %s' % (file_offset, e))
+                return
+
+            else:
+                error(index, 'Fatal', 'Problem at file address: %s extracting data_node: %s' % (file_offset, e))
+
         ino_num = datn.key['ino_num']
         log(index, '%s file addr: %s, ino num: %s' % (datn, file_offset, ino_num))
         verbose_display(datn)
@@ -97,7 +127,17 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
         inodes[ino_num]['data'].append(datn)
 
     elif chdr.node_type == UBIFS_DENT_NODE:
-        dn = nodes.dent_node(node_buf)
+        try:
+            dn = nodes.dent_node(node_buf)
+
+        except Exception as e:
+            if settings.warn_only_block_read_errors:
+                error(index, 'Error', 'Problem at file address: %s extracting dent_node: %s' % (file_offset, e))
+                return
+
+            else:
+                error(index, 'Fatal', 'Problem at file address: %s extracting dent_node: %s' % (file_offset, e))
+
         ino_num = dn.key['ino_num']
         log(index, '%s file addr: %s, ino num: %s' % (dn, file_offset, ino_num))
         verbose_display(dn)
