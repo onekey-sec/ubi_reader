@@ -7,7 +7,7 @@ determine the parameter settings to recreate them using the mtd-utils tools.
 
 ## Dependencies:
 
-Python is required.
+Python 2.7 is required.
 
 python-lzo is the only non-standard module, it may or may not be available for your distro.
 
@@ -26,6 +26,10 @@ python-lzo is the only non-standard module, it may or may not be available for y
     $ git clone https://github.com/jrspruitt/ubi_reader
     $ cd ubi_reader
     $ sudo python setup.py install
+
+    Or
+
+    $ sudo pip2 install ubi_reader
 
 
 ## Usage:
