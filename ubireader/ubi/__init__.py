@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-import re
+
 from ubireader.debug import error, log
 from ubireader.ubi.block import sort, extract_blocks
 from ubireader.ubi.defines import UBI_EC_HDR_MAGIC, FILE_CHUNK_SZ
@@ -25,24 +25,20 @@ from ubireader.ubi import display
 from ubireader.ubi.image import description as image
 from ubireader.ubi.block import layout
 
-
-class ubi():
-    """UBI object
+class ubi_base(object):
+    """UBI Base object
 
     Arguments:
     Obj:image       -- UBI image object 
     
     Attributes:
+    ubi_file:file      -- ubi_file object
+    Int:block_count    -- Number of blocks found.
+    Int:first_peb_num  -- Number of the first UBI PEB in file.
     Int:leb_size       -- Size of Logical Erase Blocks.
     Int:peb_size       -- Size of Physical Erase Blocks.
-    Int:first_peb_num  -- Number of the first UBI PEB in file.
     Int:min_io         -- Size of min I/O from vid_hdr_offset.
-    List:images        -- List of UBI image objects.
-    List:data_blocks_list     -- List of all data blocks in file.
-    List:layout_blocks_list   -- List of all layout blocks in file.
-    List:int_vol_blocks_list  -- List of internal volumes minus layout.
-    List:unknown_blocks_list  -- List of blocks with unknown types. *
-    Dict:blocks               -- Dict keyed by PEB number of all blocks.
+    Dict:blocks        -- Dict keyed by PEB number of all blocks.
     """
 
     def __init__(self, ubi_file):
@@ -55,27 +51,9 @@ class ubi():
         if self._block_count <= 0:
             error(self, 'Fatal', 'No blocks found.')
 
-        layout_list, data_list, int_vol_list, unknown_list = sort.by_type(self.blocks)
-
-        if len(layout_list) < 2:
-            error(self, 'Fatal', 'Less than 2 layout blocks found.')
-
-        self._layout_blocks_list = layout_list
-        self._data_blocks_list = data_list
-        self._int_vol_blocks_list = int_vol_list
-        self._unknown_blocks_list = unknown_list
-
         arbitrary_block = self.blocks.itervalues().next()
         self._min_io_size = arbitrary_block.ec_hdr.vid_hdr_offset
         self._leb_size = self.file.block_size - arbitrary_block.ec_hdr.data_offset
-
-        layout_pairs = layout.group_pairs(self.blocks, self.layout_blocks_list)
-
-        layout_infos = layout.associate_blocks(self.blocks, layout_pairs, self.first_peb_num)
-
-        self._images = []
-        for i in range(0, len(layout_infos)):
-            self._images.append(image(self.blocks, layout_infos[i]))
 
 
     def _get_file(self):
@@ -86,58 +64,6 @@ class ubi():
         """
         return self._file
     file = property(_get_file)
-
-
-    def _get_images(self):
-        """Get UBI images.
-
-        Returns:
-        List -- Of volume objects groupled by image.
-        """
-        return self._images
-    images = property(_get_images)           
- 
-
-    def _get_data_blocks_list(self):
-        """Get all UBI blocks found in file that are data blocks.
-
-        Returns:
-        List -- List of block objects.
-        """
-        return self._data_blocks_list
-    data_blocks_list = property(_get_data_blocks_list)
-
-
-    def _get_layout_blocks_list(self):
-        """Get all UBI blocks found in file that are layout volume blocks.
-
-        Returns:
-        List -- List of block objects.
-        """
-        return self._layout_blocks_list
-    layout_blocks_list = property(_get_layout_blocks_list)
-
-
-    def _get_int_vol_blocks_list(self):
-        """Get all UBI blocks found in file that are internal volume blocks.
-
-        Returns:
-        List -- List of block objects.
-        
-        This does not include layout blocks.
-        """
-        return self._int_vol_blocks_list
-    int_vol_blocks_list = property(_get_int_vol_blocks_list)
-
-
-    def _get_unknown_blocks_list(self):
-        """Get all UBI blocks found in file of unknown type..
-
-        Returns:
-        List -- List of block objects.
-        """
-        return self._unknown_blocks_list
-    unknown_blocks_list = property(_get_unknown_blocks_list)
 
 
     def _get_block_count(self):
@@ -202,6 +128,94 @@ class ubi():
         return self._blocks
     blocks = property(_get_blocks)
 
+
+class ubi(ubi_base):
+    """UBI object
+
+    Arguments:
+    Obj:ubi_file             -- UBI file object.
+
+    Attributes:
+    Inherits:ubi_base         -- ubi_base attributes.
+    List:images               -- List of UBI image objects.
+    List:data_blocks_list     -- List of all data blocks in file.
+    List:layout_blocks_list   -- List of all layout blocks in file.
+    List:int_vol_blocks_list  -- List of internal volumes minus layout.
+    List:unknown_blocks_list  -- List of blocks with unknown types. *
+    """
+
+    def __init__(self, ubi_file):
+        super(ubi, self).__init__(ubi_file)
+
+        layout_list, data_list, int_vol_list, unknown_list = sort.by_type(self.blocks)
+
+        if len(layout_list) < 2:
+            error(self, 'Fatal', 'Less than 2 layout blocks found.')
+
+        self._layout_blocks_list = layout_list
+        self._data_blocks_list = data_list
+        self._int_vol_blocks_list = int_vol_list
+        self._unknown_blocks_list = unknown_list
+
+        layout_pairs = layout.group_pairs(self.blocks, self.layout_blocks_list)
+
+        layout_infos = layout.associate_blocks(self.blocks, layout_pairs, self.first_peb_num)
+
+        self._images = []
+        for i in range(0, len(layout_infos)):
+            self._images.append(image(self.blocks, layout_infos[i]))
+
+
+    def _get_images(self):
+        """Get UBI images.
+
+        Returns:
+        List -- Of volume objects groupled by image.
+        """
+        return self._images
+    images = property(_get_images)
+
+
+    def _get_data_blocks_list(self):
+        """Get all UBI blocks found in file that are data blocks.
+
+        Returns:
+        List -- List of block objects.
+        """
+        return self._data_blocks_list
+    data_blocks_list = property(_get_data_blocks_list)
+
+
+    def _get_layout_blocks_list(self):
+        """Get all UBI blocks found in file that are layout volume blocks.
+
+        Returns:
+        List -- List of block objects.
+        """
+        return self._layout_blocks_list
+    layout_blocks_list = property(_get_layout_blocks_list)
+
+
+    def _get_int_vol_blocks_list(self):
+        """Get all UBI blocks found in file that are internal volume blocks.
+
+        Returns:
+        List -- List of block objects.
+
+        This does not include layout blocks.
+        """
+        return self._int_vol_blocks_list
+    int_vol_blocks_list = property(_get_int_vol_blocks_list)
+
+
+    def _get_unknown_blocks_list(self):
+        """Get all UBI blocks found in file of unknown type..
+
+        Returns:
+        List -- List of block objects.
+        """
+        return self._unknown_blocks_list
+    unknown_blocks_list = property(_get_unknown_blocks_list)
     
     def display(self, tab=''):
         """Print information about this object.
