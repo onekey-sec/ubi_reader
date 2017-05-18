@@ -22,6 +22,7 @@ import struct
 from ubireader.debug import error, log, verbose_display
 from ubireader.ubifs.defines import *
 from ubireader.ubifs import nodes, display
+from ubireader.overrides import overrides
 
 class ubifs():
     """UBIFS object
@@ -40,6 +41,9 @@ class ubifs():
     def __init__(self, ubifs_file):
         self.__name__ = 'UBIFS'
         self._file = ubifs_file
+        self._overrides = overrides()
+        self._min_io_size = 0
+        self._leb_size = 0
         try:
             self.file.reset()
             sb_chdr = nodes.common_hdr(self.file.read(UBIFS_COMMON_HDR_SZ))
@@ -50,8 +54,10 @@ class ubifs():
                 self.file.seek(UBIFS_COMMON_HDR_SZ)
                 buf = self.file.read(UBIFS_SB_NODE_SZ)
                 self._sb_node = nodes.sb_node(buf)
+                self._sb_node.leb_size = self._overrides.check('leb_size', self._sb_node.leb_size)
                 self._min_io_size = self._sb_node.min_io_size
-                self._leb_size = self._sb_node.leb_size       
+                self._leb_size = self._sb_node.leb_size
+
                 log(self , '%s file addr: %s' % (self._sb_node, self.file.last_read_addr()))
                 verbose_display(self._sb_node)
             else:
@@ -62,7 +68,7 @@ class ubifs():
         self._mst_nodes = [None, None]
         for i in xrange(0, 2):
             try:
-                mst_offset = self.leb_size * (UBIFS_MST_LNUM + i) 
+                mst_offset = self.leb_size * (UBIFS_MST_LNUM + i)
                 self.file.seek(mst_offset)
                 mst_chdr = nodes.common_hdr(self.file.read(UBIFS_COMMON_HDR_SZ))
                 log(self , '%s file addr: %s' % (mst_chdr, self.file.last_read_addr()))

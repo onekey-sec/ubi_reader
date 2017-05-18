@@ -23,6 +23,7 @@ from ubireader.debug import error, log, verbose_display, verbose_log
 from ubireader.ubi import display
 from ubireader.ubi.defines import UBI_EC_HDR_SZ, UBI_VID_HDR_SZ, UBI_INTERNAL_VOL_START, UBI_EC_HDR_MAGIC
 from ubireader.ubi.headers import ec_hdr, vid_hdr, vtbl_recs
+from ubireader.overrides import overrides
 
 
 class description(object):
@@ -48,7 +49,7 @@ class description(object):
     """
 
     def __init__(self, block_buf):
- 
+        self._overrides = overrides()
         self.file_offset = -1
         self.peb_num = -1
         self.leb_num = -1
@@ -60,6 +61,10 @@ class description(object):
 
         # TODO better understanding of block types/errors
         self.ec_hdr = ec_hdr(block_buf[0:UBI_EC_HDR_SZ])
+
+        if settings.use_overrides:
+            self.ec_hdr.data_offset = self._overrides.check('data_offset', self.ec_hdr.data_offset)
+            self.ec_hdr.vid_hdr_offset = self._overrides.check('vid_hdr_offset', self.ec_hdr.vid_hdr_offset)
 
         if not self.ec_hdr.errors or settings.ignore_block_header_errors:
             self.vid_hdr = vid_hdr(block_buf[self.ec_hdr.vid_hdr_offset:self.ec_hdr.vid_hdr_offset+UBI_VID_HDR_SZ])

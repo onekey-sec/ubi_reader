@@ -72,6 +72,9 @@ if __name__=='__main__':
     parser.add_argument('-i', '--ignore-block-header-errors', action='store_true', dest='ignore_block_header_errors',
                       help='Forces unused and error containing blocks to be included and also displayed with log/verbose. (default: False)')
 
+    parser.add_argument('-r', '--overrides', dest='overrides',
+                        help='Specify override config ini file path.')
+
     parser.add_argument('-o', '--output-dir', dest='outpath',
                         help='Specify output directory path.')
 
@@ -117,6 +120,13 @@ if __name__=='__main__':
         outpath = os.path.abspath(os.path.join(args.outpath, img_name))
     else:
         outpath = os.path.join(settings.output_dir, img_name)
+
+    if args.overrides:
+        settings.use_overrides = True
+        settings.overrides_path = args.overrides
+
+        if not os.path.exists(args.overrides):
+            parser.error('Overrides path does not exist.')
 
     if args.block_size:
         block_size = args.block_size

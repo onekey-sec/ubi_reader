@@ -24,6 +24,7 @@ from ubireader.ubi.defines import UBI_EC_HDR_MAGIC, FILE_CHUNK_SZ
 from ubireader.ubi import display
 from ubireader.ubi.image import description as image
 from ubireader.ubi.block import layout
+from ubireader.overrides import overrides
 
 class ubi_base(object):
     """UBI Base object
@@ -43,6 +44,7 @@ class ubi_base(object):
 
     def __init__(self, ubi_file):
         self.__name__ = 'UBI'
+        self._overrides = overrides()
         self._file = ubi_file
         self._first_peb_num = 0
         self._blocks = extract_blocks(self)
@@ -52,8 +54,8 @@ class ubi_base(object):
             error(self, 'Fatal', 'No blocks found.')
 
         arbitrary_block = self.blocks.itervalues().next()
-        self._min_io_size = arbitrary_block.ec_hdr.vid_hdr_offset
-        self._leb_size = self.file.block_size - arbitrary_block.ec_hdr.data_offset
+        self._min_io_size = self._overrides.check('min_io_size', arbitrary_block.ec_hdr.vid_hdr_offset)
+        self._leb_size = self._overrides.check('leb_size', self.file.block_size - arbitrary_block.ec_hdr.data_offset)
 
 
     def _get_file(self):
@@ -152,7 +154,7 @@ class ubi(ubi_base):
         if len(layout_list) < 2:
             error(self, 'Fatal', 'Less than 2 layout blocks found.')
 
-        self._layout_blocks_list = layout_list
+        self._layout_blocks_list = self._overrides.check('layout_blocks', layout_list)
         self._data_blocks_list = data_list
         self._int_vol_blocks_list = int_vol_list
         self._unknown_blocks_list = unknown_list

@@ -49,7 +49,11 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
         verbose_display(chdr)
         node_buf = ubifs.file.read(chdr.len - UBIFS_COMMON_HDR_SZ)
         file_offset = ubifs.file.last_read_addr()
-
+        # Should be implemented in nodes themselves.
+        #crc = ~crc32(buf[8:] + node_buf) & 0xFFFFFFFF
+        #if crc != chdr.crc:
+        #    return
+        #    error(index, 'Fatal', 'crc failure expecting %s got %s' % (chdr.crc, crc))
     except Exception, e:
         if e.message == 'Bad Read Offset Request' and settings.warn_only_block_read_errors:
             bad_blocks.append(lnum)

@@ -219,6 +219,7 @@ class sb_node(object):
 
         setattr(self, 'errors', [])
 
+
     def __repr__(self):
         return 'UBIFS Super Block Node'
 
@@ -243,9 +244,7 @@ class mst_node(object):
         fields = dict(zip(UBIFS_MST_NODE_FIELDS, struct.unpack(UBIFS_MST_NODE_FORMAT, buf)))
         for key in fields:
             setattr(self, key, fields[key])
-
         setattr(self, 'errors', [])
-
     def __repr__(self):
         return 'UBIFS Master Block Node'
 

@@ -19,16 +19,16 @@
 
 from ubireader.debug import error, log, verbose_log
 from ubireader.ubi.block import sort
+from ubireader.overrides import overrides
 
 class ubi_file(object):
     """UBI image file object
 
     Arguments:
-    Str:path         -- Path to file to parse
-    Int:block_size   -- Erase block size of NAND in bytes.
-    Int:start_offset -- (optional) Where to start looking in the file for
-                        UBI data.
-    Int:end_offset   -- (optional) Where to stop looking in the file.
+    Str:path         -- Path of file to parse
+    Int:block_size   -- Physical Erase Block size of UBI image.
+    Int:start_offset -- (optional) Where UBI# of first PEB is.
+    Int:end_offset   -- (optional) End of UBI data in file.
     
     Methods:
     seek            -- Put file head to specified byte offset.
@@ -46,12 +46,14 @@ class ubi_file(object):
     is_valid        -- If the object intialized okay.
 
     Handles all the actual file interactions, read, seek,
-    extract blocks, etc.
+    retrieve PEB data, etc.
     """
 
     def __init__(self, path, block_size, start_offset=0, end_offset=None):
         self.__name__ = 'UBI_File'
         self.is_valid = False
+        self._overrides = overrides()
+
         try:
             log(self, 'Open Path: %s' % path)
             self._fhandle = open(path, 'rb')
@@ -62,16 +64,18 @@ class ubi_file(object):
         file_size = self.tell()
         log(self, 'File Size: %s' % file_size)
 
-        self._start_offset = start_offset
+        self._start_offset = self._overrides.check('start_offset', start_offset)
         log(self, 'Start Offset: %s' % (self._start_offset))
 
         if end_offset:
             self._end_offset = end_offset
         else:
-            self._end_offset = file_size 
+            self._end_offset = file_size
+
+        self._end_offset = self._overrides.check('end_offset', self._end_offset)
         log(self, 'End Offset: %s' % (self._end_offset))
 
-        self._block_size = block_size
+        self._block_size = self._overrides.check('peb_size', block_size)
         log(self, 'Block Size: %s' % block_size)
 
         if start_offset > self._end_offset:
@@ -169,6 +173,17 @@ class ubi_file(object):
 
 
 class leb_virtual_file():
+    """UBI LEB virtual file
+
+    Arguments:
+    Obj:ubi          -- UBI object.
+    List:block_list  -- List of block in a volume.
+
+    Creates a virtual file of a UBI volume so a seperate
+    UBIFS image file does not need to be created on disk
+    when extracting files from a UBI image.
+    """
+
     def __init__(self, ubi, block_list):
         self.__name__ = 'leb_virtual_file'
         self.is_valid = False

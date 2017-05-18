@@ -37,6 +37,7 @@ def extract_files(ubifs, out_path, perms=False):
     try:
         inodes = {}
         bad_blocks = []
+
         walk.index(ubifs, ubifs.master_node.root_lnum, ubifs.master_node.root_offs, inodes, bad_blocks)
 
         if len(inodes) < 2:
@@ -161,6 +162,7 @@ def _process_reg_file(ubifs, inode, path):
             compr_type = 0
             sorted_data = sorted(inode['data'], key=lambda x: x.key['khash'])
             last_khash = sorted_data[0].key['khash']-1
+
             for data in sorted_data:
                 
                 # If data nodes are missing in sequence, fill in blanks
