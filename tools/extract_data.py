@@ -47,6 +47,7 @@ def extract_dents(ufile, inodes, dent_node, path=''):
     """
 
     if dent_node.inum not in inodes:
+        #print dent_node.display()
         log(extract_dents, dent_node.display())
         error(extract_dents, 'Error', 'inum: %s not found in inodes' % (dent_node.inum))
         return
@@ -127,43 +128,66 @@ def _write_reg_file(path, data):
 
 def _process_reg_file(ufile, inode, path):
     try:
+        print path
         buf = ''
+        if 'ino' in inode:
+            max_padding = inode['ino']
+        else:
+            max_padding = 1024*1024
+
         if 'data' in inode:
             compr_type = 0
             sorted_data = sorted(inode['data'], key=lambda x: x.key['khash'])
             last_khash = sorted_data[0].key['khash']-1
 
+            print sorted_data
             for data in sorted_data:
-                
                 # If data nodes are missing in sequence, fill in blanks
                 # with \x00 * UBIFS_BLOCK_SIZE
-                #print 'khash difference: %s' % (data.key['khash'] - last_khash)
                 # This is causing huge memory issues on broken image, not sure why.
-                if False: #data.key['khash'] - last_khash != 1:
+                #################################################
+                #print data.display()
+                #print 'khash %s ino_num %s' % (data.key['khash'], data.key['ino_num'])
+                ## blocks with same khash causing last_khash to make this negative.
+                ## DUPLICATE KHASH ENTRIES 
+                if data.key['khash'] - last_khash != 1:
                     while 1 != (data.key['khash'] - last_khash):
+                        # Catch case where khash are not incremented.
+                        # May want to compare data to insure it is different.
+                        if data.key['khash'] - last_khash < 1:
+                            error(_process_reg_file, 'WARN', 'khash comparison has gone negative, numbers are not incrementing, skipping data padding.')
+                            break
                         buf += '\x00'*UBIFS_BLOCK_SIZE
+                        # Prevent run away issue with missing nodes.
                         last_khash += 1
+                        if len(buf) > max_padding:
+                            error(_process_reg_file, 'WARN', 'Data Node %s: Error - Run away data padding. Probably missing nodes.' % (data.key['ino']))
+                            break
 
                 compr_type = data.compr_type
                 ufile.seek(data.offset)
                 d = ufile.read(data.compr_len)
-                buf += decompress(compr_type, data.size, d)
+                try:
+                    buf += decompress(compr_type, data.size, d)
+                except:
+                    pass
                 last_khash = data.key['khash']
-                verbose_log(_process_reg_file, 'ino num: %s, compression: %s, path: %s' % (inode['ino'].key['ino_num'], compr_type, path))
+                #verbose_log(_process_reg_file, 'ino num: %s, compression: %s, path: %s' % (inode['ino'].key['ino_num'], compr_type, path))
         else:
             print inode
     except Exception, e:
-        error(_process_reg_file, 'Warn', 'inode num:%s :%s' % (inode['ino'].key['ino_num'], e))
+        error(_process_reg_file, 'Warn', 'inode num:%s :%s' % (inode['data'].key['ino_num'], e))
     
     # Pad end of file with \x00 if needed.
     # Causing potential memory issues on broken image.
     #print 'data size difference %s' % (inode['ino'].size, len(buf))
-    #if inode['ino'].size > len(buf):
-    #    buf += '\x00' * (inode['ino'].size - len(buf))
+    if inode['ino'].size > len(buf):
+        buf += '\x00' * (inode['ino'].size - len(buf))
         
     return buf
 
 def crc_check(buf, ch_crc, chdr):
+        #return True
         crc = ~crc32(buf) & 0xFFFFFFFF
         if crc != chdr.crc:
             #print 'expected %r but got %r' % (ch_crc, crc)

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#!/usr/bin/env python
 #############################################################
 # ubi_reader/tools/extract_blocks.py
 # (c) 2017 Jason Pruitt (jrspruitt@gmail.com)
@@ -37,7 +36,7 @@ if len(sys.argv) < 4:
     print """
 Usage:
     extract_blocks.py dump.no_oob "{'block.attr': value,...}"
-        Manually extracts UBI blocks, PEB data file and text description file.
+        Extracts UBI blocks into PEB data files, and text description files.
 
     The second arg is a double quoted string, which contains a Dict of
     ubireader.ubi.block.description attributes. Attr names must be 
