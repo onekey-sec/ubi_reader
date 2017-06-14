@@ -62,7 +62,6 @@ else:
 
 ufile_obj = ubi_file(fpath, peb_size)
 ubi_obj = ubi_base(ufile_obj)
-layouts = []
 last_block = -2
 fileh = []
 
@@ -70,7 +69,6 @@ i = 0
 for block in ubi_obj.blocks:
     if ubi_obj.blocks[block].is_vtbl:
         if ubi_obj.blocks[block].peb_num > last_block + 1:
-            layouts.append(ubi_obj.blocks[block].file_offset)
             last_block = ubi_obj.blocks[block].peb_num
         else:
             if fileh:

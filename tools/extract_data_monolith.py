@@ -47,6 +47,7 @@ def extract_dents(ufile, inodes, dent_node, path=''):
     """
 
     if dent_node.inum not in inodes:
+        #print dent_node.display()
         log(extract_dents, dent_node.display())
         error(extract_dents, 'Error', 'inum: %s not found in inodes' % (dent_node.inum))
         return
@@ -75,6 +76,7 @@ def extract_dents(ufile, inodes, dent_node, path=''):
                     buf = _process_reg_file(ufile, inode, dent_path)
                     _write_reg_file(dent_path, buf)
                 else:
+                    #print dent_node.name
                     os.link(inode['hlink'] ,dent_path)
                     log(extract_dents, 'Make Link: %s > %s' % (dent_path, inode['hlink']))
             else:
@@ -120,24 +122,13 @@ def extract_dents(ufile, inodes, dent_node, path=''):
             error(extract_dents, 'Warn', 'SOCK Fail: %s : %s' % (dent_path, e))
     
 def _write_reg_file(path, data):
-    i = 0
-    npath = path
-
-    while os.path.exists(npath):
-        npath = '%s.%s' % (path, i)
-        i += 1
-
-    if i:
-        print 'Duplicate: Renamed %s to %s' % (path, npath)
-
-    path = npath
-
     with open(path, 'wb') as f:
         f.write(data)
     log(_write_reg_file, 'Make File: %s' % (path))
 
 def _process_reg_file(ufile, inode, path):
     try:
+        #print path
         buf = ''
         if 'ino' in inode:
             max_padding = inode['ino']
@@ -149,6 +140,7 @@ def _process_reg_file(ufile, inode, path):
             sorted_data = sorted(inode['data'], key=lambda x: x.key['khash'])
             last_khash = sorted_data[0].key['khash']-1
 
+            #print sorted_data
             for data in sorted_data:
                 # If data nodes are missing in sequence, fill in blanks
                 # with \x00 * UBIFS_BLOCK_SIZE
@@ -180,12 +172,11 @@ def _process_reg_file(ufile, inode, path):
                 except:
                     pass
                 last_khash = data.key['khash']
-
+                #verbose_log(_process_reg_file, 'ino num: %s, compression: %s, path: %s' % (inode['ino'].key['ino_num'], compr_type, path))
         else:
-            print "No data found in node %s" % inode
-
+            log(_process_reg_file, 'Warn', 'inode num:%s had no data node' % inode['ino'].key['ino_num'])
     except Exception, e:
-        print e
+        error(_process_reg_file, 'Warn', 'inode num:%s :%s' % (inode['data'].key['ino_num'], e))
     
     # Pad end of file with \x00 if needed.
     # Causing potential memory issues on broken image.
@@ -194,6 +185,66 @@ def _process_reg_file(ufile, inode, path):
         buf += '\x00' * (inode['ino'].size - len(buf))
         
     return buf
+
+
+
+
+
+
+
+def extract_monolith(ufile, mdata, path):
+
+    with open(path, 'wb') as f:
+        compr_type = 0
+
+
+        # Swap these two to use/not use sorting of data nodes, maybe imporve results?
+        sorted_data = sorted(mdata, key=lambda x: x.key['khash'])
+        #sorted_data = madata
+        last_khash = sorted_data[0].key['khash']-1
+        max_padding = 1024*1024
+        buf = ''
+        #print sorted_data
+        for data in sorted_data:
+            # Turn this on off to try and use padding, might help with validity of files in the monolith?
+            if False:
+            #if True: 
+                if data.key['khash'] - last_khash != 1:
+                    while 1 != (data.key['khash'] - last_khash):
+                        # Catch case where khash are not incremented.
+                        # May want to compare data to insure it is different.
+                        if data.key['khash'] - last_khash < 1:
+                            error(_process_reg_file, 'WARN', 'khash comparison has gone negative, numbers are not incrementing, skipping data padding.')
+                            break
+                        buf += '\x00'*UBIFS_BLOCK_SIZE
+                        # Prevent run away issue with missing nodes.
+                        last_khash += 1
+                        if len(buf) > max_padding:
+                            error(_process_reg_file, 'WARN', 'Data Node %s: Error - Run away data padding. Probably missing nodes.' % (data.key['ino']))
+                            break
+
+
+            compr_type = data.compr_type
+            ufile.seek(data.offset)
+            d = ufile.read(data.compr_len)
+            try:
+                buf = decompress(compr_type, data.size, d)
+            except:
+                pass
+            last_khash = data.key['khash']
+            f.write(buf)
+        
+    return buf
+
+
+
+
+
+
+
+
+
+
 
 def crc_check(buf, ch_crc, chdr):
         #return True
@@ -221,6 +272,7 @@ def find_nodes(fpath, inodes):
     """
 
     locs = []
+    monolith_data = []
     with open(fpath, 'rb') as f:
         fbuf = f.read()
         locs = [m.start() for m in re.finditer(UBIFS_NODE_MAGIC, fbuf)]
@@ -251,9 +303,10 @@ def find_nodes(fpath, inodes):
                     inodes[ino_num]['data']= []
 
                 inodes[ino_num]['data'].append(node)
+                monolith_data.append(node)
                 #print node.display()
-
-            elif chdr.node_type == UBIFS_INO_NODE:
+            continue
+            if chdr.node_type == UBIFS_INO_NODE:
                 node = nodes.ino_node(buf)
                 ino_num = node.key['ino_num']
 
@@ -275,6 +328,8 @@ def find_nodes(fpath, inodes):
 
                 inodes[ino_num]['dent'].append(node)
                 #print node.display()
+
+    return monolith_data
 
 def extract_as_inodes(fpath, inodes, opath):
     """Extract data into inode named directories
@@ -341,27 +396,32 @@ if __name__ == '__main__':
         print '%s does not exist.' % fpath
         sys.exit(1)
 
-    if not os.path.exists(opath):
-        os.mkdir(opath)
-    else:
-        a = raw_input('Output directory "%s" already exists. Merge/Overwrite contents? [y/N]:  ' % opath)
+    #if not os.path.exists(opath):
+    #    os.mkdir(opath)
+    #else:
+    #    a = raw_input('Output directory "%s" already exists. Merge/Overwrite contents? [y/N]:  ' % opath)
 
-        if not a.lower() in ['yes', 'y']:
-            print 'Exiting program.'
-            sys.exit(0)
-        print 'Merging and Overwriting "%s"' % opath
+    #    if not a.lower() in ['yes', 'y']:
+    #        print 'Exiting program.'
+    #        sys.exit(0)
+    #    print 'Merging and Overwriting "%s"' % opath
 
 
     inodes = {}
+
     # populates inodes with node info.
-    find_nodes(fpath, inodes)
+    monolith_data = find_nodes(fpath, inodes)
+
+    with open(fpath, 'rb') as ufile:
+        extract_monolith(ufile, monolith_data, opath)
 
     # Create output directory
-    if not os.path.exists(opath):
-        os.mkdir(opath)
+    #if not os.path.exists(opath):
+    #    os.mkdir(opath)
+        
 
     # Start extraction process
-    extract_as_inodes(fpath, inodes, opath)
+    #extract_as_inodes(fpath, inodes, opath)
     #extract_as_dirs(fpath, inodes, opath)
 
 
