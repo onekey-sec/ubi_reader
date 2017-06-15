@@ -5,6 +5,13 @@ UBI Reader is a Python module and collection of scripts capable of extracting
 the contents of UBI and UBIFS images, along with analyzing these images to
 determine the parameter settings to recreate them using the mtd-utils tools.
 
+## Testing Branch
+The testing branch includes a tools/ directory, that with scripts to help when trying to extract data from broken images. These also serve as examples of how to use ubi_reader in custom scripts.
+
+An override system is also included, for manually setting certain parameters that may be reported wrong by the UBI/FS data.
+
+This branch will probably remain seperate, as it is meant to be customized to aid in extracting data from problematic images. You can install it with 'python setup.py develop' to make it easier to modify ubi_reader as needed.
+
 ## Dependencies:
 
 Python 2.7 is required.
