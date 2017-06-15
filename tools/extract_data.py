@@ -146,7 +146,8 @@ def _process_reg_file(ufile, inode, path):
 
         if 'data' in inode:
             compr_type = 0
-            sorted_data = sorted(inode['data'], key=lambda x: x.key['khash'])
+            #sorted_data = sorted(inode['data'], key=lambda x: x.key['khash'])
+            sorted_data = inode['data']
             last_khash = sorted_data[0].key['khash']-1
 
             for data in sorted_data:
@@ -158,7 +159,7 @@ def _process_reg_file(ufile, inode, path):
                 #print 'khash %s ino_num %s' % (data.key['khash'], data.key['ino_num'])
                 ## blocks with same khash causing last_khash to make this negative.
                 ## DUPLICATE KHASH ENTRIES 
-                if data.key['khash'] - last_khash != 1:
+                if False: #data.key['khash'] - last_khash != 1:
                     while 1 != (data.key['khash'] - last_khash):
                         # Catch case where khash are not incremented.
                         # May want to compare data to insure it is different.
@@ -190,8 +191,8 @@ def _process_reg_file(ufile, inode, path):
     # Pad end of file with \x00 if needed.
     # Causing potential memory issues on broken image.
     #print 'data size difference %s' % (inode['ino'].size, len(buf))
-    if inode['ino'].size > len(buf):
-        buf += '\x00' * (inode['ino'].size - len(buf))
+    #if inode['ino'].size > len(buf):
+    #    buf += '\x00' * (inode['ino'].size - len(buf))
         
     return buf
 
