@@ -109,7 +109,7 @@ def get_volumes(blocks, layout_info):
     """
     volumes = {}
 
-    vol_blocks_lists = sort.by_vol_id(blocks, layout_info[2])
+    vol_blocks_lists = sort.by_vol_id(blocks, layout_info[-1])
 
     for vol_rec in blocks[layout_info[0]].vtbl_recs:
         vol_name = vol_rec.name.strip('\x00')

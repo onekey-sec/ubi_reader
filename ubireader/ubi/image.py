@@ -27,9 +27,9 @@ class description(object):
         self._image_seq = blocks[layout_info[0]].ec_hdr.image_seq
         self.vid_hdr_offset = blocks[layout_info[0]].ec_hdr.vid_hdr_offset
         self.version = blocks[layout_info[0]].ec_hdr.version
-        self._block_list = layout_info[2]
-        self._start_peb = min(layout_info[2])
-        self._end_peb = max(layout_info[2])
+        self._block_list = layout_info[-1]
+        self._start_peb = min(layout_info[-1])
+        self._end_peb = max(layout_info[-1])
         self._volumes = get_volumes(blocks, layout_info)
         log(description, 'Created Image: %s, Volume Cnt: %s' % (self.image_seq, len(self.volumes)))
 
