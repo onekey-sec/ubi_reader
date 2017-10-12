@@ -45,9 +45,9 @@ Run program with -h or --help for explanation of options.
 
 The script accepts a file with UBI or UBIFS data in it, so should work with a NAND
 dump. It will search for the first occurance of UBI or UBIFS data and attempt to
-extract the contents. If file includes special files, you will may need to run as
-fakeroot and set the (-k, --keep-permissions) option, for it to create these files.
-With out it, it'll skip them and show a warning that these files were not created.
+extract the contents. If file includes special files, you will need to run as
+root or sudo for it to create these files. With out it, it'll skip them and show a
+warning that these files were not created.
 
 ## Extracting Images:
     ubireader_extract_images [options] path/to/file
