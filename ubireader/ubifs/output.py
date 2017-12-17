@@ -37,6 +37,7 @@ def extract_files(ubifs, out_path, perms=False):
     try:
         inodes = {}
         bad_blocks = []
+
         walk.index(ubifs, ubifs.master_node.root_lnum, ubifs.master_node.root_offs, inodes, bad_blocks)
 
         if len(inodes) < 2:
@@ -75,6 +76,8 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
             for dnode in inode['dent']:
                 extract_dents(ubifs, inodes, dnode, dent_path, perms)
 
+        _set_file_timestamps(dent_path, inode)
+
     elif dent_node.type == UBIFS_ITYPE_REG:
         try:
             if inode['ino'].nlink > 1:
@@ -83,12 +86,14 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
                     buf = _process_reg_file(ubifs, inode, dent_path)
                     _write_reg_file(dent_path, buf)
                 else:
-                    os.link(inode['hlink'] ,dent_path)
+                    os.link(inode['hlink'], dent_path)
                     log(extract_dents, 'Make Link: %s > %s' % (dent_path, inode['hlink']))
             else:
                 buf = _process_reg_file(ubifs, inode, dent_path)
                 _write_reg_file(dent_path, buf)
-                
+
+            _set_file_timestamps(dent_path, inode)
+
             if perms:
                 _set_file_perms(dent_path, inode)
 
@@ -116,6 +121,7 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
             else:
                 log(extract_dents, 'Create dummy node.')
                 _write_reg_file(dent_path, str(dev))
+
                 if perms:
                     _set_file_perms(dent_path, inode)
                 
@@ -147,7 +153,10 @@ def _set_file_perms(path, inode):
     os.chown(path, inode['ino'].uid, inode['ino'].gid)
     verbose_log(_set_file_perms, 'perms:%s, owner: %s.%s, path: %s' % (inode['ino'].mode, inode['ino'].uid, inode['ino'].gid, path))
 
-    
+def _set_file_timestamps(path, inode):
+    os.utime(path, (inode['ino'].atime_sec, inode['ino'].mtime_sec))
+    verbose_log(_set_file_timestamps, 'timestamps: access: %s, modify: %s, path: %s' % (inode['ino'].atime_sec, inode['ino'].mtime_sec, path))
+
 def _write_reg_file(path, data):
     with open(path, 'wb') as f:
         f.write(data)
@@ -161,6 +170,7 @@ def _process_reg_file(ubifs, inode, path):
             compr_type = 0
             sorted_data = sorted(inode['data'], key=lambda x: x.key['khash'])
             last_khash = sorted_data[0].key['khash']-1
+
             for data in sorted_data:
                 
                 # If data nodes are missing in sequence, fill in blanks
