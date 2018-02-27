@@ -194,21 +194,42 @@ def make_files(ubi, outpath):
 
                     ubi_flags = ubi_params[img_params][volume]['flags']
                     ubi_args = ubi_params[img_params][volume]['args']
-            
-                    leb = '%s %s' % (ubi_flags['leb_size'], ubi_args['leb_size'])
+                    mkfs_flags = ['min_io_size',
+                                  'leb_size',
+                                  'max_leb_cnt',
+                                  'default_compr',
+                                  'fanout',
+                                  'key_hash',
+                                  'orph_lebs',
+                                  'log_lebs']
+
+                    argstr = ''
+                    for flag in mkfs_flags:
+                        argstr += ' %s %s' % (ubi_flags[flag], ubi_args[flag])
+
+                    #leb = '%s %s' % (ubi_flags['leb_size'], ubi_args['leb_size'])
                     peb = '%s %s' % (ubi_flags['peb_size'], ubi_args['peb_size'])
                     min_io = '%s %s' % (ubi_flags['min_io_size'], ubi_args['min_io_size'])
-                    leb_cnt = '%s %s' % (ubi_flags['max_leb_cnt'], ubi_args['max_leb_cnt'])
+                    #leb_cnt = '%s %s' % (ubi_flags['max_leb_cnt'], ubi_args['max_leb_cnt'])
                     vid_hdr = '%s %s' % (ubi_flags['vid_hdr_offset'], ubi_args['vid_hdr_offset'])
                     sub_page = '%s %s' % (ubi_flags['sub_page_size'], ubi_args['sub_page_size'])
-    
-                    buf += '/usr/sbin/mkfs.ubifs %s %s %s -r $%s %s\n' % (min_io, leb, leb_cnt, (vol_idx+1), ubifs_files[vol_idx])
+
+                    buf += '/usr/sbin/mkfs.ubifs%s -r $%s %s\n' % (argstr, (vol_idx+1), ubifs_files[vol_idx])
 
                     vol_idx += 1
 
                 config.write(fini)
 
-            buf += '/usr/sbin/ubinize %s %s %s %s -o %s %s\n' % (peb, min_io, sub_page, vid_hdr, ubi_file, ini_file)
+            ubinize_flags = ['peb_size',
+                              'min_io_size',
+                              'vid_hdr_offset',
+                              'sub_page_size']
+
+            argstr = ''
+            for flag in ubinize_flags:
+                argstr += ' %s %s' % (ubi_flags[flag], ubi_args[flag])
+
+            buf += '/usr/sbin/ubinize%s -o %s %s\n' % (argstr, ubi_file, ini_file)
             fscr.write(buf)
         os.chmod(script_path, 0755)
 
