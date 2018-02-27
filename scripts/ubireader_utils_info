@@ -223,7 +223,9 @@ def make_files(ubi, outpath):
             ubinize_flags = ['peb_size',
                               'min_io_size',
                               'vid_hdr_offset',
-                              'sub_page_size']
+                              'sub_page_size',
+                              'version',
+                              'image_seq']
 
             argstr = ''
             for flag in ubinize_flags:
