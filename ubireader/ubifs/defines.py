@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #############################################################
 # Adapted in part from linux-source-3.2/fs/ubi/ubi-media.h
