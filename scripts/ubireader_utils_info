@@ -22,7 +22,7 @@ import os
 import sys
 import time
 import argparse
-import ConfigParser
+import configparser
 
 from ubireader import settings
 from ubireader.ubi import ubi
@@ -41,7 +41,7 @@ def create_output_dir(outpath):
         try:
             os.makedirs(outpath)
             log(create_output_dir, 'Created output path: %s' % outpath)
-        except Exception, e:
+        except Exception as e:
             error(create_output_dir, 'Fatal', '%s' % e)
 
 
@@ -144,26 +144,26 @@ def print_ubi_params(ubi_obj):
             ini_params = ubi_params[img_params][volume]['ini']
             sorted_keys = sorted(ubi_params[img_params][volume]['args'])
     
-            print '\nVolume %s' % volume
+            print('\nVolume %s' % volume)
             for key in sorted_keys:
                 if len(key)< 8:
                     name = '%s\t' % key
                 else:
                     name = key
-                print '\t%s\t%s %s' % (name, ubi_flags[key], ubi_args[key])
+                print('\t%s\t%s %s' % (name, ubi_flags[key], ubi_args[key]))
 
-            print '\n\t#ubinize.ini#'            
-            print '\t[%s]' % ini_params['vol_name']
+            print('\n\t#ubinize.ini#')            
+            print('\t[%s]' % ini_params['vol_name'])
             for key in ini_params:
                 if key != 'name':
-                    print '\t%s=%s' % (key, ini_params[key])
+                    print('\t%s=%s' % (key, ini_params[key]))
 
 
 def make_files(ubi, outpath):
     ubi_params = get_ubi_params(ubi)
 
     for img_params in ubi_params:
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         img_outpath = os.path.join(outpath, 'img-%s' % img_params)
 
         if not os.path.exists(img_outpath):
@@ -174,11 +174,11 @@ def make_files(ubi, outpath):
         script_path = os.path.join(img_outpath, 'create_ubi_img-%s.sh' % img_params)
         ubifs_files =[]               
         buf = '#!/bin/sh\n'
-        print 'Writing to: %s' % script_path 
+        print('Writing to: %s' % script_path) 
 
         with open(script_path, 'w') as fscr:
             with open(ini_path, 'w') as fini:
-                print 'Writing to: %s' % ini_path
+                print('Writing to: %s' % ini_path)
                 vol_idx = 0
 
                 for volume in ubi_params[img_params]:
@@ -233,7 +233,7 @@ def make_files(ubi, outpath):
 
             buf += '/usr/sbin/ubinize%s -o %s %s\n' % (argstr, ubi_file, ini_file)
             fscr.write(buf)
-        os.chmod(script_path, 0755)
+        os.chmod(script_path, 0o755)
 
 if __name__=='__main__':
     start = time.time()

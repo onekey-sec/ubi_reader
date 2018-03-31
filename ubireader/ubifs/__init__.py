@@ -56,11 +56,11 @@ class ubifs():
                 verbose_display(self._sb_node)
             else:
                 raise Exception('Wrong node type.')
-        except Exception, e:
+        except Exception as e:
             error(self, 'Fatal', 'Super block error: %s' % e)
 
         self._mst_nodes = [None, None]
-        for i in xrange(0, 2):
+        for i in range(0, 2):
             try:
                 mst_offset = self.leb_size * (UBIFS_MST_LNUM + i) 
                 self.file.seek(mst_offset)
@@ -76,7 +76,7 @@ class ubifs():
                     verbose_display(self._mst_nodes[i])
                 else:
                     raise Exception('Wrong node type.')
-            except Exception, e:
+            except Exception as e:
                 error(self, 'Fatal', 'Master block %s error: %s' % (i, e))
 
         if not self._mst_nodes[0] or not self._mst_nodes[1]:

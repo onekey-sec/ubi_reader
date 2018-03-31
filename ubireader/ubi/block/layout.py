@@ -39,9 +39,9 @@ def group_pairs(blocks, layout_blocks_list):
         else:
             image_dict[image_seq].append(block_id)
 
-    log(group_pairs, 'Layout blocks found at PEBs: %s' % image_dict.values())
+    log(group_pairs, 'Layout blocks found at PEBs: %s' % list(image_dict.values()))
 
-    return image_dict.values()
+    return list(image_dict.values())
 
 
 def associate_blocks(blocks, layout_pairs, start_peb_num):

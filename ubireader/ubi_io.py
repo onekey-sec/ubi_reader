@@ -55,7 +55,7 @@ class ubi_file(object):
         try:
             log(self, 'Open Path: %s' % path)
             self._fhandle = open(path, 'rb')
-        except Exception, e:
+        except Exception as e:
             error(self, 'Fatal', 'Open file: %s' % e)
 
         self._fhandle.seek(0,2)
@@ -212,7 +212,7 @@ class leb_virtual_file():
                 self._last_leb = leb
                 self.seek(self.tell() + size)
                 return buf[offset:offset+size]
-            except Exception, e:
+            except Exception as e:
                 error(self, 'Fatal', 'read loc: %s, size: %s, LEB: %s, offset: %s, error: %s' % (self._last_read_addr, size, leb, offset, e))
 
 

@@ -35,7 +35,7 @@ def create_output_dir(outpath):
         try:
             os.makedirs(outpath)
             log(create_output_dir, 'Created output path: %s' % outpath)
-        except Exception, e:
+        except Exception as e:
             error(create_output_dir, 'Fatal', '%s' % e)
 
 
