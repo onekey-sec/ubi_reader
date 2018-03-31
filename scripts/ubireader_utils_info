@@ -96,7 +96,7 @@ def get_ubi_params(ubi_obj):
                 ini_params[img_seq][volume]['vol_flags'] = image.volumes[volume].vol_rec.flags
 
             ini_params[img_seq][volume]['vol_id'] = image.volumes[volume].vol_id
-            ini_params[img_seq][volume]['vol_name'] = image.volumes[volume].name.rstrip('\x00')
+            ini_params[img_seq][volume]['vol_name'] = image.volumes[volume].name.rstrip(b'\x00').decode('utf-8')
             ini_params[img_seq][volume]['vol_alignment'] = image.volumes[volume].vol_rec.alignment
 
             ini_params[img_seq][volume]['vol_size'] = image.volumes[volume].vol_rec.reserved_pebs * ubi_obj.leb_size
@@ -117,7 +117,7 @@ def get_ubi_params(ubi_obj):
             
             for key, value in image.volumes[volume].vol_rec:
                 if key == 'name':
-                    value = value.rstrip('\x00')
+                    value = value.rstrip(b'\x00').decode('utf-8')
 
                 if key in ubi_flags:
                     ubi_args[img_seq][volume][key] = value
@@ -190,7 +190,7 @@ def make_files(ubi, outpath):
                     config.set(volume, 'image', ubifs_files[vol_idx])
         
                     for i in ini_params:
-                        config.set(volume, i, ini_params[i])
+                        config.set(volume, i, str(ini_params[i]))
 
                     ubi_flags = ubi_params[img_params][volume]['flags']
                     ubi_args = ubi_params[img_params][volume]['args']
