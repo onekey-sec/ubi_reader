@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #############################################################
 # ubi_reader/ubifs
 # (c) 2013 Jason Pruitt (jrspruitt@gmail.com)
