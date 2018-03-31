@@ -152,7 +152,7 @@ def vol_rec(vol_rec, tab=''):
             value = 'autoresize'
 
         elif key == 'name':
-            value = value.strip('\x00')
+            value = value.strip(b'\x00')
 
         buf += '%s%s: %r\n' % (tab, key, value)
     return buf

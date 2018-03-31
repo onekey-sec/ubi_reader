@@ -238,7 +238,7 @@ class leb_virtual_file():
         for block in self._blocks:
             while 0 != (self._ubi.blocks[block].leb_num - last_leb):
                 last_leb += 1
-                yield '\xff'*self._ubi.leb_size
+                yield b'\xff'*self._ubi.leb_size
 
             last_leb += 1
             yield self._ubi.file.read_block_data(self._ubi.blocks[block])

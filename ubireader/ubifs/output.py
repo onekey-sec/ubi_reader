@@ -177,7 +177,7 @@ def _process_reg_file(ubifs, inode, path):
                 # with \x00 * UBIFS_BLOCK_SIZE
                 if data.key['khash'] - last_khash != 1:
                     while 1 != (data.key['khash'] - last_khash):
-                        buf += '\x00'*UBIFS_BLOCK_SIZE
+                        buf += b'\x00'*UBIFS_BLOCK_SIZE
                         last_khash += 1
 
                 compr_type = data.compr_type
@@ -192,6 +192,6 @@ def _process_reg_file(ubifs, inode, path):
     
     # Pad end of file with \x00 if needed.
     if inode['ino'].size > len(buf):
-        buf += '\x00' * (inode['ino'].size - len(buf))
+        buf += b'\x00' * (inode['ino'].size - len(buf))
         
     return buf

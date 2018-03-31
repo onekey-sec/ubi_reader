@@ -35,7 +35,7 @@
 import struct
 
 # Magic number
-UBI_EC_HDR_MAGIC = '\x55\x42\x49\x23'
+UBI_EC_HDR_MAGIC = b'\x55\x42\x49\x23'
 
 # Initial CRC32 checksum value.
 UBI_CRC32_INIT = 4294967295 #0xFFFFFFFF
@@ -62,7 +62,7 @@ EC_HDR_FIELDS = ['magic',           # Magic string UBI#
 UBI_EC_HDR_SZ = struct.calcsize(EC_HDR_FORMAT) # 64
 
 # Volume ID header.
-UBI_VID_HDR_MAGIC ='\x55\x42\x49\x21' # UBI!
+UBI_VID_HDR_MAGIC =b'\x55\x42\x49\x21' # UBI!
 VID_HDR_FORMAT = '>4sBBBBII4sIIII4sQ12sI'
 VID_HDR_FIELDS = ['magic',      # Magic string UBI!
                   'version',    # UBI version meant to accept this image.
