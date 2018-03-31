@@ -49,7 +49,7 @@ def volume(volume, tab=''):
     buf = '%s%s\n' % (tab, volume)
     buf += '%s---------------------\n' % (tab)
     buf += '\t%sVol ID: %s\n' % (tab, volume.vol_id)
-    buf += '\t%sName: %s\n' % (tab, volume.name)
+    buf += '\t%sName: %s\n' % (tab, volume.name.decode('utf-8'))
     buf += '\t%sBlock Count: %s\n' % (tab, volume.block_count)
 
     buf += '\n'
@@ -152,7 +152,10 @@ def vol_rec(vol_rec, tab=''):
             value = 'autoresize'
 
         elif key == 'name':
-            value = value.strip(b'\x00')
+            value = value.strip(b'\x00').decode('utf-8')
+
+        elif key == 'padding':
+            value = value.decode('utf-8')
 
         buf += '%s%s: %r\n' % (tab, key, value)
     return buf

@@ -48,7 +48,7 @@ class description(object):
 
 
     def __repr__(self):
-        return 'Volume: %s' % (self.name)
+        return 'Volume: %s' % (self.name.decode('utf-8'))
 
 
     def _get_name(self):
@@ -112,7 +112,7 @@ def get_volumes(blocks, layout_info):
     vol_blocks_lists = sort.by_vol_id(blocks, layout_info[2])
 
     for vol_rec in blocks[layout_info[0]].vtbl_recs:
-        vol_name = vol_rec.name.strip(b'\x00')
+        vol_name = vol_rec.name.strip(b'\x00').decode('utf-8')
         if vol_rec.rec_index not in vol_blocks_lists:
             vol_blocks_lists[vol_rec.rec_index] = []
         volumes[vol_name] = description(vol_rec.rec_index, vol_rec, vol_blocks_lists[vol_rec.rec_index])
