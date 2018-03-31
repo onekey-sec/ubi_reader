@@ -77,7 +77,7 @@ class ubi_file(object):
         if start_offset > self._end_offset:
             error(self, 'Fatal', 'Start offset larger than end offset.')
 
-        if end_offset > file_size:
+        if ( not end_offset is None ) and ( end_offset > file_size ):
             error(self, 'Fatal', 'End offset larger than file size.')
 
         self._fhandle.seek(self._start_offset)
