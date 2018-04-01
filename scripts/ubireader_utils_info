@@ -22,8 +22,10 @@ import os
 import sys
 import time
 import argparse
-import configparser
-
+if (sys.version_info > (3, 0)):
+    import configparser
+else:
+    import ConfigParser as configparser
 from ubireader import settings
 from ubireader.ubi import ubi
 from ubireader.ubi.defines import UBI_EC_HDR_MAGIC, PRINT_VOL_TYPE_LIST, UBI_VTBL_AUTORESIZE_FLG
