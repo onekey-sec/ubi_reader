@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #############################################################
 # ubi_reader/ubifs
 # (c) 2013 Jason Pruitt (jrspruitt@gmail.com)
@@ -49,7 +49,7 @@ def extract_files(ubifs, out_path, perms=False):
         if len(bad_blocks):
             error(extract_files, 'Warning', 'Data may be missing or corrupted, bad blocks, LEB [%s]' % ','.join(map(str, bad_blocks)))
 
-    except Exception, e:
+    except Exception as e:
         error(extract_files, 'Error', '%s' % e)
 
 
@@ -69,7 +69,7 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
 
                 if perms:
                     _set_file_perms(dent_path, inode)
-        except Exception, e:
+        except Exception as e:
             error(extract_dents, 'Warn', 'DIR Fail: %s' % e)
 
         if 'dent' in inode:
@@ -97,7 +97,7 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
             if perms:
                 _set_file_perms(dent_path, inode)
 
-        except Exception, e:
+        except Exception as e:
             error(extract_dents, 'Warn', 'FILE Fail: %s' % e)
 
     elif dent_node.type == UBIFS_ITYPE_LNK:
@@ -106,7 +106,7 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
             os.symlink('%s' % inode['ino'].data, dent_path)
             log(extract_dents, 'Make Symlink: %s > %s' % (dent_path, inode['ino'].data))
 
-        except Exception, e:
+        except Exception as e:
             error(extract_dents, 'Warn', 'SYMLINK Fail: %s' % e) 
 
     elif dent_node.type in [UBIFS_ITYPE_BLK, UBIFS_ITYPE_CHR]:
@@ -125,7 +125,7 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
                 if perms:
                     _set_file_perms(dent_path, inode)
                 
-        except Exception, e:
+        except Exception as e:
             error(extract_dents, 'Warn', 'DEV Fail: %s' % e)
 
     elif dent_node.type == UBIFS_ITYPE_FIFO:
@@ -135,7 +135,7 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
 
             if perms:
                 _set_file_perms(dent_path, inode)
-        except Exception, e:
+        except Exception as e:
             error(extract_dents, 'Warn', 'FIFO Fail: %s : %s' % (dent_path, e))
 
     elif dent_node.type == UBIFS_ITYPE_SOCK:
@@ -144,7 +144,7 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
                 _write_reg_file(dent_path, '')
                 if perms:
                     _set_file_perms(dent_path, inode)
-        except Exception, e:
+        except Exception as e:
             error(extract_dents, 'Warn', 'SOCK Fail: %s : %s' % (dent_path, e))
 
 
@@ -177,7 +177,7 @@ def _process_reg_file(ubifs, inode, path):
                 # with \x00 * UBIFS_BLOCK_SIZE
                 if data.key['khash'] - last_khash != 1:
                     while 1 != (data.key['khash'] - last_khash):
-                        buf += '\x00'*UBIFS_BLOCK_SIZE
+                        buf += b'\x00'*UBIFS_BLOCK_SIZE
                         last_khash += 1
 
                 compr_type = data.compr_type
@@ -187,11 +187,11 @@ def _process_reg_file(ubifs, inode, path):
                 last_khash = data.key['khash']
                 verbose_log(_process_reg_file, 'ino num: %s, compression: %s, path: %s' % (inode['ino'].key['ino_num'], compr_type, path))
 
-    except Exception, e:
+    except Exception as e:
         error(_process_reg_file, 'Warn', 'inode num:%s :%s' % (inode['ino'].key['ino_num'], e))
     
     # Pad end of file with \x00 if needed.
     if inode['ino'].size > len(buf):
-        buf += '\x00' * (inode['ino'].size - len(buf))
+        buf += b'\x00' * (inode['ino'].size - len(buf))
         
     return buf

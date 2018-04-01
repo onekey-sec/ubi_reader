@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #############################################################
 # ubi_reader
@@ -41,7 +41,7 @@ def create_output_dir(outpath):
         try:
             os.makedirs(outpath)
             log(create_output_dir, 'Created output path: %s' % outpath)
-        except Exception, e:
+        except Exception as e:
             error(create_output_dir, 'Fatal', '%s' % e)
 
 
@@ -176,7 +176,7 @@ if __name__=='__main__':
 
                 # Extract files from UBI image.
                 ubifs_obj = ubifs(lebv_file)
-                print 'Extracting files to: %s' % vol_outpath
+                print('Extracting files to: %s' % vol_outpath)
                 extract_files(ubifs_obj, vol_outpath, perms)
 
 
@@ -188,8 +188,8 @@ if __name__=='__main__':
         create_output_dir(outpath)
 
         # Extract files from UBIFS image.
-        print 'Extracting files to: %s' % outpath
+        print('Extracting files to: %s' % outpath)
         extract_files(ubifs_obj, outpath, perms)
 
     else:
-        print 'Something went wrong to get here.'
+        print('Something went wrong to get here.')

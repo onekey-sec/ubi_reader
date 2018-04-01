@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #############################################################
 # ubi_reader/ubifs
 # (c) 2013 Jason Pruitt (jrspruitt@gmail.com)
@@ -50,7 +50,7 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
         node_buf = ubifs.file.read(chdr.len - UBIFS_COMMON_HDR_SZ)
         file_offset = ubifs.file.last_read_addr()
 
-    except Exception, e:
+    except Exception as e:
         if e.message == 'Bad Read Offset Request' and settings.warn_only_block_read_errors:
             bad_blocks.append(lnum)
             return

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #############################################################
 # ubi_reader/ubi
 # (c) 2013 Jason Pruitt (jrspruitt@gmail.com)
@@ -122,7 +122,7 @@ def extract_blocks(ubi):
     for i in range(ubi.file.start_offset, ubi.file.end_offset, ubi.file.block_size):
         try:
             buf = ubi.file.read(ubi.file.block_size)
-        except Exception, e:
+        except Exception as e:
             if settings.warn_only_block_read_errors:
                 error(extract_blocks, 'Error', 'PEB: %s: %s' % (ubi.first_peb_num + peb_count, e.message))
                 continue

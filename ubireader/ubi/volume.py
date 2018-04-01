@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #############################################################
 # ubi_reader/ubi
 # (c) 2013 Jason Pruitt (jrspruitt@gmail.com)
@@ -48,7 +48,7 @@ class description(object):
 
 
     def __repr__(self):
-        return 'Volume: %s' % (self.name)
+        return 'Volume: %s' % (self.name.decode('utf-8'))
 
 
     def _get_name(self):
@@ -89,7 +89,7 @@ class description(object):
         for block in sort.by_leb(self.get_blocks(ubi.blocks)):
             if block == 'x':
                 last_leb += 1
-                yield '\xff'*ubi.leb_size
+                yield b'\xff'*ubi.leb_size
             else:
                 last_leb += 1
                 yield ubi.file.read_block_data(ubi.blocks[block])
@@ -112,7 +112,7 @@ def get_volumes(blocks, layout_info):
     vol_blocks_lists = sort.by_vol_id(blocks, layout_info[2])
 
     for vol_rec in blocks[layout_info[0]].vtbl_recs:
-        vol_name = vol_rec.name.strip('\x00')
+        vol_name = vol_rec.name.strip(b'\x00').decode('utf-8')
         if vol_rec.rec_index not in vol_blocks_lists:
             vol_blocks_lists[vol_rec.rec_index] = []
         volumes[vol_name] = description(vol_rec.rec_index, vol_rec, vol_blocks_lists[vol_rec.rec_index])

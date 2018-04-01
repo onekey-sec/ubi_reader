@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #############################################################
 # ubi_reader/ubi
 # (c) 2013 Jason Pruitt (jrspruitt@gmail.com)
@@ -62,7 +62,7 @@ def by_range(blocks, block_range):
     Returns:
     List                        -- Indexes of blocks sorted by LEB.
     """
-    peb_range = range(block_range[0],block_range[1])
+    peb_range = list(range(block_range[0],block_range[1]))
     return [i for i in blocks if i in peb_range]
 
 

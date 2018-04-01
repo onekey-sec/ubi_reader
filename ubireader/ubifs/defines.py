@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #############################################################
 # Adapted in part from linux-source-3.2/fs/ubi/ubi-media.h
@@ -35,7 +35,7 @@ import struct
 # Constant defines
 
 # Common Header.
-UBIFS_NODE_MAGIC = '\x31\x18\x10\x06' # Set to LSB
+UBIFS_NODE_MAGIC = b'\x31\x18\x10\x06' # Set to LSB
 
 # Initial CRC32 value.
 UBIFS_CRC32_INIT = 0xFFFFFFFF
@@ -64,7 +64,7 @@ UBIFS_BLOCK_SIZE = 4096
 UBIFS_BLOCK_SHIFT = 12
 
 # UBIFS padding byte pattern.
-UBIFS_PADDING_BYTE = '\xCE'
+UBIFS_PADDING_BYTE = b'\xCE'
 
 # Max key length
 UBIFS_MAX_KEY_LEN = 16

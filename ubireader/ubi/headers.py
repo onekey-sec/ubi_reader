@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #############################################################
 # ubi_reader/ubi
 # (c) 2013 Jason Pruitt (jrspruitt@gmail.com)
@@ -25,7 +25,7 @@ from ubireader.ubi.defines import *
 
 class ec_hdr(object):
     def __init__(self, buf):
-        fields = dict(zip(EC_HDR_FIELDS, struct.unpack(EC_HDR_FORMAT,buf)))
+        fields = dict(list(zip(EC_HDR_FIELDS, struct.unpack(EC_HDR_FORMAT,buf))))
         for key in fields:
             setattr(self, key, fields[key])
         setattr(self, 'errors', [])
@@ -49,7 +49,7 @@ class ec_hdr(object):
 
 class vid_hdr(object):
     def __init__(self, buf):
-        fields = dict(zip(VID_HDR_FIELDS, struct.unpack(VID_HDR_FORMAT,buf)))
+        fields = dict(list(zip(VID_HDR_FIELDS, struct.unpack(VID_HDR_FORMAT,buf))))
         for key in fields:
             setattr(self, key, fields[key])
         setattr(self, 'errors', [])
@@ -92,7 +92,7 @@ def vtbl_recs(buf):
 
 class _vtbl_rec(object):
     def __init__(self, buf):
-        fields = dict(zip(VTBL_REC_FIELDS, struct.unpack(VTBL_REC_FORMAT,buf)))
+        fields = dict(list(zip(VTBL_REC_FIELDS, struct.unpack(VTBL_REC_FORMAT,buf))))
         for key in fields:
             setattr(self, key, fields[key])
         setattr(self, 'errors', [])

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #############################################################
 # ubi_reader/ubi_io
 # (c) 2013 Jason Pruitt (jrspruitt@gmail.com)
@@ -55,7 +55,7 @@ class ubi_file(object):
         try:
             log(self, 'Open Path: %s' % path)
             self._fhandle = open(path, 'rb')
-        except Exception, e:
+        except Exception as e:
             error(self, 'Fatal', 'Open file: %s' % e)
 
         self._fhandle.seek(0,2)
@@ -77,7 +77,7 @@ class ubi_file(object):
         if start_offset > self._end_offset:
             error(self, 'Fatal', 'Start offset larger than end offset.')
 
-        if end_offset > file_size:
+        if ( not end_offset is None ) and ( end_offset > file_size ):
             error(self, 'Fatal', 'End offset larger than file size.')
 
         self._fhandle.seek(self._start_offset)
@@ -212,7 +212,7 @@ class leb_virtual_file():
                 self._last_leb = leb
                 self.seek(self.tell() + size)
                 return buf[offset:offset+size]
-            except Exception, e:
+            except Exception as e:
                 error(self, 'Fatal', 'read loc: %s, size: %s, LEB: %s, offset: %s, error: %s' % (self._last_read_addr, size, leb, offset, e))
 
 
@@ -238,7 +238,7 @@ class leb_virtual_file():
         for block in self._blocks:
             while 0 != (self._ubi.blocks[block].leb_num - last_leb):
                 last_leb += 1
-                yield '\xff'*self._ubi.leb_size
+                yield b'\xff'*self._ubi.leb_size
 
             last_leb += 1
             yield self._ubi.file.read_block_data(self._ubi.blocks[block])

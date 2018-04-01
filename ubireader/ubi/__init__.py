@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #############################################################
 # ubi_reader/ubi
 # (c) 2013 Jason Pruitt (jrspruitt@gmail.com)
@@ -51,7 +51,7 @@ class ubi_base(object):
         if self._block_count <= 0:
             error(self, 'Fatal', 'No blocks found.')
 
-        arbitrary_block = self.blocks.itervalues().next()
+        arbitrary_block = next(iter(self.blocks.values()))
         self._min_io_size = arbitrary_block.ec_hdr.vid_hdr_offset
         self._leb_size = self.file.block_size - arbitrary_block.ec_hdr.data_offset
 
