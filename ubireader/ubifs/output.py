@@ -165,7 +165,7 @@ def _write_reg_file(path, data):
 
 def _process_reg_file(ubifs, inode, path):
     try:
-        buf = ''
+        buf = b''
         if 'data' in inode:
             compr_type = 0
             sorted_data = sorted(inode['data'], key=lambda x: x.key['khash'])

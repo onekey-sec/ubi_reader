@@ -61,7 +61,7 @@ def decompress(ctype, unc_len, data):
     """
     if ctype == UBIFS_COMPR_LZO:
         try:
-            return lzo.decompress(''.join((b'\xf0', struct.pack('>I', unc_len), data)))
+            return lzo.decompress(b''.join((b'\xf0', struct.pack('>I', unc_len), data)))
         except Exception as e:
             error(decompress, 'Warn', 'LZO Error: %s' % e)
     elif ctype == UBIFS_COMPR_ZLIB:
