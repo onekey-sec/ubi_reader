@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #############################################################
 # ubi_reader/ubifs
 # (c) 2013 Jason Pruitt (jrspruitt@gmail.com)
@@ -97,7 +97,7 @@ class dent_node(object):
             else:
                 setattr(self, key, fields[key])
 
-        setattr(self, 'name', '%s' % buf[-self.nlen-1:-1])
+        setattr(self, 'name', '%s' % buf[-self.nlen-1:-1].decode('utf-8'))
         setattr(self, 'errors', [])
 
     def __repr__(self):
