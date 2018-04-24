@@ -23,7 +23,7 @@ from ubireader import settings
 
 def log(obj, message):
     if settings.logging_on or settings.logging_on_verbose:
-        print(obj.__name__, message)
+        print('{} {}'.format(obj.__name__, message))
 
 def verbose_log(obj, message):
     if settings.logging_on_verbose:
@@ -35,19 +35,19 @@ def verbose_display(displayable_obj):
 
 def error(obj, level, message):
     if settings.error_action is 'exit':
-        print(obj.__name__, '%s: %s' % (level, message))
+        print('{} {}: {}'.format(obj.__name__, level, message))
         if settings.fatal_traceback:
             traceback.print_exc()
         sys.exit(1)
 
     else:
         if level.lower() == 'warn':
-            print(obj.__name__, '%s: %s' % (level, message))
+            print('{} {}: {}'.format(obj.__name__, level, message))
         elif level.lower() == 'fatal':
-            print(obj.__name__, '%s: %s' % (level, message))
+            print('{} {}: {}'.format(obj.__name__, level, message))
             if settings.fatal_traceback:
                 traceback.print_exc()
             sys.exit(1)
         else:
-            print(obj.__name__, '%s: %s' % (level, message))
+            print('{} {}: {}'.format(obj.__name__, level, message))
 
