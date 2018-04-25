@@ -124,10 +124,10 @@ def extract_blocks(ubi):
             buf = ubi.file.read(ubi.file.block_size)
         except Exception as e:
             if settings.warn_only_block_read_errors:
-                error(extract_blocks, 'Error', 'PEB: %s: %s' % (ubi.first_peb_num + peb_count, e.message))
+                error(extract_blocks, 'Error', 'PEB: %s: %s' % (ubi.first_peb_num + peb_count, str(e)))
                 continue
             else:
-                error(extract_blocks, 'Fatal', 'PEB: %s: %s' % (ubi.first_peb_num + peb_count, e.message))
+                error(extract_blocks, 'Fatal', 'PEB: %s: %s' % (ubi.first_peb_num + peb_count, str(e)))
 
         if buf.startswith(UBI_EC_HDR_MAGIC):
             blk = description(buf)

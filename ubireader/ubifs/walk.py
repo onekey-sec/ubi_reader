@@ -51,7 +51,7 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
         file_offset = ubifs.file.last_read_addr()
 
     except Exception as e:
-        if e.message == 'Bad Read Offset Request' and settings.warn_only_block_read_errors:
+        if str(e) == 'Bad Read Offset Request' and settings.warn_only_block_read_errors:
             bad_blocks.append(lnum)
             return
 
