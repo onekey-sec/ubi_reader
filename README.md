@@ -28,7 +28,7 @@ Latest Version
 
 Or
 
-    $ sudo pip2 install ubi_reader
+    $ sudo pip install ubi_reader
 
 
 ## Usage:
