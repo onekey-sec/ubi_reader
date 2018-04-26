@@ -1,14 +1,10 @@
-
-## Python 3
-This is the initial branch for the Python3 version.
-
 # UBI Reader
 UBI Reader is a Python module and collection of scripts capable of extracting
 the contents of UBI and UBIFS images, along with analyzing these images to
 determine the parameter settings to recreate them using the mtd-utils tools.
 
 ## Testing Branch
-The testing branch includes a tools/ directory, that with scripts to help when trying to extract data from broken images. These also serve as examples of how to use ubi_reader in custom scripts.
+The testing branch includes a tools/ directory, that has scripts to help when trying to extract data from broken images. These also serve as examples of how to use parts of ubi_reader in custom scripts.
 
 An override system is also included, for manually setting certain parameters that may be reported wrong by the UBI/FS data.
 
@@ -16,27 +12,21 @@ This branch will probably remain seperate, as it is meant to be customized to ai
 
 ## Dependencies:
 
-Python 2.7 is required.
-
-python-lzo is the only non-standard module, it may or may not be available for your distro.
+Python 2.7 or 3.
 
     $ sudo apt-get install liblzo2-dev
+    $ sudo pip install python-lzo
 
-    If it is available.
-    $ sudo apt-get install python-lzo
-
-    Else you will need to install from sources.
-    $ git clone https://github.com/jd-boyd/python-lzo.git
-    $ cd python-lzo
-    $ python setup.py install
 
 ## Installation:
+
+Latest Version
 
     $ git clone https://github.com/jrspruitt/ubi_reader
     $ cd ubi_reader
     $ sudo python setup.py install
 
-    Or
+Or
 
     $ sudo pip2 install ubi_reader
 
@@ -95,18 +85,16 @@ Some general option flags are
 
 ### Known Issues
 
-* Socket files will be ignored, you can change modules/settings.py to have it created dummy files in their place.
+* Socket files will be ignored, you can change modules/settings.py to have it create dummy files in their place.
 
 * For NAND dumps and the like, this will not fix anything ECC would take care of, so some bad data
-may be extracted.
+may be extracted, this can also cause erratic behavior.
 
 * This does not replay the journal, so uncommited data will not be retrieved.
 
 * Assumes things are in good condition and where it thinks they should be...
 
 ### TODO
-
-* Organize, document, the usual.
 
 * Arbitrary block analyzer script.
 
