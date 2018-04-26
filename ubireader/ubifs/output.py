@@ -103,7 +103,7 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
     elif dent_node.type == UBIFS_ITYPE_LNK:
         try:
             # probably will need to decompress ino data if > UBIFS_MIN_COMPR_LEN
-            os.symlink('%s' % inode['ino'].data, dent_path)
+            os.symlink('%s' % inode['ino'].data.decode('utf-8'), dent_path)
             log(extract_dents, 'Make Symlink: %s > %s' % (dent_path, inode['ino'].data))
 
         except Exception as e:
