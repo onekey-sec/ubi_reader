@@ -80,6 +80,16 @@ class ubi_file(object):
         if ( not end_offset is None ) and ( end_offset > file_size ):
             error(self, 'Fatal', 'End offset larger than file size.')
 
+        # check if data aligns to blocks
+        alignment = self._end_offset % self._block_size
+
+        if ( alignment !=0 ):
+            old_end_offset=self._end_offset
+            self._end_offset = self._end_offset - alignment
+
+            log(self, 'End offset does not align with block size (0x%08X). '
+                      'Truncating %i bytes from file (was: %i bytes, now: %i bytes)'%(self._block_size,alignment,old_end_offset,self._end_offset))
+
         self._fhandle.seek(self._start_offset)
         self._last_read_addr = self._fhandle.tell()
         self.is_valid = True
