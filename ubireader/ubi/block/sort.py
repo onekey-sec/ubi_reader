@@ -34,8 +34,8 @@ def list_by_list(blist, slist):
 
     return slist_blocks
 
-def by_image_seq(blocks, image_seq):
-    """Sort blocks by provided image_seq number.
+def by_image_seq(blocks, image_seq, new_method=False):
+    """Filter blocks by provided image_seq number.
 
     Argument:
     List:blocks       -- List of block objects to sort.
@@ -44,13 +44,15 @@ def by_image_seq(blocks, image_seq):
     Returns:
     List        -- List of block indexes matching image_seq number.
     """
-    seq_blocks = []
-    for block in blocks:
-        if blocks[block].ec_hdr.image_seq == image_seq:
-            seq_blocks.append(block)
-
-    return seq_blocks
-
+    # TODO: This appears to be a filter more than a sort, shift over to just using the new_method below:
+    if not new_method:
+        seq_blocks = []
+        for block in blocks:
+            if blocks[block].ec_hdr.image_seq == image_seq:
+                seq_blocks.append(block)
+        return seq_blocks
+    else:
+        return list(filter(lambda block: blocks[block].ec_hdr.image_seq == image_seq, blocks))
 
 def by_range(blocks, block_range):
     """Sort blocks by Logical Erase Block number.
