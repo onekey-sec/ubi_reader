@@ -17,23 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-def list_by_list(blist, slist):
-    """Sort list of block indexes, by another list.
-
-    Argument:
-    List:blist           -- List of block indexes.
-    List:slist           -- Secondary list of blocks.
-
-    Returns:
-    List        -- List of block indexes matching slist from blist.
-    """
-    slist_blocks = []
-    for block in blist:
-        if block in slist:
-            slist_blocks.append(block)
-
-    return slist_blocks
-
 def by_image_seq(blocks, image_seq):
     """Filter blocks to return only those associated with the provided image_seq number.
 
@@ -45,20 +28,6 @@ def by_image_seq(blocks, image_seq):
     List        -- List of block indexes matching image_seq number.
     """
     return list(filter(lambda block: blocks[block].ec_hdr.image_seq == image_seq, blocks))
-
-def by_range(blocks, block_range):
-    """Sort blocks by Logical Erase Block number.
-    
-    Arguments:
-    List:blocks            -- List of block objects to sort.
-    List:block_range  -- range[0] = start number, range[1] = length
-    
-    Returns:
-    List                        -- Indexes of blocks sorted by LEB.
-    """
-    peb_range = list(range(block_range[0],block_range[1]))
-    return [i for i in blocks if i in peb_range]
-
 
 def by_leb(blocks):
     """Sort blocks by Logical Erase Block number.
@@ -111,30 +80,6 @@ def by_vol_id(blocks, slist=None):
         vol_blocks[blocks[i].vid_hdr.vol_id].append(blocks[i].peb_num)
 
     return vol_blocks
-
-
-def clean_bad(blocks, slist=None):
-    """Remove blocks from list with errors
-
-    Arguments:
-    Obj:blocks -- List of block objects.
-    List:slist     -- (optional) List of block indexes.
-
-    Return:
-    List -- Of error free block objects.
-    """
-
-    clean_blocks = []
-
-    for i in range(0, len(blocks)):
-        if slist and i not in slist:
-            continue
-
-        if blocks[i].is_valid:
-            clean_blocks.append(i)
-
-    return clean_blocks
-
 
 def by_type(blocks, slist=None):
     """Sort blocks into layout, internal volume, data or unknown
