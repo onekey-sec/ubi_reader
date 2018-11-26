@@ -35,7 +35,7 @@ block_size = 131072
 if len(sys.argv) < 4:
     print """
 Usage:
-    extract_blocks.py dump.no_oob "{'block.attr': value,...}"
+    extract_blocks.py dump.no_oob "{'block.attr': value,...}" output/path/
         Extracts UBI blocks into PEB data files, and text description files.
 
     The second arg is a double quoted string, which contains a Dict of
@@ -56,6 +56,7 @@ fpath = sys.argv[1]
 opath = sys.argv[3]
 try:
     search = eval(sys.argv[2])
+
 except NameError as e:
     print '\nDict key block attrs must be single quoted.'
     sys.exit(1)
@@ -111,7 +112,8 @@ for block in ubi_obj.blocks:
 print '\nBlock matches: %s' % len(blocks)
 
 if len(blocks):
-    os.mkdir(opath)
+    if not os.path.exists(opath):
+        os.mkdir(opath)
 
 for block in blocks:
     with open('%s/PEB-%s_LEB:%s.block' % (opath, block.peb_num, block.leb_num), 'wb') as f:
