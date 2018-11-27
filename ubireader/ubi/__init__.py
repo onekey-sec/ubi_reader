@@ -152,7 +152,7 @@ class ubi(ubi_base):
         if len(layout_list) < 2:
             error(self, 'Fatal', 'Less than 2 layout blocks found.')
 
-        self._layout_blocks_list = layout_list
+        self._layout_blocks_list = layout.get_newest(self.blocks, layout_list)
         self._data_blocks_list = data_list
         self._int_vol_blocks_list = int_vol_list
         self._unknown_blocks_list = unknown_list
