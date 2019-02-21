@@ -50,7 +50,7 @@ def guess_start_offset(path, guess_offset=0):
                 return  file_offset + ubi_loc
 
             elif ubifs_loc < ubi_loc:
-                log(guess_start_offset, 'Found UBI magic number at %s' % (file_offset + ubifs_loc))
+                log(guess_start_offset, 'Found UBIFS magic number at %s' % (file_offset + ubifs_loc))
                 return file_offset + ubifs_loc
             else:
                 error(guess_start_offset, 'Fatal', 'Could not determine start offset.')
