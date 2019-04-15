@@ -48,6 +48,17 @@ extract the contents. If file includes special files, you will need to run as
 root or sudo for it to create these files. With out it, it'll skip them and show a
 warning that these files were not created.
 
+## List/Copy Files:
+    ubireader_list_files [options] path/to/file
+
+The script accepts a file with UBI or UBIFS data in it, so should work with a NAND
+dump. It will search for the first occurance of UBI or UBIFS data and treat it as
+a UBIFS. To list files supply the path to list (-P, --Path), e.g. "-P /" to list
+the filesystems root directory. To copy a file from the filesystem to a local directory
+supply the source path (-C, --Copy) and the destination path (-D, --CopyDestination),
+e.g. -C /etc/passwd -D . (extract /etc/passwd from the UBIFS image and copy it to
+local directory).
+
 ## Extracting Images:
     ubireader_extract_images [options] path/to/file
 
