@@ -66,16 +66,16 @@ if __name__=='__main__':
     parser.add_argument('-i', '--ignore-block-header-errors', action='store_true', dest='ignore_block_header_errors',
                       help='Forces unused and error containing blocks to be included and also displayed with log/verbose. (default: False)')
 
-    parser.add_argument('-P', '--Path', dest='listpath',
+    parser.add_argument('-P', '--path', dest='listpath',
                         help='Path to list.')
 
-    parser.add_argument('-C', '--Copy', dest='copyfile',
-                        help='File to Copy')
+    parser.add_argument('-C', '--copy', dest='copyfile',
+                        help='File to Copy.')
 
-    parser.add_argument('-D', '--CopyDestination', dest='copyfiledest',
-                        help='Copy Destination')
+    parser.add_argument('-D', '--copy-dest', dest='copyfiledest',
+                        help='Copy Destination.')
 
-    parser.add_argument('filepath', help='File to extract contents of.')
+    parser.add_argument('filepath', help='UBI/UBIFS image file.')
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -133,21 +133,11 @@ if __name__=='__main__':
         # Loop through found images in file.
         for image in ubi_obj.images:
 
-            # Create path for specific image
-            # In case multiple images in data
-            img_outpath = os.path.join(outpath, '%s' % image.image_seq)
-
             # Loop through volumes in each image.
             for volume in image.volumes:
 
                 # Get blocks associated with this volume.
                 vol_blocks = image.volumes[volume].get_blocks(ubi_obj.blocks)
-
-                # Create volume data output path.
-                vol_outpath = os.path.join(img_outpath, volume)
-                
-                # Create volume output path directory.
-                create_output_dir(vol_outpath)
 
                 # Skip volume if empty.
                 if not len(vol_blocks):
@@ -158,11 +148,13 @@ if __name__=='__main__':
                 # into memory.
                 lebv_file = leb_virtual_file(ubi_obj, vol_blocks)
 
-                # Extract files from UBI image.
+                # Create UBIFS object.
                 ubifs_obj = ubifs(lebv_file)
-                #print('Extracting files to: %s' % vol_outpath)
-                list_files(ubifs_obj, args.listpath)
 
+                if args.listpath:
+                    list_files(ubifs_obj, args.listpath)
+                if args.copyfile and args.copyfiledest:
+                    copy_file(ubifs_obj, args.copyfile, args.copyfiledest)
 
     elif filetype == UBIFS_NODE_MAGIC:
         # Create UBIFS object

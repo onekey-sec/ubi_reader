@@ -60,6 +60,7 @@ def list_files(ubifs, list_path):
     except Exception as e:
         error(list_files, 'Error', '%s' % e)
 
+
 def copy_file(ubifs, filepath, destpath):
     pathnames = filepath.split("/")
     pnames = []
@@ -93,9 +94,9 @@ def copy_file(ubifs, filepath, destpath):
                 destpath = os.path.join(destpath, filename)
             with open(destpath, 'wb') as f:
                 f.write(filedata)
-            #os.chmod(destpath, inodes[dent.inum]['ino'].mode)
             return True
     return False
+
 
 def find_dir(inodes, inum, names, idx):
     if len(names) == 0:
@@ -113,6 +114,7 @@ def print_dent(ubifs, inodes, dent_node, long=True, longts=False):
     inode = inodes[dent_node.inum]
     if long:
         fl = file_leng(ubifs, inode)
+
         lnk = ""
         if dent_node.type == UBIFS_ITYPE_LNK:
             lnk = " -> " + inode['ino'].data.decode('utf-8')
@@ -122,9 +124,10 @@ def print_dent(ubifs, inodes, dent_node, long=True, longts=False):
         else:
             mtime = time.strftime("%b %d %H:%M", time.gmtime(inode['ino'].mtime_sec))
 
-        print('%6o %s %s %7d %s %s%s' % (inode['ino'].mode, inode['ino'].uid, inode['ino'].gid, fl, mtime, dent_node.name, lnk))
+        print('%6o %2d %s %s %7d %s %s%s' % (inode['ino'].mode, inode['ino'].nlink, inode['ino'].uid, inode['ino'].gid, fl, mtime, dent_node.name, lnk))
     else:
         print(dent_node.name)
+
 
 def file_leng(ubifs, inode):
     fl = 0
@@ -141,6 +144,7 @@ def file_leng(ubifs, inode):
             fl = fl + data.size
         return fl
     return 0
+
 
 def _process_reg_file(ubifs, inode, path):
     try:

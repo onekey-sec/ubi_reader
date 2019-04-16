@@ -53,9 +53,9 @@ warning that these files were not created.
 
 The script accepts a file with UBI or UBIFS data in it, so should work with a NAND
 dump. It will search for the first occurance of UBI or UBIFS data and treat it as
-a UBIFS. To list files supply the path to list (-P, --Path), e.g. "-P /" to list
+a UBIFS. To list files supply the path to list (-P, --path), e.g. "-P /" to list
 the filesystems root directory. To copy a file from the filesystem to a local directory
-supply the source path (-C, --Copy) and the destination path (-D, --CopyDestination),
+supply the source path (-C, --copy) and the destination path (-D, --copy-dest),
 e.g. -C /etc/passwd -D . (extract /etc/passwd from the UBIFS image and copy it to
 local directory).
 
