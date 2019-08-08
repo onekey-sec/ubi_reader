@@ -81,6 +81,15 @@ the header info from the layout block, including volume table records. If it is 
 image, the Super Node, and both Master Nodes are displayed. Using the (-u, --ubifs-info)
 option, it will get the UBIFS info from inside a UBI file instead.
 
+## Display Block Information:
+    ubireader_display_blocks [options] "{'block.attr':?, ...}" path/to/file
+
+Search for and display block information. This can be used for debugging failed image
+and file extractions. The blocks are searched for using a double quoted Python Dict of
+search paramaters, example. "{'peb_num':[0, 1] + range(100, 102), 'ec_hdr.ec': 1, 'is_valid': True}"
+This will find PEBs 0, 1, 100, 101, 102, with an erase count of 1 that is a valid block.
+Can use any of the parameters in ubireader.ubi.block.description.
+
 ## Options:
 Some general option flags are
 * -l, --log: This prints to screen actions being taken while running.
