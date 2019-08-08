@@ -114,7 +114,4 @@ may be extracted, this can also cause erratic behavior.
 
 * Assumes things are in good condition and where it thinks they should be...
 
-### TODO
-
-* Arbitrary block analyzer script.
 
