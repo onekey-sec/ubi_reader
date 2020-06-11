@@ -27,7 +27,7 @@ def by_image_seq(blocks, image_seq):
     Returns:
     List        -- List of block indexes matching image_seq number.
     """
-    return list(filter(lambda block: blocks[block].ec_hdr.image_seq == image_seq, blocks))
+    return list(filter(lambda block: blocks[block].ec_hdr.image_seq == image_seq or image_seq == 0 or blocks[block].ec_hdr.image_seq == 0, blocks))
 
 def by_leb(blocks):
     """Sort blocks by Logical Erase Block number.
