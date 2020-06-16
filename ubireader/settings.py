@@ -31,3 +31,5 @@ logging_on = False                      # Print debug info on.
 logging_on_verbose = False              # Print verbose debug info on.
 
 use_dummy_socket_file = False           # Create regular file place holder.
+
+uboot_fix = False                      # Older u-boot sets image_seq to 0 on blocks it's written to.

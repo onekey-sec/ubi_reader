@@ -16,9 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
+from ubireader import settings
 
 def by_image_seq(blocks, image_seq):
     """Filter blocks to return only those associated with the provided image_seq number.
+       If uboot_fix is set, associate blocks with an image_seq of 0 also.
 
     Argument:
     List:blocks       -- List of block objects to sort.
@@ -27,7 +29,11 @@ def by_image_seq(blocks, image_seq):
     Returns:
     List        -- List of block indexes matching image_seq number.
     """
-    return list(filter(lambda block: blocks[block].ec_hdr.image_seq == image_seq or image_seq == 0 or blocks[block].ec_hdr.image_seq == 0, blocks))
+    if settings.uboot_fix:
+        return list(filter(lambda block: blocks[block].ec_hdr.image_seq == image_seq or image_seq == 0 or blocks[block].ec_hdr.image_seq == 0, blocks))
+
+    else:
+        return list(filter(lambda block: blocks[block].ec_hdr.image_seq == image_seq, blocks))
 
 def by_leb(blocks):
     """Sort blocks by Logical Erase Block number.

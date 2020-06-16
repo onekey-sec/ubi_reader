@@ -101,6 +101,7 @@ Some general option flags are
 * -g, --guess-offset: Specify offset to start guessing where UBI data is in file. Useful for NAND dumps with false positives before image.
 * -w, --warn-only-block-read-errors: Attempts to continue extracting files even with bad block reads. Some data will be missing or corrupted!
 * -i, --ignore-block-header-errors: Forces unused and error containing blocks to be included and also displayed with log/verbose.
+* -u, --u-boot-fix: Assume blocks with image_seq 0 are because of older U-boot implementations and include them. *This may cause issues with multiple UBI image files.
 * -o, --output-dir path: Specify where files should be written to, instead of ubi_reader/output
 
 ### Known Issues
