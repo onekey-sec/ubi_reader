@@ -75,7 +75,7 @@ if __name__=='__main__':
     parser.add_argument('-i', '--ignore-block-header-errors', action='store_true', dest='ignore_block_header_errors',
                       help='Forces unused and error containing blocks to be included and also displayed with log/verbose. (default: False)')
 
-    parser.add_argument('-u', '--u-boot-fix', action='store_true', dest='uboot_fix',
+    parser.add_argument('-f', '--u-boot-fix', action='store_true', dest='uboot_fix',
                       help='Assume blocks with image_seq 0 are because of older U-boot implementations and include them. (default: False)')
 
     parser.add_argument('block_search_params',

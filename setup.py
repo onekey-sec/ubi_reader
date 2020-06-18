@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-version = '0.6.6'
+version = '0.6.7'
 
 setup(
     name='ubi_reader',
