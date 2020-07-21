@@ -34,7 +34,7 @@ def verbose_display(displayable_obj):
         print(displayable_obj.display('\t'))
 
 def error(obj, level, message):
-    if settings.error_action is 'exit':
+    if settings.error_action == 'exit':
         print('{} {}: {}'.format(obj.__name__, level, message))
         if settings.fatal_traceback:
             traceback.print_exc()
