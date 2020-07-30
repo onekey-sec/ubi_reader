@@ -167,7 +167,10 @@ if __name__=='__main__':
                     print(ubifs_obj.display())
                     print(ubifs_obj.superblock_node.display('\t'))
                     print(ubifs_obj.master_node.display('\t'))
-                    print(ubifs_obj.master_node2.display('\t'))
+                    try:
+                        print(ubifs_obj.master_node2.display('\t'))
+                    except:
+                        print('Master Node Error only one valid node.')
 
     elif filetype == UBIFS_NODE_MAGIC:
         # Create UBIFS object
@@ -175,7 +178,10 @@ if __name__=='__main__':
         print(ubifs_obj.display())
         print(ubifs_obj.superblock_node.display('\t'))
         print(ubifs_obj.master_node.display('\t'))
-        print(ubifs_obj.master_node2.display('\t'))
+        try:
+            print(ubifs_obj.master_node2.display('\t'))
+        except:
+            print('Master Node Error only one valid node.')
 
     else:
         print('Something went wrong to get here.')

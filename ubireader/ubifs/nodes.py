@@ -209,6 +209,7 @@ class sb_node(object):
 
     Arguments:
     Bin:buf     -- Raw data to extract header information from.
+    Int:offset  -- Offset in LEB of data node.
 
     See ubifs/defines.py for object attributes.
     """
@@ -237,6 +238,7 @@ class mst_node(object):
 
     Arguments:
     Bin:buf     -- Raw data to extract header information from.
+    Int:offset  -- Offset in LEB of data node.
 
     See ubifs/defines.py for object attributes.
     """
