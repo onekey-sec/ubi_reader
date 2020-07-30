@@ -77,10 +77,15 @@ class ubifs():
                 else:
                     raise Exception('Wrong node type.')
             except Exception as e:
-                error(self, 'Fatal', 'Master block %s error: %s' % (i, e))
+                error(self, 'Warn', 'Master block %s error: %s' % (i, e))
 
-        if not self._mst_nodes[0] or not self._mst_nodes[1]:
-            error(self, 'Fatal', 'Less than 2 Master blocks found.')
+        if self._mst_nodes[0] is None and self._mst_nodes[1] is None:
+            error(self, 'Fatal', 'No valid Master Node found.')
+
+        elif self._mst_nodes[0] is None and self._mst_nodes[1] is not None:
+            self._mst_nodes[0] = self._mst_nodes[1]
+            self._mst_nodes[1] = None
+            log(self , 'Swapping Master Nodes due to bad first node.')
 
 
     def _get_file(self):
