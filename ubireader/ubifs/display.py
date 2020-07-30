@@ -41,6 +41,7 @@ def common_hdr(chdr, tab=''):
 
 def sb_node(node, tab=''):
     buf = '%s%s\n' % (tab, node)
+    buf += '%sFile offset: %s\n' % (tab, node.file_offset)
     buf += '%s---------------------\n' % (tab)
     tab += '\t'
     for key, value in node:
@@ -57,6 +58,7 @@ def sb_node(node, tab=''):
 
 def mst_node(node, tab=''):
     buf = '%s%s\n' % (tab, node)
+    buf += '%sFile offset: %s\n' % (tab, node.file_offset)
     buf += '%s---------------------\n' % (tab)
     tab += '\t'
     for key, value in node:

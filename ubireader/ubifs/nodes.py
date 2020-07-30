@@ -212,7 +212,8 @@ class sb_node(object):
 
     See ubifs/defines.py for object attributes.
     """
-    def __init__(self, buf):
+    def __init__(self, buf, file_offset):
+        self.file_offset = file_offset
         fields = dict(list(zip(UBIFS_SB_NODE_FIELDS, struct.unpack(UBIFS_SB_NODE_FORMAT, buf))))
         for key in fields:
             setattr(self, key, fields[key])
@@ -239,7 +240,8 @@ class mst_node(object):
 
     See ubifs/defines.py for object attributes.
     """
-    def __init__(self, buf):
+    def __init__(self, buf, file_offset):
+        self.file_offset = file_offset
         fields = dict(list(zip(UBIFS_MST_NODE_FIELDS, struct.unpack(UBIFS_MST_NODE_FORMAT, buf))))
         for key in fields:
             setattr(self, key, fields[key])

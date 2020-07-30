@@ -84,7 +84,7 @@ if __name__=='__main__':
                       Ex. "{\'peb_num\':[0, 1], \'ec_hdr.ec\': 1, \'is_valid\': True}"
                       """)
 
-    parser.add_argument('filepath', help='File to extract contents of.')
+    parser.add_argument('filepath', help='File with blocks of interest.')
 
     if len(sys.argv) == 1:
         parser.print_help()

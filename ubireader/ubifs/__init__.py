@@ -49,7 +49,7 @@ class ubifs():
             if sb_chdr.node_type == UBIFS_SB_NODE:
                 self.file.seek(UBIFS_COMMON_HDR_SZ)
                 buf = self.file.read(UBIFS_SB_NODE_SZ)
-                self._sb_node = nodes.sb_node(buf)
+                self._sb_node = nodes.sb_node(buf, self.file.last_read_addr())
                 self._min_io_size = self._sb_node.min_io_size
                 self._leb_size = self._sb_node.leb_size       
                 log(self , '%s file addr: %s' % (self._sb_node, self.file.last_read_addr()))
@@ -71,7 +71,7 @@ class ubifs():
                 if mst_chdr.node_type == UBIFS_MST_NODE:
                     self.file.seek(mst_offset + UBIFS_COMMON_HDR_SZ)
                     buf = self.file.read(UBIFS_MST_NODE_SZ)
-                    self._mst_nodes[i] = nodes.mst_node(buf)
+                    self._mst_nodes[i] = nodes.mst_node(buf, self.file.last_read_addr())
                     log(self , '%s%s file addr: %s' % (self._mst_nodes[i], i, self.file.last_read_addr()))
                     verbose_display(self._mst_nodes[i])
                 else:
