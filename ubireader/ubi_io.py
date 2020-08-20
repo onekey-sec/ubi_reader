@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from ubireader import settings
 from ubireader.debug import error, log, verbose_log
 from ubireader.ubi.block import sort
 
@@ -66,10 +67,14 @@ class ubi_file(object):
         log(self, 'Start Offset: %s' % (self._start_offset))
 
         if end_offset:
+            tail = file_size - end_offset
             self._end_offset = end_offset
         else:
-            self._end_offset = file_size 
+            tail = (file_size - start_offset) % block_size
+            self._end_offset = file_size - tail
         log(self, 'End Offset: %s' % (self._end_offset))
+        if tail > 0:
+            log(self, 'File Tail Size: %s' % (tail))
 
         self._block_size = block_size
         log(self, 'Block Size: %s' % block_size)
@@ -79,6 +84,13 @@ class ubi_file(object):
 
         if ( not end_offset is None ) and ( end_offset > file_size ):
             error(self, 'Fatal', 'End offset larger than file size.')
+
+        remainer = (self._end_offset - start_offset) % block_size
+        if remainer != 0:
+            if settings.warn_only_block_read_errors:
+                error(self, 'Error', 'File read is not block aligned.')
+            else:
+                error(self, 'Fatal', 'File read is not block aligned.')
 
         self._fhandle.seek(self._start_offset)
         self._last_read_addr = self._fhandle.tell()
