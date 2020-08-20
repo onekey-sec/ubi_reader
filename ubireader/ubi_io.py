@@ -85,8 +85,8 @@ class ubi_file(object):
         if ( not end_offset is None ) and ( end_offset > file_size ):
             error(self, 'Fatal', 'End offset larger than file size.')
 
-        remainer = (self._end_offset - start_offset) % block_size
-        if remainer != 0:
+        remainder = (self._end_offset - start_offset) % block_size
+        if remainder != 0:
             if settings.warn_only_block_read_errors:
                 error(self, 'Error', 'File read is not block aligned.')
             else:
