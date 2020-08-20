@@ -119,7 +119,7 @@ def extract_blocks(ubi):
     bad_blocks = []
 
     # range instead of xrange, as xrange breaks > 4GB end_offset.
-    for i in range(ubi.file.start_offset, ubi.file.end_offset, ubi.file.block_size):
+    for i in range(ubi.file.start_offset, ubi.file.end_offset - (ubi.file.end_offset % ubi.file.block_size), ubi.file.block_size):
         try:
             buf = ubi.file.read(ubi.file.block_size)
         except Exception as e:
