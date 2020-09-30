@@ -117,7 +117,7 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
                 log(extract_dents, 'Make Device Node: %s' % (dent_path))
 
                 if perms:
-                    _set_file_perms(path, inode)
+                    _set_file_perms(dent_path, inode)
             else:
                 log(extract_dents, 'Create dummy node.')
                 _write_reg_file(dent_path, str(dev))
