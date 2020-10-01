@@ -3,12 +3,24 @@ UBI Reader is a Python module and collection of scripts capable of extracting
 the contents of UBI and UBIFS images, along with analyzing these images to
 determine the parameter settings to recreate them using the mtd-utils tools.
 
+
+### Known Issues
+These are some known issues, that prevent an exact data dump from occuring.
+
+* This does not replay the journal, so uncommited data will not be retrieved. Data can be in the journal with both clean and unclean shutdowns.
+
+* Depending on how the NAND was dumped, the data bits may not be error corrected.
+
+* Socket files will be ignored, you can change ubireader/settings.py to have it create dummy files in their place.
+
+
 ## Testing Branch
 The testing branch includes a tools/ directory, that has scripts to help when trying to extract data from broken images. These also serve as examples of how to use parts of ubi_reader in custom scripts.
 
 An override system is also included, for manually setting certain parameters that may be reported wrong by the UBI/FS data.
 
 This branch will probably remain seperate, as it is meant to be customized to aid in extracting data from problematic images. You can install it with 'python setup.py develop' to make it easier to modify ubi_reader as needed.
+
 
 ## Dependencies:
 
@@ -103,16 +115,3 @@ Some general option flags are
 * -i, --ignore-block-header-errors: Forces unused and error containing blocks to be included and also displayed with log/verbose.
 * -f, --u-boot-fix: Assume blocks with image_seq 0 are because of older U-boot implementations and include them. *This may cause issues with multiple UBI image files.
 * -o, --output-dir path: Specify where files should be written to, instead of ubi_reader/output
-
-### Known Issues
-
-* Socket files will be ignored, you can change modules/settings.py to have it create dummy files in their place.
-
-* For NAND dumps and the like, this will not fix anything ECC would take care of, so some bad data
-may be extracted, this can also cause erratic behavior.
-
-* This does not replay the journal, so uncommited data will not be retrieved.
-
-* Assumes things are in good condition and where it thinks they should be...
-
-
