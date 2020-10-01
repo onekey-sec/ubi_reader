@@ -112,14 +112,14 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
     elif dent_node.type in [UBIFS_ITYPE_BLK, UBIFS_ITYPE_CHR]:
         try:
             dev = struct.unpack('<II', inode['ino'].data)[0]
-            if True:
+            if not settings.use_dummy_devices:
                 os.mknod(dent_path, inode['ino'].mode, dev)
                 log(extract_dents, 'Make Device Node: %s' % (dent_path))
 
                 if perms:
                     _set_file_perms(dent_path, inode)
             else:
-                log(extract_dents, 'Create dummy node.')
+                log(extract_dents, 'Create dummy device.')
                 _write_reg_file(dent_path, str(dev))
 
                 if perms:
