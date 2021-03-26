@@ -156,31 +156,38 @@ UBIFS_XATTR_FL     = 32 # This inode is inode for extended attributes
 UBIFS_FL_MASK = 0x0000001F
 
 # Compression alogrithms.
-UBIFS_COMPR_NONE        = 0 # No compression
-UBIFS_COMPR_LZO         = 1 # LZO compression
-UBIFS_COMPR_ZLIB        = 2 # ZLIB compression
-UBIFS_COMPR_TYPES_CNT   = 3 # Count of supported compression types
-PRINT_UBIFS_COMPR = ['none','lzo','zlib']
+UBIFS_COMPR_NONE            = 0 # No compression
+UBIFS_COMPR_LZO             = 1 # LZO compression
+UBIFS_COMPR_ZLIB            = 2 # ZLIB compression
+UBIFS_COMPR_ZSTD            = 3 # ZSTD compression
+UBIFS_COMPR_TYPES_CNT       = 4 # Count of supported compression types
+PRINT_UBIFS_COMPR = ['none','lzo','zlib', 'zstd']
 
 # UBIFS node types
-UBIFS_INO_NODE          = 0  # Inode node
-UBIFS_DATA_NODE         = 1  # Data node
-UBIFS_DENT_NODE         = 2  # Directory entry node
-UBIFS_XENT_NODE         = 3  # Extended attribute node
-UBIFS_TRUN_NODE         = 4  # Truncation node
-UBIFS_PAD_NODE          = 5  # Padding node
-UBIFS_SB_NODE           = 6  # Superblock node
-UBIFS_MST_NODE          = 7  # Master node
-UBIFS_REF_NODE          = 8  # LEB reference node
-UBIFS_IDX_NODE          = 9  # Index node
-UBIFS_CS_NODE           = 10 # Commit start node
-UBIFS_ORPH_NODE         = 11 # Orphan node
-UBIFS_NODE_TYPES_CNT    = 12 # Count of supported node types
+UBIFS_INO_NODE              = 0  # Inode node
+UBIFS_DATA_NODE             = 1  # Data node
+UBIFS_DENT_NODE             = 2  # Directory entry node
+UBIFS_XENT_NODE             = 3  # Extended attribute node
+UBIFS_TRUN_NODE             = 4  # Truncation node
+UBIFS_PAD_NODE              = 5  # Padding node
+UBIFS_SB_NODE               = 6  # Superblock node
+UBIFS_MST_NODE              = 7  # Master node
+UBIFS_REF_NODE              = 8  # LEB reference node
+UBIFS_IDX_NODE              = 9  # Index node
+UBIFS_CS_NODE               = 10 # Commit start node
+UBIFS_ORPH_NODE             = 11 # Orphan node
+UBIFS_AUTH_NODE             = 12 # Authentication node
+UBIFS_SIG_NODE              = 13 # Signature node
+UBIFS_NODE_TYPES_CNT        = 14 # Count of supported node types
 
 # Master node flags
-UBIFS_MST_DIRTY     = 1 # Rebooted uncleanly
-UBIFS_MST_NO_ORPHS  = 2 # No orphans present
-UBIFS_MST_RCVRY     = 4 # Written by recovery
+UBIFS_MST_DIRTY             = 1 # Rebooted uncleanly
+UBIFS_MST_NO_ORPHS          = 2 # No orphans present
+UBIFS_MST_RCVRY             = 4 # Written by recovery
+PRINT_UBIFS_MST = [[UBIFS_MST_DIRTY, 'Dirty'],
+                   [UBIFS_MST_NO_ORPHS, 'No orphans'],
+                   [UBIFS_MST_RCVRY, 'Recovery write'],
+                  ]
 
 # Node group type
 UBIFS_NO_NODE_GROUP         = 0 # This node is not part of a group
@@ -188,21 +195,30 @@ UBIFS_IN_NODE_GROUP         = 1 # This node is part of a group
 UBIFS_LAST_OF_NODE_GROUP    = 2 # This node is the last in a group
 
 # Superblock flags
-UBIFS_FLG_BIGLPT        = 2 # if 'big' LPT model is used if set.
-UBIFS_FLG_SPACE_FIXUP   = 4 # first-mount 'fixup' of free space within
-
+UBIFS_FLG_BIGLPT            = 2     # If 'big' LPT model is used if set.
+UBIFS_FLG_SPACE_FIXUP       = 4     # First-mount 'fixup' of free space within.
+UBIFS_FLG_DOUBLE_HASH       = 8     # Store 32bit cookie for 64bit support.
+UBIFS_FLG_ENCRYPTION        = 16    # If filesystem contains encrypted files.
+UBIFS_FLG_AUTHENTICATION    = 32    # If contains hashes for authentication.
+PRINT_UBIFS_FLGS = [[UBIFS_FLG_BIGLPT,       'Big LPT'],
+                    [UBIFS_FLG_SPACE_FIXUP,   'Space fixup'],
+                    [UBIFS_FLG_DOUBLE_HASH,   'Double hash'],
+                    [UBIFS_FLG_ENCRYPTION,    'Encryption'],
+                    [UBIFS_FLG_AUTHENTICATION,'Authentication'],
+                   ]
 
 # Struct defines
 
 # Common header node
 UBIFS_COMMON_HDR_FORMAT = '<IIQIBB2s'
-UBIFS_COMMON_HDR_FIELDS = ['magic',     # UBIFS node magic number.
-                           'crc',       # CRC32 checksum of header.
-                           'sqnum',     # Sequence number.
-                           'len',       # Full node length.
-                           'node_type', # Node type.
-                           'group_type',# Node group type.
-                           'padding']   # Reserved for future, zeros.
+UBIFS_COMMON_HDR_FIELDS = ['magic',         # UBIFS node magic number.
+                           'crc',           # CRC32 checksum of header.
+                           'sqnum',         # Sequence number.
+                           'len',           # Full node length.
+                           'node_type',     # Node type.
+                           'group_type',    # Node group type.
+                           'padding',       # Reserved for future, zeros.
+                           ]
 UBIFS_COMMON_HDR_SZ = struct.calcsize(UBIFS_COMMON_HDR_FORMAT)
                             # LEBs needed.
 # Key offset in key nodes
@@ -212,12 +228,13 @@ UBIFS_KEY_OFFSET = UBIFS_COMMON_HDR_SZ
 # Device node descriptor
 UBIFS_DEV_DESC_FORMAT = '<IQ'
 UBIFS_DEV_DESC_FIELDS = ['new',  # New type device descriptor.
-                         'huge'] # huge type device descriptor.
+                         'huge', # huge type device descriptor.
+                         ]
 UBIFS_DEV_DESC_SZ = struct.calcsize(UBIFS_DEV_DESC_FORMAT)
 
 # Inode node
 UBIFS_INO_NODE_FORMAT = '<%ssQQQQQIIIIIIIIIII4sIH26s' % (UBIFS_MAX_KEY_LEN)
-UBIFS_INO_NODE_FIELDS = ['key',         # Node key
+UBIFS_INO_NODE_FIELDS = ['key',         # Node key.
                          'creat_sqnum', # Sequence number at time of creation.
                          'size',        # Inode size in bytes (uncompressed).
                          'atime_sec',   # Access time in seconds.
@@ -232,46 +249,52 @@ UBIFS_INO_NODE_FIELDS = ['key',         # Node key
                          'mode',        # Access flags.
                          'flags',       # Per-inode flags.
                          'data_len',    # Inode data length.
-                         'xattr_cnt',   # Count of extended attr this inode has
+                         'xattr_cnt',   # Count of extended attr this inode has.
                          'xattr_size',  # Summarized size of all extended
                                         # attributes in bytes.
                          'padding1',    # Reserved for future, zeros.
-                         'xattr_names', # Sum of lengths of all extended.
+                         'xattr_names', # Sum of lengths of all extended
                                         # attribute names belonging to this
                                         # inode.
                          'compr_type',  # Compression type used for this inode.
-                         'padding2']    # Reserved for future, zeros.
-                        # 'data' No size
+                         'padding2',    # Reserved for future, zeros.
+                         ]
+                                        # 'data', no size.
 UBIFS_INO_NODE_SZ = struct.calcsize(UBIFS_INO_NODE_FORMAT)
 
 
 # Directory entry node
-UBIFS_DENT_NODE_FORMAT = '<%ssQBBH4s' % (UBIFS_MAX_KEY_LEN)
-UBIFS_DENT_NODE_FIELDS = ['key',     # Node key.
-                          'inum',    # Target inode number.
-                          'padding1',# Reserved for future, zeros.
-                          'type',    # Type of target inode.
-                          'nlen',    # Name length.
-                          'padding2']# Reserved for future, zeros.
-                        # 'Name' No size
+UBIFS_DENT_NODE_FORMAT = '<%ssQBBHI' % (UBIFS_MAX_KEY_LEN)
+UBIFS_DENT_NODE_FIELDS = ['key',        # Node key.
+                          'inum',       # Target inode number.
+                          'padding1',   # Reserved for future, zeros.
+                          'type',       # Type of target inode.
+                          'nlen',       # Name length.
+                          'cookie',     # 32bit random number, used to
+                                        # construct a 64bit identifier.
+                          ]
+                                        # 'name', no size.
 UBIFS_DENT_NODE_SZ = struct.calcsize(UBIFS_DENT_NODE_FORMAT)
 
 
 # Data node
-UBIFS_DATA_NODE_FORMAT = '<%ssIH2s' % (UBIFS_MAX_KEY_LEN)
-UBIFS_DATA_NODE_FIELDS = ['key',        # Node key.
-                          'size',       # Uncompressed data size.
-                          'compr_type', # Compression type UBIFS_COMPR_*
-                          'padding']    # Reserved for future, zeros.
-                        # 'data' No size
+UBIFS_DATA_NODE_FORMAT = '<%ssIHH' % (UBIFS_MAX_KEY_LEN)
+UBIFS_DATA_NODE_FIELDS = ['key',            # Node key.
+                          'size',           # Uncompressed data size.
+                          'compr_type',     # Compression type UBIFS_COMPR_*.
+                          'compr_size',     # Compressed data size in bytes
+                                            # only valid when data is encrypted.
+                          ]
+                                            # 'data', no size.
 UBIFS_DATA_NODE_SZ = struct.calcsize(UBIFS_DATA_NODE_FORMAT)
 
 # Truncation node
 UBIFS_TRUN_NODE_FORMAT = '<I12sQQ'
-UBIFS_TRUN_NODE_FIELDS = ['inum',     # Truncated inode number.
-                          'padding',  # Reserved for future, zeros.
-                          'old_size', # size before truncation.
-                          'new_size'] # Size after truncation.
+UBIFS_TRUN_NODE_FIELDS = ['inum',           # Truncated inode number.
+                          'padding',        # Reserved for future, zeros.
+                          'old_size',       # size before truncation.
+                          'new_size',       # Size after truncation.
+                          ]
 UBIFS_TRUN_NODE_SZ = struct.calcsize(UBIFS_TRUN_NODE_FORMAT)
 
 # Padding node
@@ -279,8 +302,16 @@ UBIFS_PAD_NODE_FORMAT = '<I'
 UBIFS_PAD_NODE_FIELDS = ['pad_len'] # Number of bytes after this inode unused.
 UBIFS_PAD_NODE_SZ = struct.calcsize(UBIFS_PAD_NODE_FORMAT)
 
+
+# The maxmimum size of a hash, enough for sha512
+UBIFS_MAX_HASH_LEN = 64
+
+# The maxmimum size of a hmac, enough for hmac(sha512)
+UBIFS_MAX_HMAC_LEN = 64
+
+
 # Superblock node
-UBIFS_SB_NODE_FORMAT = '<2sBBIIIIIQIIIIIIIH2sIIQI16sI3968s'
+UBIFS_SB_NODE_FORMAT = '<2sBBIIIIIQIIIIIIIH2sIIQI16sI%ss%ssH%ss3774s' % (UBIFS_MAX_HMAC_LEN, UBIFS_MAX_HMAC_LEN, UBIFS_MAX_HASH_LEN)
 UBIFS_SB_NODE_FIELDS = ['padding',          # Reserved for future, zeros.
                         'key_hash',         # Type of hash func used in keys.
                         'key_fmt',          # Format of the key.
@@ -295,7 +326,7 @@ UBIFS_SB_NODE_FIELDS = ['padding',          # Reserved for future, zeros.
                                             # table.
                         'orph_lebs',        # Number of LEBS used for
                                             # recording orphans.
-                        'jhead_cnt',        # Count of journal heads
+                        'jhead_cnt',        # Count of journal heads.
                         'fanout',           # Tree fanout, max number of links
                                             # per indexing node.
                         'lsave_cnt',        # Number of LEB numbers in LPT's
@@ -303,71 +334,98 @@ UBIFS_SB_NODE_FIELDS = ['padding',          # Reserved for future, zeros.
                         'fmt_version',      # UBIFS on-flash format version.
                         'default_compr',    # Default compression used.
                         'padding1',         # Reserved for future, zeros.
-                        'rp_uid',           # Reserve pool UID
-                        'rp_gid',           # Reserve pool GID
-                        'rp_size',          # Reserve pool size in bytes
+                        'rp_uid',           # Reserve pool UID.
+                        'rp_gid',           # Reserve pool GID.
+                        'rp_size',          # Reserve pool size in bytes.
                         'time_gran',        # Time granularity in nanoseconds.
                         'uuid',             # UUID generated when the FS image
                                             # was created.
                         'ro_compat_version',# UBIFS R/O Compatibility version.
-                        'padding2']         #Reserved for future, zeros
+                        'hmac',             # HAMC to authenticate the superblock node.
+                        'hmac_wkm',         # HMAC of a well known message (the string "UBIFS").
+                                            # as a convenience to the user to chek if the correct
+                                            # key is past.
+                        'hash_algo',        # The has algo used for this feilseystem.
+                                            # (one of enum hash_algo).
+                        'hash_mst',         # Hash of the master node, only valid for
+                                            # signed images in which the master node
+                                            # does not contain a hmac.
+                        'padding2'          # Reserved for future, zeros.
+                        ]
 UBIFS_SB_NODE_SZ = struct.calcsize(UBIFS_SB_NODE_FORMAT)
 
 # Master node
-UBIFS_MST_NODE_FORMAT = '<QQIIIIIIIIQQQQQQIIIIIIIIIIII344s'
-UBIFS_MST_NODE_FIELDS = ['highest_inum',# Highest inode number in the
-                                        # committed index.
-                         'cmt_no',      # Commit Number.
-                         'flags',       # Various flags.
-                         'log_lnum',    # LEB num start of log.
-                         'root_lnum',   # LEB num of root indexing node.
-                         'root_offs',   # Offset within root_lnum
-                         'root_len',    # Root indexing node length.
-                         'gc_lnum',     # LEB reserved for garbage collection.
-                         'ihead_lnum',  # LEB num of index head.
-                         'ihead_offs',  # Offset of index head.
-                         'index_size',  # Size of index on flash.
-                         'total_free',  # Total free space in bytes.
-                         'total_dirty', # Total dirty space in bytes.
-                         'total_used',  # Total used space in bytes (data LEBs)
-                         'total_dead',  # Total dead space in bytes (data LEBs)
-                         'total_dark',  # Total dark space in bytes (data LEBs)
-                         'lpt_lnum',    # LEB num of LPT root nnode.
-                         'lpt_offs',    # Offset of LPT root nnode.
-                         'nhead_lnum',  # LEB num of LPT head.
-                         'nhead_offs',  # Offset of LPT head.
-                         'ltab_lnum',   # LEB num of LPT's own lprop table.
-                         'ltab_offs',   # Offset of LPT's own lprop table.
-                         'lsave_lnum',  # LEB num of LPT's save table.
-                         'lsave_offs',  # Offset of LPT's save table.
-                         'lscan_lnum',  # LEB num of last LPT scan.
-                         'empty_lebs',  # Number of empty LEBs.
-                         'idx_lebs',    # Number of indexing LEBs.
-                         'leb_cnt',     # Count of LEBs used by FS.
-                         'padding']     # Reserved for future, zeros.
+UBIFS_MST_NODE_FORMAT = '<QQIIIIIIIIQQQQQQIIIIIIIIIIII%ss%ss%ss152s' % (UBIFS_MAX_HASH_LEN, UBIFS_MAX_HASH_LEN, UBIFS_MAX_HMAC_LEN)
+UBIFS_MST_NODE_FIELDS = ['highest_inum',    # Highest inode number in the
+                                            # committed index.
+                         'cmt_no',          # Commit Number.
+                         'flags',           # Various flags.
+                         'log_lnum',        # LEB num start of log.
+                         'root_lnum',       # LEB num of root indexing node.
+                         'root_offs',       # Offset within root_lnum
+                         'root_len',        # Root indexing node length.
+                         'gc_lnum',         # LEB reserved for garbage collection.
+                         'ihead_lnum',      # LEB num of index head.
+                         'ihead_offs',      # Offset of index head.
+                         'index_size',      # Size of index on flash.
+                         'total_free',      # Total free space in bytes.
+                         'total_dirty',     # Total dirty space in bytes.
+                         'total_used',      # Total used space in bytes (data LEBs)
+                         'total_dead',      # Total dead space in bytes (data LEBs)
+                         'total_dark',      # Total dark space in bytes (data LEBs)
+                         'lpt_lnum',        # LEB num of LPT root nnode.
+                         'lpt_offs',        # Offset of LPT root nnode.
+                         'nhead_lnum',      # LEB num of LPT head.
+                         'nhead_offs',      # Offset of LPT head.
+                         'ltab_lnum',       # LEB num of LPT's own lprop table.
+                         'ltab_offs',       # Offset of LPT's own lprop table.
+                         'lsave_lnum',      # LEB num of LPT's save table.
+                         'lsave_offs',      # Offset of LPT's save table.
+                         'lscan_lnum',      # LEB num of last LPT scan.
+                         'empty_lebs',      # Number of empty LEBs.
+                         'idx_lebs',        # Number of indexing LEBs.
+                         'leb_cnt',         # Count of LEBs used by FS.
+                         'hash_root_idx',   # The hash of the root index node.
+                         'hash_lpt',        # The has of the LPT.
+                         'hmac',            # HMAC to athenticate the master node.
+                         'padding',         # Reserved for future, zeros.
+                         ]
 UBIFS_MST_NODE_SZ = struct.calcsize(UBIFS_MST_NODE_FORMAT)
 
 # LEB Reference node
 UBIFS_REF_NODE_FORMAT = '<III28s'
-UBIFS_REF_NODE_FIELDS = ['lnum',    # Referred LEB number.
-                         'offs',    # Start offset of referred LEB.
-                         'jhead',   # Journal head number.
-                         'padding'] # Reserved for future, zeros.
+UBIFS_REF_NODE_FIELDS = ['lnum',            # Referred LEB number.
+                         'offs',            # Start offset of referred LEB.
+                         'jhead',           # Journal head number.
+                         'padding',         # Reserved for future, zeros.
+                         ]
 UBIFS_REF_NODE_SZ = struct.calcsize(UBIFS_REF_NODE_FORMAT)
+
+# Signature node
+UBIFS_SIG_NODE_FORMAT = '<II32s'
+UBIFS_SIG_NODE_FIELDS = ['type',            # Type of the signature.
+                         'len',             # Length of signature data.
+                         'padding',         # Reserved for future, zeros.
+                         ]
+                                            # 'sig', no size.
+
+UBIFS_SIG_NODE_SZ = struct.calcsize(UBIFS_SIG_NODE_FORMAT)
 
 # key/reference/length branch
 UBIFS_BRANCH_FORMAT = '<III%ss' % (UBIFS_SK_LEN)
-UBIFS_BRANCH_FIELDS = ['lnum',  # LEB number of target node.
-                       'offs',  # Offset within lnum.
-                       'len',   # Target node length.
-                       'key']   # Using UBIFS_SK_LEN as size.
+UBIFS_BRANCH_FIELDS = ['lnum',              # LEB number of target node.
+                       'offs',              # Offset within lnum.
+                       'len',               # Target node length.
+                       'key',               # Using UBIFS_SK_LEN as size.
+                       ]
 UBIFS_BRANCH_SZ = struct.calcsize(UBIFS_BRANCH_FORMAT)
 
 # Indexing node
 UBIFS_IDX_NODE_FORMAT = '<HH'
-UBIFS_IDX_NODE_FIELDS = ['child_cnt',   # Number of child index nodes.
-                         'level']       # Tree level.
-                        # branches, no size.
+UBIFS_IDX_NODE_FIELDS = ['child_cnt',       # Number of child index nodes.
+                         'level',           # Tree level.
+                         ]
+                                            # 'branches', no size.
 UBIFS_IDX_NODE_SZ = struct.calcsize(UBIFS_IDX_NODE_FORMAT)
 
 # File chunk size for reads.

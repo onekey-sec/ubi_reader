@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
+from ubireader.ubifs.defines import PRINT_UBIFS_FLGS, PRINT_UBIFS_MST
 
 def ubifs(ubifs, tab=''):
     buf = '%sUBIFS Image\n' % (tab)
@@ -51,6 +52,17 @@ def sb_node(node, tab=''):
             buf += '%s%s: %s\n' % (tab, key, ','.join(value))
         elif key == 'uuid':
             buf += '%s%s: %r\n' % (tab, key, value)
+        elif key == 'flags':
+            flags = ''
+            for flag in PRINT_UBIFS_FLGS:
+                if value & flag[0]:
+                    flags += '%s, ' % flag[1]
+
+            if flags.endswith(', '):
+                flags = flags[0:-2]
+
+            buf += '%s%s: %s\n' % (tab, key, flags)
+
         else:
             buf += '%s%s: %r\n' % (tab, key, value)
     return buf
@@ -66,6 +78,16 @@ def mst_node(node, tab=''):
             continue
         elif key == 'errors':
             buf += '%s%s: %s\n' % (tab, key, ','.join(value))
+        elif key == 'flags':
+            flags = ''
+            for flag in PRINT_UBIFS_MST:
+                if value & flag[0]:
+                    flags += '%s, ' % flag[1]
+
+            if flags.endswith(', '):
+                flags = flags[0:-2]
+
+            buf += '%s%s: %s\n' % (tab, key, flags)
         else:
             buf += '%s%s: %r\n' % (tab, key, value)
     return buf
