@@ -148,7 +148,7 @@ def file_leng(ubifs, inode):
 
 def _process_reg_file(ubifs, inode, path):
     try:
-        buf = b''
+        buf = bytearray()
         if 'data' in inode:
             compr_type = 0
             sorted_data = sorted(inode['data'], key=lambda x: x.key['khash'])
@@ -177,4 +177,4 @@ def _process_reg_file(ubifs, inode, path):
     if inode['ino'].size > len(buf):
         buf += b'\x00' * (inode['ino'].size - len(buf))
         
-    return buf
+    return bytes(buf)
