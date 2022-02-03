@@ -26,6 +26,10 @@ from ubireader.ubifs import walk
 from ubireader.ubifs.misc import decompress
 from ubireader.debug import error, log, verbose_log
 
+def is_safe_path(basedir, path):
+    basedir = os.path.realpath(basedir)
+    path = os.path.realpath(os.path.join(basedir, path))
+    return basedir == os.path.commonpath((basedir, path))
 
 def extract_files(ubifs, out_path, perms=False):
     """Extract UBIFS contents to_path/
@@ -59,8 +63,12 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
         return
 
     inode = inodes[dent_node.inum]
-    dent_path = os.path.join(path, dent_node.name)
-        
+
+    if not is_safe_path(path, dent_node.name):
+        error(extract_dents, 'Warning', 'Path traversal attempt: %s, discarding' % (dent_node.name))
+        return
+    dent_path = os.path.realpath(os.path.join(path, dent_node.name))
+
     if dent_node.type == UBIFS_ITYPE_DIR:
         try:
             if not os.path.exists(dent_path):
