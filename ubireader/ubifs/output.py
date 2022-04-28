@@ -166,13 +166,13 @@ def _write_reg_file(path, data):
 def _process_reg_file(ubifs, inode, path):
     try:
         buf = bytearray()
+        start_key = 0x00 | (UBIFS_DATA_KEY << UBIFS_S_KEY_BLOCK_BITS)
         if 'data' in inode:
             compr_type = 0
             sorted_data = sorted(inode['data'], key=lambda x: x.key['khash'])
-            last_khash = sorted_data[0].key['khash']-1
+            last_khash = start_key - 1 
 
             for data in sorted_data:
-                
                 # If data nodes are missing in sequence, fill in blanks
                 # with \x00 * UBIFS_BLOCK_SIZE
                 if data.key['khash'] - last_khash != 1:
