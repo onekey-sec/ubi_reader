@@ -70,11 +70,7 @@ class ubi_file(object):
             tail = file_size - end_offset
             self._end_offset = end_offset
         else:
-            tail = (file_size - start_offset) % block_size
-            self._end_offset = file_size - tail
-        log(self, 'End Offset: %s' % (self._end_offset))
-        if tail > 0:
-            log(self, 'File Tail Size: %s' % (tail))
+            self._end_offset = file_size
 
         self._block_size = block_size
         log(self, 'Block Size: %s' % block_size)
@@ -121,7 +117,10 @@ class ubi_file(object):
     def read(self, size):
         if self.end_offset < self.tell() + size:
             error(self.read, 'Error', 'Block ends at %s which is greater than file size %s' % (self.tell() + size, self.end_offset))
-            raise Exception('Bad Read Offset Request')
+            if settings.warn_only_block_read_errors:
+                size = self.end_offset - self.tell()
+            else:
+                raise Exception('Bad Read Offset Request')
 
         self._last_read_addr = self.tell()
         verbose_log(self, 'read loc: %s, size: %s' % (self._last_read_addr, size))
