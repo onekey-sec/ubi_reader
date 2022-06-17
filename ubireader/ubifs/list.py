@@ -55,7 +55,7 @@ def list_files(ubifs, list_path):
             print_dent(ubifs, inodes, dent, longts=False)
         
         if len(bad_blocks):
-            error(list_files, 'Warning', 'Data may be missing or corrupted, bad blocks, LEB [%s]' % ','.join(map(str, bad_blocks)))
+            error(list_files, 'Warn', 'Data may be missing or corrupted, bad blocks, LEB [%s]' % ','.join(map(str, bad_blocks)))
 
     except Exception as e:
         error(list_files, 'Error', '%s' % e)

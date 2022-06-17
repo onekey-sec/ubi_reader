@@ -51,7 +51,7 @@ def extract_files(ubifs, out_path, perms=False):
             extract_dents(ubifs, inodes, dent, out_path, perms)
 
         if len(bad_blocks):
-            error(extract_files, 'Warning', 'Data may be missing or corrupted, bad blocks, LEB [%s]' % ','.join(map(str, bad_blocks)))
+            error(extract_files, 'Warn', 'Data may be missing or corrupted, bad blocks, LEB [%s]' % ','.join(map(str, bad_blocks)))
 
     except Exception as e:
         error(extract_files, 'Error', '%s' % e)
@@ -65,7 +65,7 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
     inode = inodes[dent_node.inum]
 
     if not is_safe_path(path, dent_node.name):
-        error(extract_dents, 'Warning', 'Path traversal attempt: %s, discarding' % (dent_node.name))
+        error(extract_dents, 'Warn', 'Path traversal attempt: %s, discarding' % (dent_node.name))
         return
     dent_path = os.path.realpath(os.path.join(path, dent_node.name))
 
