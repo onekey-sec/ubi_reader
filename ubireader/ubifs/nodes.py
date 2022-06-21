@@ -97,7 +97,7 @@ class dent_node(object):
             else:
                 setattr(self, key, fields[key])
 
-        setattr(self, 'name', '%s' % buf[-self.nlen-1:-1].decode('utf-8'))
+        setattr(self, 'name', '%s' % buf[-self.nlen-1:-1].decode('utf-8').replace("/", ""))
         setattr(self, 'errors', [])
 
     def __repr__(self):
