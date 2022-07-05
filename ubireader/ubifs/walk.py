@@ -37,26 +37,35 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
         'data'   -- List of data nodes if present.
         'dent'   -- List of directory entry nodes if present.
     """
-    try:
-        if len(bad_blocks):
-            if lnum in bad_blocks:
-                return
+    if len(bad_blocks):
+        if lnum in bad_blocks:
+            return
 
-        ubifs.file.seek((ubifs.leb_size * lnum) + offset)
-        buf = ubifs.file.read(UBIFS_COMMON_HDR_SZ)
-        chdr = nodes.common_hdr(buf)
-        log(index , '%s file addr: %s' % (chdr, ubifs.file.last_read_addr()))
-        verbose_display(chdr)
-        node_buf = ubifs.file.read(chdr.len - UBIFS_COMMON_HDR_SZ)
-        file_offset = ubifs.file.last_read_addr()
+    ubifs.file.seek((ubifs.leb_size * lnum) + offset)
+    buf = ubifs.file.read(UBIFS_COMMON_HDR_SZ)
 
-    except Exception as e:
-        if str(e) == 'Bad Read Offset Request' and settings.warn_only_block_read_errors:
-            bad_blocks.append(lnum)
+    if len(buf) < UBIFS_COMMON_HDR_SZ:
+        if settings.warn_only_block_read_errors:
+            error(index, 'Error', 'LEB: %s, Common Hdr Size smaller than expected.' % (lnum))
             return
 
         else:
-            error(index, 'Fatal', 'LEB: %s, UBIFS offset: %s, error: %s' % (lnum, ((ubifs.leb_size * lnum) + offset), e))
+            error(index, 'Fatal', 'LEB: %s, Common Hdr Size smaller than expected.' % (lnum))
+
+    chdr = nodes.common_hdr(buf)
+    log(index , '%s file addr: %s' % (chdr, ubifs.file.last_read_addr()))
+    verbose_display(chdr)
+    read_size = chdr.len - UBIFS_COMMON_HDR_SZ
+    node_buf = ubifs.file.read(read_size)
+    file_offset = ubifs.file.last_read_addr()
+
+    if len(node_buf) < read_size:
+        if settings.warn_only_block_read_errors:
+            error(index, 'Error', 'LEB: %s at %s, Node size smaller than expected.' % (lnum, file_offset))
+            return
+
+        else:
+            error(index, 'Fatal', 'LEB: %s at %s, Node size smaller than expected.' % (lnum, file_offset))
 
     if chdr.node_type == UBIFS_IDX_NODE:
         try:
