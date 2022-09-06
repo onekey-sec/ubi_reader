@@ -18,10 +18,11 @@
 #############################################################
 
 import re
+from zlib import crc32
 from ubireader import settings
 from ubireader.debug import error, log, verbose_display, verbose_log
 from ubireader.ubi import display
-from ubireader.ubi.defines import UBI_EC_HDR_SZ, UBI_VID_HDR_SZ, UBI_INTERNAL_VOL_START, UBI_EC_HDR_MAGIC
+from ubireader.ubi.defines import UBI_EC_HDR_SZ, UBI_VID_HDR_SZ, UBI_INTERNAL_VOL_START, UBI_EC_HDR_MAGIC, UBI_CRC32_INIT
 from ubireader.ubi.headers import ec_hdr, vid_hdr, vtbl_recs
 
 
@@ -44,6 +45,7 @@ class description(object):
     Int:leb_num          -- Logical Erase Block number.
     Int:file_offset      -- Address location in file of this block.
     Int:size             -- Size of total block data or PEB size.
+    Int:data_crc         -- crc32 of block data.
     Will print out all information when invoked as a string.
     """
 
@@ -127,6 +129,7 @@ def extract_blocks(ubi):
             blk.file_offset = i
             blk.peb_num = ubi.first_peb_num + peb_count
             blk.size = ubi.file.block_size
+            blk.data_crc = (~crc32(buf[blk.ec_hdr.data_offset:blk.ec_hdr.data_offset+blk.vid_hdr.data_size]) & 0xFFFFFFFF)
             blocks[blk.peb_num] = blk
             peb_count += 1
             log(extract_blocks, blk)
@@ -166,6 +169,9 @@ def rm_old_blocks(blocks, block_list):
             if i == k:
                 continue
 
+            if k in del_blocks:
+                continue
+
             if blocks[i].leb_num != blocks[k].leb_num:
                 continue
 
@@ -176,20 +182,23 @@ def rm_old_blocks(blocks, block_list):
 
             if second_newer:
                 if blocks[k].vid_hdr.copy_flag == 0:
-                    log(rm_old_blocks, 'Old block removed: PEB %s, LEB %s' % (blocks[i].peb_num, blocks[i].leb_num))
+                    log(rm_old_blocks, 'Old block removed (copy_flag): PEB %s, LEB %s' % (blocks[i].peb_num, blocks[i].leb_num))
                     del_blocks.append(i)
                     break
             else:
                 if blocks[i].vid_hdr.copy_flag == 0:
-                    log(rm_old_blocks, 'Old block removed: PEB %s, LEB %s' % (blocks[k].peb_num, blocks[k].leb_num))
+                    log(rm_old_blocks, 'Old block removed (copy_flag): PEB %s, LEB %s' % (blocks[k].peb_num, blocks[k].leb_num))
                     del_blocks.append(k)
                     break
 
-            if 'crc' in blocks[k].vid_hdr.errors:
-                log(rm_old_blocks, 'Old block removed: PEB %s, LEB %s' % (blocks[k].peb_num, blocks[k].leb_num))
+            if blocks[k].data_crc != blocks[k].vid_hdr.data_crc:
+                log(rm_old_blocks, 'Old block removed (data_crc): PEB %s, LEB %s' % (blocks[k].peb_num, blocks[k].leb_num))
                 del_blocks.append(k)
-            else:
-                log(rm_old_blocks, 'Old block removed: PEB %s, LEB %s' % (blocks[i].peb_num, blocks[i].leb_num))
+                break
+
+            elif blocks[i].data_crc != blocks[i].vid_hdr.data_crc:
+                log(rm_old_blocks, 'Old block removed (data_crc): PEB %s, LEB %s' % (blocks[i].peb_num, blocks[i].leb_num))
                 del_blocks.append(i)
+                break
                 
     return [j for j in block_list if j not in del_blocks]

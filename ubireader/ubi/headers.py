@@ -41,7 +41,7 @@ class ec_hdr(object):
                 yield key, getattr(self, key)
 
     def _check_errors(self, buf_crc):
-        crc_chk = (~crc32(buf_crc) & 0xFFFFFFFF)
+        crc_chk = (~crc32(buf_crc) & UBI_CRC32_INIT)
         if self.hdr_crc != crc_chk:
             log(vid_hdr, 'CRC Failed: expected 0x%x got 0x%x' % (crc_chk, self.hdr_crc))
             self.errors.append('crc')
@@ -65,7 +65,7 @@ class vid_hdr(object):
         return 'VID Header'
 
     def _check_errors(self, buf_crc):
-        crc_chk = (~crc32(buf_crc) & 0xFFFFFFFF)
+        crc_chk = (~crc32(buf_crc) & UBI_CRC32_INIT)
         if self.hdr_crc != crc_chk:
             log(vid_hdr, 'CRC Failed: expected 0x%x got 0x%x' % (crc_chk, self.hdr_crc))
             self.errors.append('crc')
