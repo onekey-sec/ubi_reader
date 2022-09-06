@@ -153,3 +153,43 @@ def extract_blocks(ubi):
             ubi.file.start_offset = cur_offset
 
     return blocks
+
+
+def rm_old_blocks(blocks, block_list):
+    del_blocks = []
+
+    for i in block_list:
+        if i in del_blocks or blocks[i].is_valid is not True:
+            continue
+
+        for k in block_list:
+            if i == k:
+                continue
+
+            if blocks[i].leb_num != blocks[k].leb_num:
+                continue
+
+            if blocks[i].ec_hdr.image_seq != blocks[k].ec_hdr.image_seq:
+                continue
+
+            second_newer =  blocks[k].vid_hdr.sqnum > blocks[i].vid_hdr.sqnum
+
+            if second_newer:
+                if blocks[k].vid_hdr.copy_flag == 0:
+                    log(rm_old_blocks, 'Old block removed: PEB %s, LEB %s' % (blocks[i].peb_num, blocks[i].leb_num))
+                    del_blocks.append(i)
+                    break
+            else:
+                if blocks[i].vid_hdr.copy_flag == 0:
+                    log(rm_old_blocks, 'Old block removed: PEB %s, LEB %s' % (blocks[k].peb_num, blocks[k].leb_num))
+                    del_blocks.append(k)
+                    break
+
+            if 'crc' in blocks[k].vid_hdr.errors:
+                log(rm_old_blocks, 'Old block removed: PEB %s, LEB %s' % (blocks[k].peb_num, blocks[k].leb_num))
+                del_blocks.append(k)
+            else:
+                log(rm_old_blocks, 'Old block removed: PEB %s, LEB %s' % (blocks[i].peb_num, blocks[i].leb_num))
+                del_blocks.append(i)
+                
+    return [j for j in block_list if j not in del_blocks]
