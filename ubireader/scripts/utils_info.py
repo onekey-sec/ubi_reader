@@ -20,8 +20,6 @@
 
 import os
 import sys
-import time
-import argparse
 if (sys.version_info > (3, 0)):
     import configparser
 else:
@@ -33,7 +31,8 @@ from ubireader.ubifs import ubifs
 from ubireader.ubifs.defines import PRINT_UBIFS_KEY_HASH, PRINT_UBIFS_COMPR
 from ubireader.ubi_io import ubi_file, leb_virtual_file
 from ubireader.debug import error, log
-from ubireader.utils import guess_filetype, guess_start_offset, guess_peb_size
+from ubireader.utils import UBIReaderError, guess_filetype, guess_start_offset, guess_peb_size
+
 
 def create_output_dir(outpath):
     if os.path.exists(outpath):
@@ -237,100 +236,66 @@ def make_files(ubi, outpath):
             fscr.write(buf)
         os.chmod(script_path, 0o755)
 
-if __name__=='__main__':
-    start = time.time()
-    description = 'Determine settings for recreating UBI image.'
-    usage = 'ubireader_utils_info [options] filepath'
-    parser = argparse.ArgumentParser(usage=usage, description=description)
 
-    parser.add_argument('-r', '--show-only', action='store_true', dest='show_only',
-                      help='Print parameters to screen only. (default: false)')
+def utils_info(
+        filepath,
+        show_only=False,
+        log=False,
+        verbose=False,
+        block_size=None,
+        start_offset=None,
+        end_offset=None,
+        guess_offset=None,
+        warn_only_block_read_errors=False,
+        ignore_block_header_errors=False,
+        uboot_fix=False,
+        outpath=None
+    ):
+    settings.logging_on = log
 
-    parser.add_argument('-l', '--log', action='store_true', dest='log',
-                      help='Print extraction information to screen.')
+    settings.logging_on_verbose = verbose
 
-    parser.add_argument('-v', '--verbose-log', action='store_true', dest='verbose',
-                      help='Prints nearly everything about anything to screen.')
-    
-    parser.add_argument('-p', '--peb-size', type=int, dest='block_size',
-                        help='Specify PEB size.')
+    settings.warn_only_block_read_errors = warn_only_block_read_errors
 
-    parser.add_argument('-s', '--start-offset', type=int, dest='start_offset',
-                        help='Specify offset of UBI data in file. (default: 0)')
+    settings.ignore_block_header_errors = ignore_block_header_errors
 
-    parser.add_argument('-n', '--end-offset', type=int, dest='end_offset',
-                        help='Specify end offset of UBI data in file.')
+    settings.uboot_fix = uboot_fix
 
-    parser.add_argument('-g', '--guess-offset', type=int, dest='guess_offset',
-                        help='Specify offset to start guessing where UBI data is in file. (default: 0)')
+    if not os.path.exists(filepath):
+        raise UBIReaderError("File path doesn't exist.")
 
-    parser.add_argument('-w', '--warn-only-block-read-errors', action='store_true', dest='warn_only_block_read_errors',
-                      help='Attempts to continue extracting files even with bad block reads. Some data will be missing or corrupted! (default: False)')
-
-    parser.add_argument('-i', '--ignore-block-header-errors', action='store_true', dest='ignore_block_header_errors',
-                      help='Forces unused and error containing blocks to be included and also displayed with log/verbose. (default: False)')
-
-    parser.add_argument('-f', '--u-boot-fix', action='store_true', dest='uboot_fix',
-                      help='Assume blocks with image_seq 0 are because of older U-boot implementations and include them. (default: False)')
-
-    parser.add_argument('-o', '--output-dir', dest='outpath',
-                        help='Specify output directory path.')
-
-    parser.add_argument('filepath', help='File to extract contents of.')
-
-    if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit(1)
-
-    args = parser.parse_args()
-
-    settings.logging_on = args.log
-
-    settings.logging_on_verbose = args.verbose
-
-    settings.warn_only_block_read_errors = args.warn_only_block_read_errors
-
-    settings.ignore_block_header_errors = args.ignore_block_header_errors
-
-    settings.uboot_fix = args.uboot_fix
-
-    if args.filepath:
-        path = args.filepath
-        if not os.path.exists(path):
-            parser.error("File path doesn't exist.")
-
-    if args.start_offset:
-        start_offset = args.start_offset
-    elif args.guess_offset:
-        start_offset = guess_start_offset(path, args.guess_offset)
+    if start_offset:
+        start_offset = start_offset
+    elif guess_offset:
+        start_offset = guess_start_offset(filepath, guess_offset)
     else:
-        start_offset = guess_start_offset(path)
+        start_offset = guess_start_offset(filepath)
 
-    if args.end_offset:
-        end_offset = args.end_offset
+    if end_offset:
+        end_offset = end_offset
     else:
         end_offset = None
 
-    filetype = guess_filetype(path, start_offset)
+    filetype = guess_filetype(filepath, start_offset)
     if filetype != UBI_EC_HDR_MAGIC:
-        parser.error('File does not look like UBI data.')
+        raise UBIReaderError('File does not look like UBI data.')
 
-    img_name = os.path.basename(path)
-    if args.outpath:
-        outpath = os.path.abspath(os.path.join(args.outpath, img_name))
+    img_name = os.path.basename(filepath)
+    if outpath:
+        outpath = os.path.abspath(os.path.join(outpath, img_name))
     else:
         outpath = os.path.join(settings.output_dir, img_name)
 
-    if args.block_size:
-        block_size = args.block_size
+    if block_size:
+        block_size = block_size
     else:
-        block_size = guess_peb_size(path)
+        block_size = guess_peb_size(filepath)
 
         if not block_size:
-            parser.error('Block size could not be determined.')
+            raise UBIReaderError('Block size could not be determined.')
 
     # Create file object.
-    ufile_obj = ubi_file(path, block_size, start_offset, end_offset)
+    ufile_obj = ubi_file(filepath, block_size, start_offset, end_offset)
 
     # Create UBI object
     ubi_obj = ubi(ufile_obj)
@@ -338,8 +303,7 @@ if __name__=='__main__':
     # Print info.
     print_ubi_params(ubi_obj)
 
-    if not args.show_only:
+    if not show_only:
         create_output_dir(outpath)
         # Create build scripts.
         make_files(ubi_obj, outpath)
-
