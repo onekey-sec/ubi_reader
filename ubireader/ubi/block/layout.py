@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-from ubireader.debug import error, log
+from ubireader.debug import log
 from ubireader.ubi.block import sort
 
 def get_newest(blocks, layout_blocks):

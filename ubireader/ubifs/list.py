@@ -18,7 +18,6 @@
 #############################################################
 
 import os
-import struct
 
 import time
 from ubireader import settings

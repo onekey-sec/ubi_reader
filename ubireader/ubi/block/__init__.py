@@ -17,10 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-import re
 from zlib import crc32
 from ubireader import settings
-from ubireader.debug import error, log, verbose_display, verbose_log
+from ubireader.debug import log, verbose_display, verbose_log
 from ubireader.ubi import display
 from ubireader.ubi.defines import UBI_EC_HDR_SZ, UBI_VID_HDR_SZ, UBI_INTERNAL_VOL_START, UBI_EC_HDR_MAGIC, UBI_CRC32_INIT
 from ubireader.ubi.headers import ec_hdr, vid_hdr, vtbl_recs
