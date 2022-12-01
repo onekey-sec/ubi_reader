@@ -152,7 +152,7 @@ def extract_blocks(ubi):
 
         else:
             cur_offset += ubi.file.block_size
-            ubi.first_peb_num = cur_offset/ubi.file.block_size
+            ubi.first_peb_num = cur_offset//ubi.file.block_size
             ubi.file.start_offset = cur_offset
 
     return blocks
