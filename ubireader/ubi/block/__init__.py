@@ -129,7 +129,7 @@ def extract_blocks(ubi):
             blk.file_offset = i
             blk.peb_num = ubi.first_peb_num + peb_count
             blk.size = ubi.file.block_size
-            blk.data_crc = (~crc32(buf[blk.ec_hdr.data_offset:blk.ec_hdr.data_offset+blk.vid_hdr.data_size]) & 0xFFFFFFFF)
+            blk.data_crc = (~crc32(buf[blk.ec_hdr.data_offset:blk.ec_hdr.data_offset+blk.vid_hdr.data_size]) & UBI_CRC32_INIT)
             blocks[blk.peb_num] = blk
             peb_count += 1
             log(extract_blocks, blk)
