@@ -66,7 +66,7 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
     inode = inodes[dent_node.inum]
 
     if not is_safe_path(path, dent_node.name):
-        error(extract_dents, 'Warn', 'Path traversal attempt: %s, discarding' % (dent_node.name))
+        error(extract_dents, 'Warn', 'Path traversal attempt: %s, discarding.' % (dent_node.name))
         return
     dent_path = os.path.realpath(os.path.join(path, dent_node.name))
 

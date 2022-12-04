@@ -19,7 +19,6 @@
 
 import os
 import time
-from ubireader import settings
 from ubireader.ubifs.defines import *
 from ubireader.ubifs import walk
 from ubireader.ubifs.misc import decompress

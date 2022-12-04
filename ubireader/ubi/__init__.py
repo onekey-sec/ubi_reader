@@ -19,7 +19,6 @@
 
 from ubireader.debug import error
 from ubireader.ubi.block import sort, extract_blocks
-from ubireader.ubi.defines import UBI_EC_HDR_MAGIC, FILE_CHUNK_SZ
 from ubireader.ubi import display
 from ubireader.ubi.image import description as image
 from ubireader.ubi.block import layout, rm_old_blocks

@@ -60,7 +60,6 @@ def guess_start_offset(path, guess_offset=0):
     f.close()
 
 
-
 def guess_filetype(path, start_offset=0):
     log(guess_filetype, 'Looking for file type at %s' % start_offset)
 
@@ -80,7 +79,6 @@ def guess_filetype(path, start_offset=0):
             error(guess_filetype, 'Fatal', 'Could not determine file type.')
     
     return ftype
-
 
 
 def guess_leb_size(path):
@@ -127,7 +125,6 @@ def guess_leb_size(path):
     return block_size
 
 
-
 def guess_peb_size(path):
     """Determine the most likely block size
 
@@ -163,24 +160,24 @@ def guess_peb_size(path):
         file_offset += FILE_CHUNK_SZ
     f.close()
 
-    occurances = {}
+    occurrences = {}
     for i in range(0, len(offsets)):
         try:
             diff = offsets[i] - offsets[i-1]
         except:
             diff = offsets[i]
 
-        if diff not in occurances:
-            occurances[diff] = 0
+        if diff not in occurrences:
+            occurrences[diff] = 0
 
-        occurances[diff] += 1
+        occurrences[diff] += 1
 
     most_frequent = 0
     block_size = None
 
-    for offset in occurances:
-        if occurances[offset] > most_frequent:
-            most_frequent = occurances[offset]
+    for offset in occurrences:
+        if occurrences[offset] > most_frequent:
+            most_frequent = occurrences[offset]
             block_size = offset
 
     return block_size
