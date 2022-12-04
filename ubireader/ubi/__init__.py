@@ -19,7 +19,7 @@
 
 
 from ubireader.debug import error, log
-from ubireader.ubi.block import sort, extract_blocks, rm_old_blocks
+from ubireader.ubi.block import sort, extract_blocks
 from ubireader.ubi.defines import UBI_EC_HDR_MAGIC, FILE_CHUNK_SZ
 from ubireader.ubi import display
 from ubireader.ubi.image import description as image
@@ -148,10 +148,6 @@ class ubi(ubi_base):
         super(ubi, self).__init__(ubi_file)
 
         layout_list, data_list, int_vol_list, unknown_list = sort.by_type(self.blocks)
-        layout_list = rm_old_blocks(self.blocks, layout_list)
-        data_list = rm_old_blocks(self.blocks, data_list)
-        int_vol_list = rm_old_blocks(self.blocks, int_vol_list)
-        unknown_list = rm_old_blocks(self.blocks, unknown_list)
 
         if len(layout_list) < 2:
             error(self, 'Fatal', 'Less than 2 layout blocks found.')
@@ -163,7 +159,7 @@ class ubi(ubi_base):
 
         layout_pairs = layout.group_pairs(self.blocks, self.layout_blocks_list)
 
-        layout_infos = layout.associate_blocks(self.blocks, layout_pairs, self.first_peb_num)
+        layout_infos = layout.associate_blocks(self.blocks, layout_pairs)
 
         self._images = []
         for i in range(0, len(layout_infos)):

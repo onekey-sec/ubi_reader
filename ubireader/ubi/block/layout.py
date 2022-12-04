@@ -30,8 +30,8 @@ def get_newest(blocks, layout_blocks):
     Returns:
     List -- Newest layout blocks in list
     """
-    layout_temp = list(layout_blocks)
 
+    layout_temp = list(layout_blocks)
     for i in range(0, len(layout_temp)):
         for k in range(0, len(layout_blocks)):
             if blocks[layout_temp[i]].ec_hdr.image_seq != blocks[layout_blocks[k]].ec_hdr.image_seq:
@@ -71,21 +71,21 @@ def group_pairs(blocks, layout_blocks_list):
     return list(image_dict.values())
 
 
-def associate_blocks(blocks, layout_pairs, start_peb_num):
+def associate_blocks(blocks, layout_pairs):
     """Group block indexes with appropriate layout pairs
 
     Arguments:
     List:blocks        -- List of block objects
     List:layout_pairs  -- List of grouped layout blocks
-    Int:start_peb_num  -- Number of the PEB to start from.
 
     Returns:
     List -- Layout block pairs grouped with associated block ranges.
     """
+
     seq_blocks = []
     for layout_pair in layout_pairs:
         seq_blocks = sort.by_image_seq(blocks, blocks[layout_pair[0]].ec_hdr.image_seq)
-
+        seq_blocks = [b for b in seq_blocks if b not in layout_pair]
         layout_pair.append(seq_blocks)
 
     return layout_pairs

@@ -19,7 +19,7 @@
 
 from ubireader.debug import log
 from ubireader.ubi import display
-from ubireader.ubi.block import sort, get_blocks_in_list
+from ubireader.ubi.block import sort, get_blocks_in_list, rm_old_blocks
 
 class description(object):
     """UBI Volume object
@@ -110,11 +110,12 @@ def get_volumes(blocks, layout_info):
     volumes = {}
 
     vol_blocks_lists = sort.by_vol_id(blocks, layout_info[2])
-
     for vol_rec in blocks[layout_info[0]].vtbl_recs:
         vol_name = vol_rec.name.strip(b'\x00').decode('utf-8')
         if vol_rec.rec_index not in vol_blocks_lists:
             vol_blocks_lists[vol_rec.rec_index] = []
+
+        vol_blocks_lists[vol_rec.rec_index] = rm_old_blocks(blocks, vol_blocks_lists[vol_rec.rec_index])
         volumes[vol_name] = description(vol_rec.rec_index, vol_rec, vol_blocks_lists[vol_rec.rec_index])
             
     return volumes

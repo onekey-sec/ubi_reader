@@ -162,7 +162,11 @@ def rm_old_blocks(blocks, block_list):
     del_blocks = []
 
     for i in block_list:
-        if i in del_blocks or blocks[i].is_valid is not True:
+        if i in del_blocks:
+            continue
+
+        if blocks[i].is_valid is not True:
+            del_blocks.append(i)
             continue
 
         for k in block_list:
@@ -172,6 +176,10 @@ def rm_old_blocks(blocks, block_list):
             if k in del_blocks:
                 continue
 
+            if blocks[k].is_valid is not True:
+                del_blocks.append(k)
+                continue
+
             if blocks[i].leb_num != blocks[k].leb_num:
                 continue
 
@@ -179,26 +187,52 @@ def rm_old_blocks(blocks, block_list):
                 continue
 
             second_newer =  blocks[k].vid_hdr.sqnum > blocks[i].vid_hdr.sqnum
-
+            del_block = None
+            use_block = None
+            
             if second_newer:
                 if blocks[k].vid_hdr.copy_flag == 0:
-                    log(rm_old_blocks, 'Old block removed (copy_flag): PEB %s, LEB %s' % (blocks[i].peb_num, blocks[i].leb_num))
-                    del_blocks.append(i)
-                    break
+                    del_block = i
+                    use_block = k
+
             else:
                 if blocks[i].vid_hdr.copy_flag == 0:
-                    log(rm_old_blocks, 'Old block removed (copy_flag): PEB %s, LEB %s' % (blocks[k].peb_num, blocks[k].leb_num))
-                    del_blocks.append(k)
-                    break
+                    del_block = k
+                    use_block = i
 
-            if blocks[k].data_crc != blocks[k].vid_hdr.data_crc:
-                log(rm_old_blocks, 'Old block removed (data_crc): PEB %s, LEB %s' % (blocks[k].peb_num, blocks[k].leb_num))
-                del_blocks.append(k)
+            if del_block is not None:
+                del_blocks.append(del_block)
+                log(rm_old_blocks, 'Old block removed (copy_flag): PEB %s, LEB %s, Using PEB%s' % (blocks[del_block].peb_num, blocks[del_block].leb_num, use_block))
                 break
 
-            elif blocks[i].data_crc != blocks[i].vid_hdr.data_crc:
-                log(rm_old_blocks, 'Old block removed (data_crc): PEB %s, LEB %s' % (blocks[i].peb_num, blocks[i].leb_num))
-                del_blocks.append(i)
-                break
-                
+            if second_newer:
+                if blocks[k].data_crc != blocks[k].vid_hdr.data_crc:
+                    del_block = k
+                    use_block = i
+                else:
+                    del_block = i
+                    use_block = k
+            else:
+                if blocks[i].data_crc != blocks[i].vid_hdr.data_crc:
+                    del_block = i
+                    use_block = k
+                else:
+                    del_block = k
+                    use_block = i
+
+            if del_block is not None:
+                del_blocks.append(del_block)
+                log(rm_old_blocks, 'Old block removed (data_crc): PEB %s, LEB %s, vid_hdr.data_crc %s / %s, Using PEB %s' % (blocks[del_block].peb_num,
+                                                                                                                           blocks[del_block].leb_num,
+                                                                                                                           blocks[del_block].vid_hdr.data_crc,
+                                                                                                                           blocks[del_block].data_crc,
+                                                                                                                           use_block))
+
+            else:
+                use_block = min(k, i)
+                del_blocks.append(use_block)
+                error('Warn', rm_old_blocks, 'Multiple PEB [%s] for LEB %s: Using first.' % (', '.join(i, k), blocks[i].leb_num, use_block))
+
+            break
+
     return [j for j in block_list if j not in del_blocks]
