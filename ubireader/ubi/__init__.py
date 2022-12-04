@@ -22,7 +22,7 @@ from ubireader.ubi.block import sort, extract_blocks
 from ubireader.ubi.defines import UBI_EC_HDR_MAGIC, FILE_CHUNK_SZ
 from ubireader.ubi import display
 from ubireader.ubi.image import description as image
-from ubireader.ubi.block import layout
+from ubireader.ubi.block import layout, rm_old_blocks
 
 class ubi_base(object):
     """UBI Base object
@@ -148,15 +148,17 @@ class ubi(ubi_base):
 
         layout_list, data_list, int_vol_list, unknown_list = sort.by_type(self.blocks)
 
-        if len(layout_list) < 2:
-            error(self, 'Fatal', 'Less than 2 layout blocks found.')
-
-        self._layout_blocks_list = layout.get_newest(self.blocks, layout_list)
+        self._layout_blocks_list = layout_list
         self._data_blocks_list = data_list
         self._int_vol_blocks_list = int_vol_list
         self._unknown_blocks_list = unknown_list
+        
+        newest_layout_list = rm_old_blocks(self.blocks, self.layout_blocks_list)
+        
+        if len(newest_layout_list) < 2:
+            error(self, 'Fatal', 'Less than 2 layout blocks found.')
 
-        layout_pairs = layout.group_pairs(self.blocks, self.layout_blocks_list)
+        layout_pairs = layout.group_pairs(self.blocks, newest_layout_list)
 
         layout_infos = layout.associate_blocks(self.blocks, layout_pairs)
 

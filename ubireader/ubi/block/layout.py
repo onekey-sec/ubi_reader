@@ -20,33 +20,6 @@
 from ubireader.debug import log
 from ubireader.ubi.block import sort
 
-def get_newest(blocks, layout_blocks):
-    """Filter out old layout blocks from list
-
-    Arguments:
-    List:blocks        -- List of block objects
-    List:layout_blocks -- List of layout block indexes
-
-    Returns:
-    List -- Newest layout blocks in list
-    """
-
-    layout_temp = list(layout_blocks)
-    for i in range(0, len(layout_temp)):
-        for k in range(0, len(layout_blocks)):
-            if blocks[layout_temp[i]].ec_hdr.image_seq != blocks[layout_blocks[k]].ec_hdr.image_seq:
-                continue
-
-            if blocks[layout_temp[i]].leb_num != blocks[layout_blocks[k]].leb_num:
-                continue
-
-            if blocks[layout_temp[i]].vid_hdr.sqnum > blocks[layout_blocks[k]].vid_hdr.sqnum:
-                del layout_blocks[k]
-                break
-
-    return layout_blocks
-
-
 def group_pairs(blocks, layout_blocks_list):
     """Sort a list of layout blocks into pairs
 
