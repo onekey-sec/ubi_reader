@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
+
 from ubireader import settings
 
 def by_image_seq(blocks, image_seq):

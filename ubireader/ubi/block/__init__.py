@@ -17,7 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-import re
 from zlib import crc32
 from ubireader import settings
 from ubireader.debug import error, log, verbose_display, verbose_log

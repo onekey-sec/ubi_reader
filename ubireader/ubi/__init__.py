@@ -17,8 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-
-from ubireader.debug import error, log
+from ubireader.debug import error
 from ubireader.ubi.block import sort, extract_blocks
 from ubireader.ubi.defines import UBI_EC_HDR_MAGIC, FILE_CHUNK_SZ
 from ubireader.ubi import display

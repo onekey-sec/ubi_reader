@@ -29,7 +29,8 @@ from ubireader.debug import error, log, verbose_log
 def is_safe_path(basedir, path):
     basedir = os.path.realpath(basedir)
     path = os.path.realpath(os.path.join(basedir, path))
-    return basedir == os.path.commonpath((basedir, path))
+    return True if path.startswith(basedir) else False
+
 
 def extract_files(ubifs, out_path, perms=False):
     """Extract UBIFS contents to_path/
@@ -196,7 +197,7 @@ def _process_reg_file(ubifs, inode, path):
                 verbose_log(_process_reg_file, 'ino num: %s, compression: %s, path: %s' % (inode['ino'].key['ino_num'], compr_type, path))
 
     except Exception as e:
-        error(_process_reg_file, 'Warn', 'inode num:%s :%s' % (inode['ino'].key['ino_num'], e))
+        error(_process_reg_file, 'Warn', 'inode num:%s path:%s :%s' % (inode['ino'].key['ino_num'], path, e))
     
     # Pad end of file with \x00 if needed.
     if inode['ino'].size > len(buf):

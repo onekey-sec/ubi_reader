@@ -18,8 +18,6 @@
 #############################################################
 
 import os
-import struct
-
 import time
 from ubireader import settings
 from ubireader.ubifs.defines import *

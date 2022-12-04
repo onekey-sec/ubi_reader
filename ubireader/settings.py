@@ -17,8 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-import os
-
 output_dir = 'ubifs-root'
 
 error_action = True                     # if 'exit' on any error exit program.

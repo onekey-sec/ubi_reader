@@ -17,7 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-from ubireader import settings
 from ubireader.debug import error, log, verbose_log
 from ubireader.ubi.block import sort
 
