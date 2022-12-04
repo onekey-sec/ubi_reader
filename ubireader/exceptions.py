@@ -1,0 +1,2 @@
+class UBIReaderParseError(Exception):
+    pass
