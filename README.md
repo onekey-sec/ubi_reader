@@ -24,7 +24,7 @@ This branch will probably remain seperate, as it is meant to be customized to ai
 
 ## Dependencies:
 
-Since version v0.8.2, Python3 is required, with the following packages:
+Python 2.7 or 3 with the following packages:
 
     $ sudo apt-get install liblzo2-dev
     $ sudo pip install python-lzo
