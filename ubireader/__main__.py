@@ -15,9 +15,9 @@ def main():
     subparsers = parser.add_subparsers()
     subparsers.add_parser(
         "display-blocks",
-        usage=correct_usage(display_blocks.usage),
-        description=display_blocks.description,
-        parents=[display_blocks.parser]
+        usage=correct_usage(display_blocks.ui.usage),
+        description=display_blocks.ui.description,
+        parents=[display_blocks.ui.parser]
     )
     subparsers.add_parser(
         "display-info",
@@ -27,15 +27,15 @@ def main():
     )
     subparsers.add_parser(
         "extract-files",
-        usage=correct_usage(extract_files.usage),
-        description=extract_files.description,
-        parents=[extract_files.parser]
+        usage=correct_usage(extract_files.ui.usage),
+        description=extract_files.ui.description,
+        parents=[extract_files.ui.parser]
     )
     subparsers.add_parser(
         "extract-images",
-        usage=correct_usage(extract_images.usage),
-        description=extract_images.description,
-        parents=[extract_images.parser]
+        usage=correct_usage(extract_images.ui.usage),
+        description=extract_images.ui.description,
+        parents=[extract_images.ui.parser]
     )
     subparsers.add_parser(
         "list-files",

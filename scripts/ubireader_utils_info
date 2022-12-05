@@ -20,7 +20,6 @@
 
 import argparse
 import sys
-import time
 
 from ubireader.exceptions import UBIReaderParseError
 from ubireader.parsers import utils_info

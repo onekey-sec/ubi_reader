@@ -31,9 +31,9 @@ from ubireader.parsers import display_blocks
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(
-        usage=display_blocks.usage,
-        description=display_blocks.description,
-        parents=[display_blocks.parser]
+        usage=display_blocks.ui.usage,
+        description=display_blocks.ui.description,
+        parents=[display_blocks.ui.parser]
     )
 
     if len(sys.argv) == 1:

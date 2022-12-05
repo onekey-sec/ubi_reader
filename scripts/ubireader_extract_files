@@ -19,7 +19,6 @@
 #############################################################
 
 import sys
-import time
 import argparse
 
 from ubireader.exceptions import UBIReaderParseError
@@ -28,9 +27,9 @@ from ubireader.parsers import extract_files
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(
-        usage=extract_files.usage,
-        description=extract_files.description,
-        parents=[extract_files.parser]
+        usage=extract_files.ui.usage,
+        description=extract_files.ui.description,
+        parents=[extract_files.ui.parser]
     )
 
     if len(sys.argv) == 1:

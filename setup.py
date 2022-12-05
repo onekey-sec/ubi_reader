@@ -27,7 +27,7 @@ setup(
             ],
     entry_points={
         'console_scripts': [
-            'ubireader = __main__:main',
+            'ubireader = ubireader.__main__:main',
         ]
     }
 )
