@@ -1,46 +1,11 @@
-from ubireader.parsers import UIParser
+from ubireader.parsers import ArgHandler
 from ubireader.exceptions import UBIReaderParseError
 from ubireader.ubi import ubi_base
 from ubireader.ubi_io import ubi_file
 
-# Set up argparser and cli options.
-ui = UIParser()
-ui.description = 'Search for specified blocks and display information.'
-ui.usage = """
-ubireader display-blocks "{'block.attr': value,...}" path/to/image
-    Search for blocks by given parameters and display information about them.
-    This is block only, no volume or image information is created, which can
-    be used to debug file and image extraction.
-Example:
-    "{'peb_num':[0, 1] + range(100, 102), 'ec_hdr.ec': 1, 'is_valid': True}"
-    This matches block.peb_num 0, 1, 100, 101, and 102 
-    with a block.ec_hdr.ec (erase count) of 1, that are valid PEB blocks.
-    For a full list of parameters check ubireader.ubi.block.description.
-"""
+def parse(*args, **kwargs):
+    args = ArgHandler(*args, **kwargs)
 
-
-ui.parser.add_argument('block_search_params',
-                        help="""
-                        Double quoted Dict of ubi.block.description attributes, which is run through eval().
-                        Ex. "{\'peb_num\':[0, 1], \'ec_hdr.ec\': 1, \'is_valid\': True}"
-                        """)
-
-ui.arg_log()
-ui.arg_verbose_log()
-ui.arg_peb_size()
-ui.arg_leb_size()
-ui.arg_start_offset()
-ui.arg_end_offset()
-ui.arg_guess_offset()
-ui.arg_warn_only_block_read_errors()
-ui.arg_ignore_block_header_errors()
-ui.arg_u_boot_fix()
-ui.arg_output_dir()
-ui.arg_filepath()
-
-
-def display_blocks(*args, **kwargs):
-    ui.parse_args(*args, **kwargs)
     if 'block_search_params' in kwargs:
         if kwargs['block_search_params']:
             try:
@@ -59,7 +24,7 @@ def display_blocks(*args, **kwargs):
             raise UBIReaderParseError('No search parameters given, -b arg is required.')
 
 
-    ufile_obj = ubi_file(ui.filepath, ui.block_size, ui.start_offset, ui.end_offset)
+    ufile_obj = ubi_file(args.filepath, args.block_size, args.start_offset, args.end_offset)
     ubi_obj = ubi_base(ufile_obj)
     blocks = []
 
@@ -94,6 +59,3 @@ def display_blocks(*args, **kwargs):
 
     for block in blocks:
         print(block.display())
-
-
-ui.function=display_blocks

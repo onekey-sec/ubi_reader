@@ -1,47 +1,25 @@
-#!/usr/bin/env python
-#############################################################
-# ubi_reader/scripts/ubireader_display_blocks
-# (c) 2019 Jason Pruitt (jrspruitt@gmail.com)
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#############################################################
-
-#############################################################
-# Search by block parameters and display information about
-# matching blocks.
-#############################################################
-
-import argparse
 import sys
 
+from ubireader.ui.scripts import DisplayBlocksUi
 from ubireader.exceptions import UBIReaderParseError
-from ubireader.parsers import display_blocks
 
-
-if __name__=='__main__':
-    parser = argparse.ArgumentParser(
-        usage=display_blocks.ui.usage,
-        description=display_blocks.ui.description,
-        parents=[display_blocks.ui.parser]
-    )
+def main():
+    ui = DisplayBlocksUi(True)
+    ui.usage='ubireader_display_blocks [options] filepath'
 
     if len(sys.argv) == 1:
-        parser.print_help()
+        ui.parser.print_help()
+        sys.exit(1)
+    
+    args = vars(ui.parser.parse_args())
 
-    args = vars(parser.parse_args())
-    func = args.pop("func")
+    func = args.pop('func')
+    filepath = args.pop('filepath')
+
     try:
-        func(**args)
+        func(filepath, **args)
     except UBIReaderParseError as e:
-        parser.error(str(e))
+        sys.exit("Error: " + str(e))
+
+if __name__ == "__main__":
+    main()

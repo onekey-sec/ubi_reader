@@ -1,4 +1,3 @@
-import argparse
 import os
 import sys
 if (sys.version_info > (3, 0)):
@@ -6,29 +5,12 @@ if (sys.version_info > (3, 0)):
 else:
     import ConfigParser as configparser
 
-from ubireader import settings
-from ubireader.exceptions import UBIReaderParseError
-from ubireader.parsers import parser_base
+from ubireader.parsers import ArgHandler, makedir
 from ubireader.ubi import ubi
 from ubireader.ubi.defines import UBI_EC_HDR_MAGIC, PRINT_VOL_TYPE_LIST, UBI_VTBL_AUTORESIZE_FLG
 from ubireader.ubifs import ubifs
 from ubireader.ubifs.defines import PRINT_UBIFS_KEY_HASH, PRINT_UBIFS_COMPR
 from ubireader.ubi_io import ubi_file, leb_virtual_file
-from ubireader.debug import error, log
-from ubireader.utils import guess_filetype, guess_start_offset, guess_peb_size
-
-
-def create_output_dir(outpath):
-    if os.path.exists(outpath):
-        if os.listdir(outpath):
-            error(create_output_dir, 'Fatal', 'Output directory is not empty. %s' % outpath)
-    else:
-        try:
-            os.makedirs(outpath)
-            log(create_output_dir, 'Created output path: %s' % outpath)
-        except Exception as e:
-            error(create_output_dir, 'Fatal', '%s' % e)
-
 
 def get_ubi_params(ubi_obj):
     """Get ubi_obj utils params
@@ -221,67 +203,11 @@ def make_files(ubi, outpath):
         os.chmod(script_path, 0o755)
 
 
-def utils_info(
-        filepath,
-        show_only=False,
-        log=False,
-        verbose=False,
-        block_size=None,
-        start_offset=None,
-        end_offset=None,
-        guess_offset=None,
-        warn_only_block_read_errors=False,
-        ignore_block_header_errors=False,
-        uboot_fix=False,
-        outpath=None
-    ):
-    settings.logging_on = log
-
-    settings.logging_on_verbose = verbose
-
-    settings.warn_only_block_read_errors = warn_only_block_read_errors
-
-    settings.ignore_block_header_errors = ignore_block_header_errors
-
-    settings.uboot_fix = uboot_fix
-
-    if filepath:
-        path = filepath
-        if not os.path.exists(path):
-            raise UBIReaderParseError("File path doesn't exist.")
-
-    if start_offset:
-        start_offset = start_offset
-    elif guess_offset:
-        start_offset = guess_start_offset(path, guess_offset)
-    else:
-        start_offset = guess_start_offset(path)
-
-    if end_offset:
-        end_offset = end_offset
-    else:
-        end_offset = None
-
-    filetype = guess_filetype(path, start_offset)
-    if filetype != UBI_EC_HDR_MAGIC:
-        raise UBIReaderParseError('File does not look like UBI data.')
-
-    img_name = os.path.basename(path)
-    if outpath:
-        outpath = os.path.abspath(os.path.join(outpath, img_name))
-    else:
-        outpath = os.path.join(settings.output_dir, img_name)
-
-    if block_size:
-        block_size = block_size
-    else:
-        block_size = guess_peb_size(path)
-
-        if not block_size:
-            raise UBIReaderParseError('Block size could not be determined.')
+def parse(filepath, *args, **kwargs):
+    args = ArgHandler(filepath, *args, **kwargs)
 
     # Create file object.
-    ufile_obj = ubi_file(path, block_size, start_offset, end_offset)
+    ufile_obj = ubi_file(args.filepath, args.block_size, args.start_offset, args.end_offset)
 
     # Create UBI object
     ubi_obj = ubi(ufile_obj)
@@ -289,24 +215,7 @@ def utils_info(
     # Print info.
     print_ubi_params(ubi_obj)
 
-    if not show_only:
-        create_output_dir(outpath)
+    if not kwargs['show_only']:
+        makedir(args.output_dir)
         # Create build scripts.
-        make_files(ubi_obj, outpath)
-
-
-description = 'Determine settings for recreating UBI image.'
-usage = 'ubireader_utils_info [options] filepath'
-parser = argparse.ArgumentParser(
-    usage=usage,
-    description=description,
-    parents=[parser_base],
-    add_help=False
-)
-parser.set_defaults(func=utils_info)
-
-parser.add_argument('-r', '--show-only', action='store_true', dest='show_only',
-                    help='Print parameters to screen only. (default: false)')
-
-parser.add_argument('-o', '--output-dir', dest='outpath',
-                    help='Specify output directory path.')
+        make_files(ubi_obj, args.output_dir)
