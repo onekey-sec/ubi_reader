@@ -62,7 +62,7 @@ class description(object):
         # TODO better understanding of block types/errors
         self.ec_hdr = ec_hdr(block_buf[0:UBI_EC_HDR_SZ])
 
-        if not self.ec_hdr.errors or settings.ignore_block_header_errors:
+        if not self.ec_hdr.errors or settings.ignore_block_header_errors or settings.warn_only_block_read_errors:
             self.vid_hdr = vid_hdr(block_buf[self.ec_hdr.vid_hdr_offset:self.ec_hdr.vid_hdr_offset+UBI_VID_HDR_SZ])
 
             if not self.vid_hdr.errors or settings.ignore_block_header_errors:
@@ -72,7 +72,8 @@ class description(object):
                     self.vtbl_recs = vtbl_recs(block_buf[self.ec_hdr.data_offset:])
 
                 self.leb_num = self.vid_hdr.lnum
-
+        else:
+            raise Exception("ECC error in block header. Use either --warn-only-block-read-errors or --ignore-block-header-errors.")
         self.is_vtbl = bool(self.vtbl_recs) or False
         self.is_valid = not self.ec_hdr.errors and not self.vid_hdr.errors or settings.ignore_block_header_errors
 
