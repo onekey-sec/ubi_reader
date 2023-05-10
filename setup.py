@@ -16,7 +16,7 @@ setup(
     license='GNU GPL',
     keywords='UBI UBIFS',
 
-    install_requires=['python-lzo'],
+    install_requires=['lzallright'],
     packages = find_packages(),
     scripts=['scripts/ubireader_display_info',
              'scripts/ubireader_extract_files',
