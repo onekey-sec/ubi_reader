@@ -22,14 +22,6 @@ An override system is also included, for manually setting certain parameters tha
 This branch will probably remain seperate, as it is meant to be customized to aid in extracting data from problematic images. You can install it with 'python setup.py develop' to make it easier to modify ubi_reader as needed.
 
 
-## Dependencies:
-
-Python 2.7 or 3 with the following packages:
-
-    $ sudo apt-get install liblzo2-dev
-    $ sudo pip install python-lzo
-
-
 ## Installation:
 
 Latest Version
