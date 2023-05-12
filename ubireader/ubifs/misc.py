@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-import lzo
+from lzallright.lzallright import LZOCompressor as lzo
 import struct
 import zlib
 from ubireader.ubifs.defines import *
