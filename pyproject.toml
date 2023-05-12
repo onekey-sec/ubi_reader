@@ -11,6 +11,13 @@ packages = [{include = "ubi_reader"}]
 python = "^3.8"
 lzallright = "^0.1.0"
 
+[tool.poetry.group.dev.dependencies]
+pyright = "^1.1.307"
+ruff = "^0.0.265"
+pytest = "^7.3.1"
+pytest-cov = "^4.0.0"
+pre-commit = "^3.3.1"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
