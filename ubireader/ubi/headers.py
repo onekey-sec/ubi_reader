@@ -21,65 +21,76 @@ import struct
 from zlib import crc32
 
 from ubireader.debug import log
-from ubireader.ubi.defines import *
+from ubireader.ubi.defines import (
+    EC_HDR_FIELDS,
+    EC_HDR_FORMAT,
+    UBI_CRC32_INIT,
+    VID_HDR_FIELDS,
+    VID_HDR_FORMAT,
+    UBI_VTBL_REC_SZ,
+    VTBL_REC_FIELDS,
+    VTBL_REC_FORMAT,
+    UBI_MAX_VOLUMES,
+)
+
 
 class ec_hdr(object):
     def __init__(self, buf):
-        fields = dict(list(zip(EC_HDR_FIELDS, struct.unpack(EC_HDR_FORMAT,buf))))
+        fields = dict(list(zip(EC_HDR_FIELDS, struct.unpack(EC_HDR_FORMAT, buf))))
         for key in fields:
             setattr(self, key, fields[key])
-        setattr(self, 'errors', [])
+        setattr(self, "errors", [])
 
         self._check_errors(buf[:-4])
-        
+
     def __repr__(self):
-        return 'Erase Count Header'
+        return "Erase Count Header"
 
     def __iter__(self):
         for key in dir(self):
-            if not key.startswith('_'):
+            if not key.startswith("_"):
                 yield key, getattr(self, key)
 
     def _check_errors(self, buf_crc):
-        crc_chk = (~crc32(buf_crc) & UBI_CRC32_INIT)
+        crc_chk = ~crc32(buf_crc) & UBI_CRC32_INIT
         if self.hdr_crc != crc_chk:
-            log(vid_hdr, 'CRC Failed: expected 0x%x got 0x%x' % (crc_chk, self.hdr_crc))
-            self.errors.append('crc')
+            log(vid_hdr, "CRC Failed: expected 0x%x got 0x%x" % (crc_chk, self.hdr_crc))
+            self.errors.append("crc")
 
 
 class vid_hdr(object):
     def __init__(self, buf):
-        fields = dict(list(zip(VID_HDR_FIELDS, struct.unpack(VID_HDR_FORMAT,buf))))
+        fields = dict(list(zip(VID_HDR_FIELDS, struct.unpack(VID_HDR_FORMAT, buf))))
         for key in fields:
             setattr(self, key, fields[key])
-        setattr(self, 'errors', [])
+        setattr(self, "errors", [])
 
         self._check_errors(buf[:-4])
 
     def __iter__(self):
         for key in dir(self):
-            if not key.startswith('_'):
+            if not key.startswith("_"):
                 yield key, getattr(self, key)
 
     def __repr__(self):
-        return 'VID Header'
+        return "VID Header"
 
     def _check_errors(self, buf_crc):
-        crc_chk = (~crc32(buf_crc) & UBI_CRC32_INIT)
+        crc_chk = ~crc32(buf_crc) & UBI_CRC32_INIT
         if self.hdr_crc != crc_chk:
-            log(vid_hdr, 'CRC Failed: expected 0x%x got 0x%x' % (crc_chk, self.hdr_crc))
-            self.errors.append('crc')
+            log(vid_hdr, "CRC Failed: expected 0x%x got 0x%x" % (crc_chk, self.hdr_crc))
+            self.errors.append("crc")
 
 
 def vtbl_recs(buf):
     data_buf = buf
     vtbl_recs = []
-    vtbl_rec_ret = ''
+    vtbl_rec_ret = ""
 
-    for i in range(0, UBI_MAX_VOLUMES):    
-        offset = i*UBI_VTBL_REC_SZ
-        vtbl_rec_buf = data_buf[offset:offset+UBI_VTBL_REC_SZ]
-        
+    for i in range(0, UBI_MAX_VOLUMES):
+        offset = i * UBI_VTBL_REC_SZ
+        vtbl_rec_buf = data_buf[offset : offset + UBI_VTBL_REC_SZ]
+
         if len(vtbl_rec_buf) == UBI_VTBL_REC_SZ:
             vtbl_rec_ret = _vtbl_rec(vtbl_rec_buf)
 
@@ -92,23 +103,23 @@ def vtbl_recs(buf):
 
 class _vtbl_rec(object):
     def __init__(self, buf):
-        fields = dict(list(zip(VTBL_REC_FIELDS, struct.unpack(VTBL_REC_FORMAT,buf))))
+        fields = dict(list(zip(VTBL_REC_FIELDS, struct.unpack(VTBL_REC_FORMAT, buf))))
         for key in fields:
             setattr(self, key, fields[key])
-        setattr(self, 'errors', [])
-        setattr(self, 'rec_index', -1)
+        setattr(self, "errors", [])
+        setattr(self, "rec_index", -1)
 
-        self.name = self.name[0: self.name_len]
+        self.name = self.name[0 : self.name_len]
         self._check_errors(buf[:-4])
 
     def __repr__(self):
-        return 'Volume Table Record: %s' % getattr(self, 'name')
+        return "Volume Table Record: %s" % getattr(self, "name")
 
     def __iter__(self):
         for key in dir(self):
-            if not key.startswith('_'):
+            if not key.startswith("_"):
                 yield key, getattr(self, key)
 
     def _check_errors(self, buf_crc):
         if self.crc != (~crc32(buf_crc) & 0xFFFFFFFF):
-            self.errors.append('crc')
+            self.errors.append("crc")

@@ -19,8 +19,9 @@
 
 from ubireader.debug import log
 from ubireader.ubi import display
-from ubireader.ubi.volume import get_volumes
 from ubireader.ubi.block import get_blocks_in_list
+from ubireader.ubi.volume import get_volumes
+
 
 class description(object):
     def __init__(self, blocks, layout_info):
@@ -31,30 +32,31 @@ class description(object):
         self._start_peb = min(layout_info[2])
         self._end_peb = max(layout_info[2])
         self._volumes = get_volumes(blocks, layout_info)
-        log(description, 'Created Image: %s, Volume Cnt: %s' % (self.image_seq, len(self.volumes)))
+        log(
+            description,
+            "Created Image: %s, Volume Cnt: %s" % (self.image_seq, len(self.volumes)),
+        )
 
     def __repr__(self):
-        return 'Image: %s' % (self.image_seq)
-
+        return "Image: %s" % (self.image_seq)
 
     def get_blocks(self, blocks):
         return get_blocks_in_list(blocks, self._block_list)
 
-
     def _get_peb_range(self):
         return [self._start_peb, self._end_peb]
-    peb_range = property(_get_peb_range)
 
+    peb_range = property(_get_peb_range)
 
     def _get_image_seq(self):
         return self._image_seq
-    image_seq = property(_get_image_seq)
 
+    image_seq = property(_get_image_seq)
 
     def _get_volumes(self):
         return self._volumes
+
     volumes = property(_get_volumes)
 
-
-    def display(self, tab=''):
+    def display(self, tab=""):
         return display.image(self, tab)

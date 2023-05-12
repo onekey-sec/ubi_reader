@@ -19,10 +19,11 @@
 
 import os
 import time
-from ubireader.ubifs.defines import *
+
+from ubireader.debug import error, verbose_log
 from ubireader.ubifs import walk
+from ubireader.ubifs.defines import UBIFS_ITYPE_LNK, UBIFS_BLOCK_SIZE
 from ubireader.ubifs.misc import decompress
-from ubireader.debug import error, log, verbose_log
 
 
 def list_files(ubifs, list_path):
@@ -35,27 +36,38 @@ def list_files(ubifs, list_path):
         inodes = {}
         bad_blocks = []
 
-        walk.index(ubifs, ubifs.master_node.root_lnum, ubifs.master_node.root_offs, inodes, bad_blocks)
+        walk.index(
+            ubifs,
+            ubifs.master_node.root_lnum,
+            ubifs.master_node.root_offs,
+            inodes,
+            bad_blocks,
+        )
 
         if len(inodes) < 2:
-            raise Exception('No inodes found')
+            raise Exception("No inodes found")
 
         inum = find_dir(inodes, 1, pnames, 0)
 
-        if inum == None:
+        if inum is None:
             return
 
-        if not 'dent' in inodes[inum]:
+        if "dent" not in inodes[inum]:
             return
 
-        for dent in inodes[inum]['dent']:
+        for dent in inodes[inum]["dent"]:
             print_dent(ubifs, inodes, dent, longts=False)
-        
+
         if len(bad_blocks):
-            error(list_files, 'Warn', 'Data may be missing or corrupted, bad blocks, LEB [%s]' % ','.join(map(str, bad_blocks)))
+            error(
+                list_files,
+                "Warn",
+                "Data may be missing or corrupted, bad blocks, LEB [%s]"
+                % ",".join(map(str, bad_blocks)),
+            )
 
     except Exception as e:
-        error(list_files, 'Error', '%s' % e)
+        error(list_files, "Error", "%s" % e)
 
 
 def copy_file(ubifs, filepath, destpath):
@@ -65,31 +77,37 @@ def copy_file(ubifs, filepath, destpath):
         if len(i) > 0:
             pnames.append(i)
 
-    filename = pnames[len(pnames)-1]
+    filename = pnames[len(pnames) - 1]
     del pnames[-1]
 
     inodes = {}
     bad_blocks = []
 
-    walk.index(ubifs, ubifs.master_node.root_lnum, ubifs.master_node.root_offs, inodes, bad_blocks)
+    walk.index(
+        ubifs,
+        ubifs.master_node.root_lnum,
+        ubifs.master_node.root_offs,
+        inodes,
+        bad_blocks,
+    )
 
     if len(inodes) < 2:
         return False
 
     inum = find_dir(inodes, 1, pnames, 0)
 
-    if inum == None:
+    if inum is None:
         return False
 
-    if not 'dent' in inodes[inum]:
+    if "dent" not in inodes[inum]:
         return False
 
-    for dent in inodes[inum]['dent']:
+    for dent in inodes[inum]["dent"]:
         if dent.name == filename:
             filedata = _process_reg_file(ubifs, inodes[dent.inum], filepath)
             if os.path.isdir(destpath):
                 destpath = os.path.join(destpath, filename)
-            with open(destpath, 'wb') as f:
+            with open(destpath, "wb") as f:
                 f.write(filedata)
             return True
     return False
@@ -98,12 +116,12 @@ def copy_file(ubifs, filepath, destpath):
 def find_dir(inodes, inum, names, idx):
     if len(names) == 0:
         return 1
-    for dent in inodes[inum]['dent']:
+    for dent in inodes[inum]["dent"]:
         if dent.name == names[idx]:
-            if len(names) == idx+1:
+            if len(names) == idx + 1:
                 return dent.inum
             else:
-                return find_dir(inodes, dent.inum, names, idx+1)
+                return find_dir(inodes, dent.inum, names, idx + 1)
     return None
 
 
@@ -114,28 +132,39 @@ def print_dent(ubifs, inodes, dent_node, long=True, longts=False):
 
         lnk = ""
         if dent_node.type == UBIFS_ITYPE_LNK:
-            lnk = " -> " + inode['ino'].data.decode('utf-8')
+            lnk = " -> " + inode["ino"].data.decode("utf-8")
 
         if longts:
-            mtime = inode['ino'].mtime_sec
+            mtime = inode["ino"].mtime_sec
         else:
-            mtime = time.strftime("%b %d %H:%M", time.gmtime(inode['ino'].mtime_sec))
+            mtime = time.strftime("%b %d %H:%M", time.gmtime(inode["ino"].mtime_sec))
 
-        print('%6o %2d %s %s %7d %s %s%s' % (inode['ino'].mode, inode['ino'].nlink, inode['ino'].uid, inode['ino'].gid, fl, mtime, dent_node.name, lnk))
+        print(
+            "%6o %2d %s %s %7d %s %s%s"
+            % (
+                inode["ino"].mode,
+                inode["ino"].nlink,
+                inode["ino"].uid,
+                inode["ino"].gid,
+                fl,
+                mtime,
+                dent_node.name,
+                lnk,
+            )
+        )
     else:
         print(dent_node.name)
 
 
 def file_leng(ubifs, inode):
     fl = 0
-    if 'data' in inode:
-        compr_type = 0
-        sorted_data = sorted(inode['data'], key=lambda x: x.key['khash'])
-        last_khash = sorted_data[0].key['khash']-1
+    if "data" in inode:
+        sorted_data = sorted(inode["data"], key=lambda x: x.key["khash"])
+        last_khash = sorted_data[0].key["khash"] - 1
 
         for data in sorted_data:
-            if data.key['khash'] - last_khash != 1:
-                while 1 != (data.key['khash'] - last_khash):
+            if data.key["khash"] - last_khash != 1:
+                while 1 != (data.key["khash"] - last_khash):
                     last_khash += 1
                     fl = fl + UBIFS_BLOCK_SIZE
             fl = fl + data.size
@@ -146,32 +175,39 @@ def file_leng(ubifs, inode):
 def _process_reg_file(ubifs, inode, path):
     try:
         buf = bytearray()
-        if 'data' in inode:
+        if "data" in inode:
             compr_type = 0
-            sorted_data = sorted(inode['data'], key=lambda x: x.key['khash'])
-            last_khash = sorted_data[0].key['khash']-1
+            sorted_data = sorted(inode["data"], key=lambda x: x.key["khash"])
+            last_khash = sorted_data[0].key["khash"] - 1
 
             for data in sorted_data:
-                
                 # If data nodes are missing in sequence, fill in blanks
                 # with \x00 * UBIFS_BLOCK_SIZE
-                if data.key['khash'] - last_khash != 1:
-                    while 1 != (data.key['khash'] - last_khash):
-                        buf += b'\x00'*UBIFS_BLOCK_SIZE
+                if data.key["khash"] - last_khash != 1:
+                    while 1 != (data.key["khash"] - last_khash):
+                        buf += b"\x00" * UBIFS_BLOCK_SIZE
                         last_khash += 1
 
                 compr_type = data.compr_type
                 ubifs.file.seek(data.offset)
                 d = ubifs.file.read(data.compr_len)
                 buf += decompress(compr_type, data.size, d)
-                last_khash = data.key['khash']
-                verbose_log(_process_reg_file, 'ino num: %s, compression: %s, path: %s' % (inode['ino'].key['ino_num'], compr_type, path))
+                last_khash = data.key["khash"]
+                verbose_log(
+                    _process_reg_file,
+                    "ino num: %s, compression: %s, path: %s"
+                    % (inode["ino"].key["ino_num"], compr_type, path),
+                )
 
     except Exception as e:
-        error(_process_reg_file, 'Warn', 'inode num:%s :%s' % (inode['ino'].key['ino_num'], e))
-    
+        error(
+            _process_reg_file,
+            "Warn",
+            "inode num:%s :%s" % (inode["ino"].key["ino_num"], e),
+        )
+
     # Pad end of file with \x00 if needed.
-    if inode['ino'].size > len(buf):
-        buf += b'\x00' * (inode['ino'].size - len(buf))
-        
+    if inode["ino"].size > len(buf):
+        buf += b"\x00" * (inode["ino"].size - len(buf))
+
     return bytes(buf)

@@ -18,9 +18,19 @@
 #############################################################
 
 from ubireader import settings
+from ubireader.debug import error, log, verbose_display, verbose_log
 from ubireader.ubifs import nodes
-from ubireader.ubifs.defines import *
-from ubireader.debug import error, log, verbose_log, verbose_display
+from ubireader.ubifs.defines import (
+    UBIFS_COMMON_HDR_SZ,
+    UBIFS_IDX_NODE,
+    UBIFS_IDX_NODE_SZ,
+    UBIFS_BRANCH_SZ,
+    UBIFS_INO_NODE,
+    UBIFS_DATA_NODE,
+    UBIFS_DATA_NODE_SZ,
+    UBIFS_DENT_NODE,
+)
+
 
 def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
     """Walk the index gathering Inode, Dir Entry, and File nodes.
@@ -46,14 +56,22 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
 
     if len(buf) < UBIFS_COMMON_HDR_SZ:
         if settings.warn_only_block_read_errors:
-            error(index, 'Error', 'LEB: %s, Common Hdr Size smaller than expected.' % (lnum))
+            error(
+                index,
+                "Error",
+                "LEB: %s, Common Hdr Size smaller than expected." % (lnum),
+            )
             return
 
         else:
-            error(index, 'Fatal', 'LEB: %s, Common Hdr Size smaller than expected.' % (lnum))
+            error(
+                index,
+                "Fatal",
+                "LEB: %s, Common Hdr Size smaller than expected." % (lnum),
+            )
 
     chdr = nodes.common_hdr(buf)
-    log(index , '%s file addr: %s' % (chdr, ubifs.file.last_read_addr()))
+    log(index, "%s file addr: %s" % (chdr, ubifs.file.last_read_addr()))
     verbose_display(chdr)
     read_size = chdr.len - UBIFS_COMMON_HDR_SZ
     node_buf = ubifs.file.read(read_size)
@@ -61,11 +79,19 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
 
     if len(node_buf) < read_size:
         if settings.warn_only_block_read_errors:
-            error(index, 'Error', 'LEB: %s at %s, Node size smaller than expected.' % (lnum, file_offset))
+            error(
+                index,
+                "Error",
+                "LEB: %s at %s, Node size smaller than expected." % (lnum, file_offset),
+            )
             return
 
         else:
-            error(index, 'Fatal', 'LEB: %s at %s, Node size smaller than expected.' % (lnum, file_offset))
+            error(
+                index,
+                "Fatal",
+                "LEB: %s at %s, Node size smaller than expected." % (lnum, file_offset),
+            )
 
     if chdr.node_type == UBIFS_IDX_NODE:
         try:
@@ -73,19 +99,36 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
 
         except Exception as e:
             if settings.warn_only_block_read_errors:
-                error(index, 'Error', 'Problem at file address: %s extracting idx_node: %s' % (file_offset, e))
+                error(
+                    index,
+                    "Error",
+                    "Problem at file address: %s extracting idx_node: %s"
+                    % (file_offset, e),
+                )
                 return
 
             else:
-                error(index, 'Fatal', 'Problem at file address: %s extracting idx_node: %s' % (file_offset, e))
+                error(
+                    index,
+                    "Fatal",
+                    "Problem at file address: %s extracting idx_node: %s"
+                    % (file_offset, e),
+                )
 
-        log(index, '%s file addr: %s' % (idxn, file_offset))
+        log(index, "%s file addr: %s" % (idxn, file_offset))
         verbose_display(idxn)
         branch_idx = 0
 
         for branch in idxn.branches:
-            verbose_log(index, '-------------------')
-            log(index, '%s file addr: %s' % (branch, file_offset + UBIFS_IDX_NODE_SZ + (branch_idx * UBIFS_BRANCH_SZ)))
+            verbose_log(index, "-------------------")
+            log(
+                index,
+                "%s file addr: %s"
+                % (
+                    branch,
+                    file_offset + UBIFS_IDX_NODE_SZ + (branch_idx * UBIFS_BRANCH_SZ),
+                ),
+            )
             verbose_display(branch)
             index(ubifs, branch.lnum, branch.offs, inodes, bad_blocks)
             branch_idx += 1
@@ -96,44 +139,70 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
 
         except Exception as e:
             if settings.warn_only_block_read_errors:
-                error(index, 'Error', 'Problem at file address: %s extracting ino_node: %s' % (file_offset, e))
+                error(
+                    index,
+                    "Error",
+                    "Problem at file address: %s extracting ino_node: %s"
+                    % (file_offset, e),
+                )
                 return
 
             else:
-                error(index, 'Fatal', 'Problem at file address: %s extracting ino_node: %s' % (file_offset, e))
+                error(
+                    index,
+                    "Fatal",
+                    "Problem at file address: %s extracting ino_node: %s"
+                    % (file_offset, e),
+                )
 
-        ino_num = inon.key['ino_num']
-        log(index, '%s file addr: %s, ino num: %s' % (inon, file_offset, ino_num))
+        ino_num = inon.key["ino_num"]
+        log(index, "%s file addr: %s, ino num: %s" % (inon, file_offset, ino_num))
         verbose_display(inon)
 
-        if not ino_num in inodes:
+        if ino_num not in inodes:
             inodes[ino_num] = {}
 
-        inodes[ino_num]['ino'] = inon
+        inodes[ino_num]["ino"] = inon
 
     elif chdr.node_type == UBIFS_DATA_NODE:
         try:
-            datn = nodes.data_node(node_buf, (ubifs.leb_size * lnum) + UBIFS_COMMON_HDR_SZ + offset + UBIFS_DATA_NODE_SZ)
+            datn = nodes.data_node(
+                node_buf,
+                (ubifs.leb_size * lnum)
+                + UBIFS_COMMON_HDR_SZ
+                + offset
+                + UBIFS_DATA_NODE_SZ,
+            )
 
         except Exception as e:
             if settings.warn_only_block_read_errors:
-                error(index, 'Error', 'Problem at file address: %s extracting data_node: %s' % (file_offset, e))
+                error(
+                    index,
+                    "Error",
+                    "Problem at file address: %s extracting data_node: %s"
+                    % (file_offset, e),
+                )
                 return
 
             else:
-                error(index, 'Fatal', 'Problem at file address: %s extracting data_node: %s' % (file_offset, e))
+                error(
+                    index,
+                    "Fatal",
+                    "Problem at file address: %s extracting data_node: %s"
+                    % (file_offset, e),
+                )
 
-        ino_num = datn.key['ino_num']
-        log(index, '%s file addr: %s, ino num: %s' % (datn, file_offset, ino_num))
+        ino_num = datn.key["ino_num"]
+        log(index, "%s file addr: %s, ino num: %s" % (datn, file_offset, ino_num))
         verbose_display(datn)
 
-        if not ino_num in inodes:
+        if ino_num not in inodes:
             inodes[ino_num] = {}
 
-        if not 'data' in inodes[ino_num]:
-            inodes[ino_num]['data']= []
+        if "data" not in inodes[ino_num]:
+            inodes[ino_num]["data"] = []
 
-        inodes[ino_num]['data'].append(datn)
+        inodes[ino_num]["data"].append(datn)
 
     elif chdr.node_type == UBIFS_DENT_NODE:
         try:
@@ -141,20 +210,30 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
 
         except Exception as e:
             if settings.warn_only_block_read_errors:
-                error(index, 'Error', 'Problem at file address: %s extracting dent_node: %s' % (file_offset, e))
+                error(
+                    index,
+                    "Error",
+                    "Problem at file address: %s extracting dent_node: %s"
+                    % (file_offset, e),
+                )
                 return
 
             else:
-                error(index, 'Fatal', 'Problem at file address: %s extracting dent_node: %s' % (file_offset, e))
+                error(
+                    index,
+                    "Fatal",
+                    "Problem at file address: %s extracting dent_node: %s"
+                    % (file_offset, e),
+                )
 
-        ino_num = dn.key['ino_num']
-        log(index, '%s file addr: %s, ino num: %s' % (dn, file_offset, ino_num))
+        ino_num = dn.key["ino_num"]
+        log(index, "%s file addr: %s, ino num: %s" % (dn, file_offset, ino_num))
         verbose_display(dn)
 
-        if not ino_num in inodes:
+        if ino_num not in inodes:
             inodes[ino_num] = {}
 
-        if not 'dent' in inodes[ino_num]:
-            inodes[ino_num]['dent']= []
+        if "dent" not in inodes[ino_num]:
+            inodes[ino_num]["dent"] = []
 
-        inodes[ino_num]['dent'].append(dn)
+        inodes[ino_num]["dent"].append(dn)

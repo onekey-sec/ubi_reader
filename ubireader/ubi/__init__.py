@@ -18,17 +18,17 @@
 #############################################################
 
 from ubireader.debug import error
-from ubireader.ubi.block import sort, extract_blocks
 from ubireader.ubi import display
+from ubireader.ubi.block import extract_blocks, layout, rm_old_blocks, sort
 from ubireader.ubi.image import description as image
-from ubireader.ubi.block import layout, rm_old_blocks
+
 
 class ubi_base(object):
     """UBI Base object
 
     Arguments:
-    Obj:image       -- UBI image object 
-    
+    Obj:image       -- UBI image object
+
     Attributes:
     ubi_file:file      -- ubi_file object
     Int:block_count    -- Number of blocks found.
@@ -40,19 +40,18 @@ class ubi_base(object):
     """
 
     def __init__(self, ubi_file):
-        self.__name__ = 'UBI'
+        self.__name__ = "UBI"
         self._file = ubi_file
         self._first_peb_num = 0
         self._blocks = extract_blocks(self)
         self._block_count = len(self.blocks)
 
         if self._block_count <= 0:
-            error(self, 'Fatal', 'No blocks found.')
+            error(self, "Fatal", "No blocks found.")
 
         arbitrary_block = next(iter(self.blocks.values()))
         self._min_io_size = arbitrary_block.ec_hdr.vid_hdr_offset
         self._leb_size = self.file.block_size - arbitrary_block.ec_hdr.data_offset
-
 
     def _get_file(self):
         """UBI File object
@@ -61,8 +60,8 @@ class ubi_base(object):
         Obj -- UBI File object.
         """
         return self._file
-    file = property(_get_file)
 
+    file = property(_get_file)
 
     def _get_block_count(self):
         """Total amount of UBI blocks in file.
@@ -71,20 +70,21 @@ class ubi_base(object):
         Int -- Number of blocks
         """
         return self._block_count
-    block_count = property(_get_block_count)
 
+    block_count = property(_get_block_count)
 
     def _set_first_peb_num(self, i):
         self._first_peb_num = i
+
     def _get_first_peb_num(self):
         """First Physical Erase Block with UBI data
-        
+
         Returns:
         Int -- Number of the first PEB.
         """
         return self._first_peb_num
-    first_peb_num = property(_get_first_peb_num, _set_first_peb_num)
 
+    first_peb_num = property(_get_first_peb_num, _set_first_peb_num)
 
     def _get_leb_size(self):
         """LEB size of UBI blocks in file.
@@ -93,8 +93,8 @@ class ubi_base(object):
         Int -- LEB Size.
         """
         return self._leb_size
-    leb_size = property(_get_leb_size)
 
+    leb_size = property(_get_leb_size)
 
     def _get_peb_size(self):
         """PEB size of UBI blocks in file.
@@ -103,8 +103,8 @@ class ubi_base(object):
         Int -- PEB Size.
         """
         return self.file.block_size
-    peb_size = property(_get_peb_size)
 
+    peb_size = property(_get_peb_size)
 
     def _get_min_io_size(self):
         """Min I/O Size
@@ -113,8 +113,8 @@ class ubi_base(object):
         Int -- Min I/O Size.
         """
         return self._min_io_size
-    min_io_size = property(_get_min_io_size)
 
+    min_io_size = property(_get_min_io_size)
 
     def _get_blocks(self):
         """Main Dict of UBI Blocks
@@ -124,6 +124,7 @@ class ubi_base(object):
         as there can be thousands.
         """
         return self._blocks
+
     blocks = property(_get_blocks)
 
 
@@ -151,11 +152,11 @@ class ubi(ubi_base):
         self._data_blocks_list = data_list
         self._int_vol_blocks_list = int_vol_list
         self._unknown_blocks_list = unknown_list
-        
+
         newest_layout_list = rm_old_blocks(self.blocks, self.layout_blocks_list)
-        
+
         if len(newest_layout_list) < 2:
-            error(self, 'Fatal', 'Less than 2 layout blocks found.')
+            error(self, "Fatal", "Less than 2 layout blocks found.")
 
         layout_pairs = layout.group_pairs(self.blocks, newest_layout_list)
 
@@ -165,7 +166,6 @@ class ubi(ubi_base):
         for i in range(0, len(layout_infos)):
             self._images.append(image(self.blocks, layout_infos[i]))
 
-
     def _get_images(self):
         """Get UBI images.
 
@@ -173,8 +173,8 @@ class ubi(ubi_base):
         List -- Of volume objects groupled by image.
         """
         return self._images
-    images = property(_get_images)
 
+    images = property(_get_images)
 
     def _get_data_blocks_list(self):
         """Get all UBI blocks found in file that are data blocks.
@@ -183,8 +183,8 @@ class ubi(ubi_base):
         List -- List of block objects.
         """
         return self._data_blocks_list
-    data_blocks_list = property(_get_data_blocks_list)
 
+    data_blocks_list = property(_get_data_blocks_list)
 
     def _get_layout_blocks_list(self):
         """Get all UBI blocks found in file that are layout volume blocks.
@@ -193,8 +193,8 @@ class ubi(ubi_base):
         List -- List of block objects.
         """
         return self._layout_blocks_list
-    layout_blocks_list = property(_get_layout_blocks_list)
 
+    layout_blocks_list = property(_get_layout_blocks_list)
 
     def _get_int_vol_blocks_list(self):
         """Get all UBI blocks found in file that are internal volume blocks.
@@ -205,8 +205,8 @@ class ubi(ubi_base):
         This does not include layout blocks.
         """
         return self._int_vol_blocks_list
-    int_vol_blocks_list = property(_get_int_vol_blocks_list)
 
+    int_vol_blocks_list = property(_get_int_vol_blocks_list)
 
     def _get_unknown_blocks_list(self):
         """Get all UBI blocks found in file of unknown type..
@@ -215,11 +215,12 @@ class ubi(ubi_base):
         List -- List of block objects.
         """
         return self._unknown_blocks_list
+
     unknown_blocks_list = property(_get_unknown_blocks_list)
-    
-    def display(self, tab=''):
+
+    def display(self, tab=""):
         """Print information about this object.
-        
+
         Argument:
         Str:tab    -- '\t' for spacing this object.
         """

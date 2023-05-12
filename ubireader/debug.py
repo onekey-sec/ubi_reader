@@ -19,35 +19,39 @@
 
 import sys
 import traceback
+
 from ubireader import settings
+
 
 def log(obj, message):
     if settings.logging_on or settings.logging_on_verbose:
-        print('{} {}'.format(obj.__name__, message))
+        print("{} {}".format(obj.__name__, message))
+
 
 def verbose_log(obj, message):
     if settings.logging_on_verbose:
         log(obj, message)
 
+
 def verbose_display(displayable_obj):
     if settings.logging_on_verbose:
-        print(displayable_obj.display('\t'))
+        print(displayable_obj.display("\t"))
+
 
 def error(obj, level, message):
-    if settings.error_action == 'exit':
-        print('{} {}: {}'.format(obj.__name__, level, message))
+    if settings.error_action == "exit":
+        print("{} {}: {}".format(obj.__name__, level, message))
         if settings.fatal_traceback:
             traceback.print_exc()
         sys.exit(1)
 
     else:
-        if level.lower() == 'warn':
-            print('{} {}: {}'.format(obj.__name__, level, message))
-        elif level.lower() == 'fatal':
-            print('{} {}: {}'.format(obj.__name__, level, message))
+        if level.lower() == "warn":
+            print("{} {}: {}".format(obj.__name__, level, message))
+        elif level.lower() == "fatal":
+            print("{} {}: {}".format(obj.__name__, level, message))
             if settings.fatal_traceback:
                 traceback.print_exc()
             sys.exit(1)
         else:
-            print('{} {}: {}'.format(obj.__name__, level, message))
-
+            print("{} {}: {}".format(obj.__name__, level, message))

@@ -20,6 +20,7 @@
 from ubireader.debug import log
 from ubireader.ubi.block import sort
 
+
 def group_pairs(blocks, layout_blocks_list):
     """Sort a list of layout blocks into pairs
 
@@ -31,15 +32,15 @@ def group_pairs(blocks, layout_blocks_list):
     List -- Layout block pair indexes grouped in a list
     """
 
-    image_dict={}
+    image_dict = {}
     for block_id in layout_blocks_list:
-        image_seq=blocks[block_id].ec_hdr.image_seq
+        image_seq = blocks[block_id].ec_hdr.image_seq
         if image_seq not in image_dict:
-            image_dict[image_seq]=[block_id]
+            image_dict[image_seq] = [block_id]
         else:
             image_dict[image_seq].append(block_id)
 
-    log(group_pairs, 'Layout blocks found at PEBs: %s' % list(image_dict.values()))
+    log(group_pairs, "Layout blocks found at PEBs: %s" % list(image_dict.values()))
 
     return list(image_dict.values())
 

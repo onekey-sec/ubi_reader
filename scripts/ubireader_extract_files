@@ -18,76 +18,145 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+import argparse
 import os
 import sys
 import time
-import argparse
 
 from ubireader import settings
+from ubireader.debug import error, log
 from ubireader.ubi import ubi
 from ubireader.ubi.defines import UBI_EC_HDR_MAGIC
+from ubireader.ubi_io import leb_virtual_file, ubi_file
 from ubireader.ubifs import ubifs
-from ubireader.ubifs.output import extract_files
 from ubireader.ubifs.defines import UBIFS_NODE_MAGIC
-from ubireader.ubi_io import ubi_file, leb_virtual_file
-from ubireader.debug import error, log
-from ubireader.utils import guess_filetype, guess_start_offset, guess_leb_size, guess_peb_size
+from ubireader.ubifs.output import extract_files
+from ubireader.utils import (
+    guess_filetype,
+    guess_leb_size,
+    guess_peb_size,
+    guess_start_offset,
+)
+
 
 def create_output_dir(outpath):
     if os.path.exists(outpath):
         if os.listdir(outpath):
-            error(create_output_dir, 'Fatal', 'Output directory is not empty. %s' % outpath)
+            error(
+                create_output_dir,
+                "Fatal",
+                "Output directory is not empty. %s" % outpath,
+            )
     else:
         try:
             os.makedirs(outpath)
-            log(create_output_dir, 'Created output path: %s' % outpath)
+            log(create_output_dir, "Created output path: %s" % outpath)
         except Exception as e:
-            error(create_output_dir, 'Fatal', '%s' % e)
+            error(create_output_dir, "Fatal", "%s" % e)
 
 
-if __name__=='__main__':
+if __name__ == "__main__":
     start = time.time()
-    description = 'Extract contents of a UBI or UBIFS image.'
-    usage = 'ubireader_extract_files [options] filepath'
+    description = "Extract contents of a UBI or UBIFS image."
+    usage = "ubireader_extract_files [options] filepath"
     parser = argparse.ArgumentParser(usage=usage, description=description)
 
-    parser.add_argument('-k', '--keep-permissions', action='store_true', dest='permissions',
-                      help='Maintain file permissions, requires running as root. (default: False)')
+    parser.add_argument(
+        "-k",
+        "--keep-permissions",
+        action="store_true",
+        dest="permissions",
+        help="Maintain file permissions, requires running as root. (default: False)",
+    )
 
-    parser.add_argument('-l', '--log', action='store_true', dest='log',
-                      help='Print extraction information to screen.')
+    parser.add_argument(
+        "-l",
+        "--log",
+        action="store_true",
+        dest="log",
+        help="Print extraction information to screen.",
+    )
 
-    parser.add_argument('-v', '--verbose-log', action='store_true', dest='verbose',
-                      help='Prints nearly everything about anything to screen.')
-    
-    parser.add_argument('-p', '--peb-size', type=int, dest='block_size',
-                        help='Specify PEB size. (UBI Only)')
-    
-    parser.add_argument('-e', '--leb-size', type=int, dest='block_size',
-                        help='Specify LEB size. (UBIFS Only)')
+    parser.add_argument(
+        "-v",
+        "--verbose-log",
+        action="store_true",
+        dest="verbose",
+        help="Prints nearly everything about anything to screen.",
+    )
 
-    parser.add_argument('-s', '--start-offset', type=int, dest='start_offset',
-                        help='Specify offset of UBI/UBIFS data in file. (default: 0)')
+    parser.add_argument(
+        "-p",
+        "--peb-size",
+        type=int,
+        dest="block_size",
+        help="Specify PEB size. (UBI Only)",
+    )
 
-    parser.add_argument('-n', '--end-offset', type=int, dest='end_offset',
-                        help='Specify end offset of UBI/UBIFS data in file.')
+    parser.add_argument(
+        "-e",
+        "--leb-size",
+        type=int,
+        dest="block_size",
+        help="Specify LEB size. (UBIFS Only)",
+    )
 
-    parser.add_argument('-g', '--guess-offset', type=int, dest='guess_offset',
-                        help='Specify offset to start guessing where UBI data is in file. (default: 0)')
+    parser.add_argument(
+        "-s",
+        "--start-offset",
+        type=int,
+        dest="start_offset",
+        help="Specify offset of UBI/UBIFS data in file. (default: 0)",
+    )
 
-    parser.add_argument('-w', '--warn-only-block-read-errors', action='store_true', dest='warn_only_block_read_errors',
-                      help='Attempts to continue extracting files even with bad block reads. Some data will be missing or corrupted! (default: False)')
+    parser.add_argument(
+        "-n",
+        "--end-offset",
+        type=int,
+        dest="end_offset",
+        help="Specify end offset of UBI/UBIFS data in file.",
+    )
 
-    parser.add_argument('-i', '--ignore-block-header-errors', action='store_true', dest='ignore_block_header_errors',
-                      help='Forces unused and error containing blocks to be included and also displayed with log/verbose. (default: False)')
+    parser.add_argument(
+        "-g",
+        "--guess-offset",
+        type=int,
+        dest="guess_offset",
+        help="Specify offset to start guessing where UBI data is in file. (default: 0)",
+    )
 
-    parser.add_argument('-f', '--u-boot-fix', action='store_true', dest='uboot_fix',
-                      help='Assume blocks with image_seq 0 are because of older U-boot implementations and include them. (default: False)')
+    parser.add_argument(
+        "-w",
+        "--warn-only-block-read-errors",
+        action="store_true",
+        dest="warn_only_block_read_errors",
+        help="""Attempts to continue extracting files even with bad block reads.
+        Some data will be missing or corrupted! (default: False)""",
+    )
 
-    parser.add_argument('-o', '--output-dir', dest='outpath',
-                        help='Specify output directory path.')
+    parser.add_argument(
+        "-i",
+        "--ignore-block-header-errors",
+        action="store_true",
+        dest="ignore_block_header_errors",
+        help="""Forces unused and error containing blocks to be included and
+        also displayed with log/verbose. (default: False)""",
+    )
 
-    parser.add_argument('filepath', help='File to extract contents of.')
+    parser.add_argument(
+        "-f",
+        "--u-boot-fix",
+        action="store_true",
+        dest="uboot_fix",
+        help="""Assume blocks with image_seq 0 are because of older U-boot
+        implementations and include them. (default: False)""",
+    )
+
+    parser.add_argument(
+        "-o", "--output-dir", dest="outpath", help="Specify output directory path."
+    )
+
+    parser.add_argument("filepath", help="File to extract contents of.")
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -124,7 +193,7 @@ if __name__=='__main__':
 
     filetype = guess_filetype(path, start_offset)
     if not filetype:
-        parser.error('Could not determine file type.')
+        parser.error("Could not determine file type.")
 
     if args.outpath:
         outpath = args.outpath
@@ -140,7 +209,7 @@ if __name__=='__main__':
             block_size = guess_leb_size(path)
 
         if not block_size:
-            parser.error('Block size could not be determined.')
+            parser.error("Block size could not be determined.")
 
     perms = args.permissions
 
@@ -153,20 +222,18 @@ if __name__=='__main__':
 
         # Loop through found images in file.
         for image in ubi_obj.images:
-
             # Create path for specific image
             # In case multiple images in data
-            img_outpath = os.path.join(outpath, '%s' % image.image_seq)
+            img_outpath = os.path.join(outpath, "%s" % image.image_seq)
 
             # Loop through volumes in each image.
             for volume in image.volumes:
-
                 # Get blocks associated with this volume.
                 vol_blocks = image.volumes[volume].get_blocks(ubi_obj.blocks)
 
                 # Create volume data output path.
                 vol_outpath = os.path.join(img_outpath, volume)
-                
+
                 # Create volume output path directory.
                 create_output_dir(vol_outpath)
 
@@ -181,9 +248,8 @@ if __name__=='__main__':
 
                 # Extract files from UBI image.
                 ubifs_obj = ubifs(lebv_file)
-                print('Extracting files to: %s' % vol_outpath)
+                print("Extracting files to: %s" % vol_outpath)
                 extract_files(ubifs_obj, vol_outpath, perms)
-
 
     elif filetype == UBIFS_NODE_MAGIC:
         # Create UBIFS object
@@ -193,8 +259,8 @@ if __name__=='__main__':
         create_output_dir(outpath)
 
         # Extract files from UBIFS image.
-        print('Extracting files to: %s' % outpath)
+        print("Extracting files to: %s" % outpath)
         extract_files(ubifs_obj, outpath, perms)
 
     else:
-        print('Something went wrong to get here.')
+        print("Something went wrong to get here.")

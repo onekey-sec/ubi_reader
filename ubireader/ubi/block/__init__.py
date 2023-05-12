@@ -18,10 +18,17 @@
 #############################################################
 
 from zlib import crc32
+
 from ubireader import settings
 from ubireader.debug import error, log, verbose_display, verbose_log
 from ubireader.ubi import display
-from ubireader.ubi.defines import UBI_EC_HDR_SZ, UBI_VID_HDR_SZ, UBI_INTERNAL_VOL_START, UBI_EC_HDR_MAGIC, UBI_CRC32_INIT
+from ubireader.ubi.defines import (
+    UBI_CRC32_INIT,
+    UBI_EC_HDR_MAGIC,
+    UBI_EC_HDR_SZ,
+    UBI_INTERNAL_VOL_START,
+    UBI_VID_HDR_SZ,
+)
 from ubireader.ubi.headers import ec_hdr, vid_hdr, vtbl_recs
 
 
@@ -49,7 +56,6 @@ class description(object):
     """
 
     def __init__(self, block_buf):
- 
         self.file_offset = -1
         self.peb_num = -1
         self.leb_num = -1
@@ -63,27 +69,33 @@ class description(object):
         self.ec_hdr = ec_hdr(block_buf[0:UBI_EC_HDR_SZ])
 
         if not self.ec_hdr.errors or settings.ignore_block_header_errors:
-            self.vid_hdr = vid_hdr(block_buf[self.ec_hdr.vid_hdr_offset:self.ec_hdr.vid_hdr_offset+UBI_VID_HDR_SZ])
+            self.vid_hdr = vid_hdr(
+                block_buf[
+                    self.ec_hdr.vid_hdr_offset : self.ec_hdr.vid_hdr_offset
+                    + UBI_VID_HDR_SZ
+                ]
+            )
 
             if not self.vid_hdr.errors or settings.ignore_block_header_errors:
                 self.is_internal_vol = self.vid_hdr.vol_id >= UBI_INTERNAL_VOL_START
-    
+
                 if self.vid_hdr.vol_id >= UBI_INTERNAL_VOL_START:
-                    self.vtbl_recs = vtbl_recs(block_buf[self.ec_hdr.data_offset:])
+                    self.vtbl_recs = vtbl_recs(block_buf[self.ec_hdr.data_offset :])
 
                 self.leb_num = self.vid_hdr.lnum
 
         self.is_vtbl = bool(self.vtbl_recs) or False
-        self.is_valid = not self.ec_hdr.errors and not self.vid_hdr.errors or settings.ignore_block_header_errors
-
+        self.is_valid = (
+            not self.ec_hdr.errors
+            and not self.vid_hdr.errors
+            or settings.ignore_block_header_errors
+        )
 
     def __repr__(self):
-        return 'Block: PEB# %s: LEB# %s' % (self.peb_num, self.leb_num)
+        return "Block: PEB# %s: LEB# %s" % (self.peb_num, self.leb_num)
 
-
-    def display(self, tab=''):
+    def display(self, tab=""):
         return display.block(self, tab)
-
 
 
 def get_blocks_in_list(blocks, idx_list):
@@ -99,8 +111,7 @@ def get_blocks_in_list(blocks, idx_list):
                      order of idx_list.
     """
 
-    return {i:blocks[i] for i in idx_list}
-
+    return {i: blocks[i] for i in idx_list}
 
 
 def extract_blocks(ubi):
@@ -108,7 +119,7 @@ def extract_blocks(ubi):
 
     Arguments:.
     Obj:ubi    -- UBI object.
-    
+
     Returns:
     Dict -- Of block objects keyed by PEB number.
     """
@@ -128,30 +139,42 @@ def extract_blocks(ubi):
             blk.file_offset = i
             blk.peb_num = ubi.first_peb_num + peb_count
             blk.size = ubi.file.block_size
-            blk.data_crc = (~crc32(buf[blk.ec_hdr.data_offset:blk.ec_hdr.data_offset+blk.vid_hdr.data_size]) & UBI_CRC32_INIT)
+            blk.data_crc = (
+                ~crc32(
+                    buf[
+                        blk.ec_hdr.data_offset : blk.ec_hdr.data_offset
+                        + blk.vid_hdr.data_size
+                    ]
+                )
+                & UBI_CRC32_INIT
+            )
             blocks[blk.peb_num] = blk
             peb_count += 1
             log(extract_blocks, blk)
-            verbose_log(extract_blocks, 'file addr: %s' % (ubi.file.last_read_addr()))
-            ec_hdr_errors = ''
-            vid_hdr_errors = ''
+            verbose_log(extract_blocks, "file addr: %s" % (ubi.file.last_read_addr()))
+            ec_hdr_errors = ""
+            vid_hdr_errors = ""
 
             if blk.ec_hdr.errors:
-                ec_hdr_errors = ','.join(blk.ec_hdr.errors)
+                ec_hdr_errors = ",".join(blk.ec_hdr.errors)
 
             if blk.vid_hdr and blk.vid_hdr.errors:
-                vid_hdr_errors = ','.join(blk.vid_hdr.errors)
+                vid_hdr_errors = ",".join(blk.vid_hdr.errors)
 
             if ec_hdr_errors or vid_hdr_errors:
                 if blk.peb_num not in bad_blocks:
                     bad_blocks.append(blk.peb_num)
-                    log(extract_blocks, 'PEB: %s has possible issue EC_HDR [%s], VID_HDR [%s]' % (blk.peb_num, ec_hdr_errors, vid_hdr_errors))
+                    log(
+                        extract_blocks,
+                        "PEB: %s has possible issue EC_HDR [%s], VID_HDR [%s]"
+                        % (blk.peb_num, ec_hdr_errors, vid_hdr_errors),
+                    )
 
             verbose_display(blk)
 
         else:
             cur_offset += ubi.file.block_size
-            ubi.first_peb_num = cur_offset//ubi.file.block_size
+            ubi.first_peb_num = cur_offset // ubi.file.block_size
             ubi.file.start_offset = cur_offset
 
     return blocks
@@ -185,10 +208,10 @@ def rm_old_blocks(blocks, block_list):
             if blocks[i].ec_hdr.image_seq != blocks[k].ec_hdr.image_seq:
                 continue
 
-            second_newer =  blocks[k].vid_hdr.sqnum > blocks[i].vid_hdr.sqnum
+            second_newer = blocks[k].vid_hdr.sqnum > blocks[i].vid_hdr.sqnum
             del_block = None
             use_block = None
-            
+
             if second_newer:
                 if blocks[k].vid_hdr.copy_flag == 0:
                     del_block = i
@@ -201,7 +224,11 @@ def rm_old_blocks(blocks, block_list):
 
             if del_block is not None:
                 del_blocks.append(del_block)
-                log(rm_old_blocks, 'Old block removed (copy_flag): PEB %s, LEB %s, Using PEB%s' % (blocks[del_block].peb_num, blocks[del_block].leb_num, use_block))
+                log(
+                    rm_old_blocks,
+                    "Old block removed (copy_flag): PEB %s, LEB %s, Using PEB%s"
+                    % (blocks[del_block].peb_num, blocks[del_block].leb_num, use_block),
+                )
                 break
 
             if second_newer:
@@ -221,16 +248,28 @@ def rm_old_blocks(blocks, block_list):
 
             if del_block is not None:
                 del_blocks.append(del_block)
-                log(rm_old_blocks, 'Old block removed (data_crc): PEB %s, LEB %s, vid_hdr.data_crc %s / %s, Using PEB %s' % (blocks[del_block].peb_num,
-                                                                                                                           blocks[del_block].leb_num,
-                                                                                                                           blocks[del_block].vid_hdr.data_crc,
-                                                                                                                           blocks[del_block].data_crc,
-                                                                                                                           use_block))
+                log(
+                    rm_old_blocks,
+                    """Old block removed (data_crc): PEB %s, LEB %s,
+                    vid_hdr.data_crc %s / %s, Using PEB %s"""
+                    % (
+                        blocks[del_block].peb_num,
+                        blocks[del_block].leb_num,
+                        blocks[del_block].vid_hdr.data_crc,
+                        blocks[del_block].data_crc,
+                        use_block,
+                    ),
+                )
 
             else:
                 use_block = min(k, i)
                 del_blocks.append(use_block)
-                error('Warn', rm_old_blocks, 'Multiple PEB [%s] for LEB %s: Using first.' % (', '.join(i, k), blocks[i].leb_num, use_block))
+                error(
+                    "Warn",
+                    rm_old_blocks,
+                    "Multiple PEB [%s] for LEB %s: Using first. (use block: %d)"
+                    % (", ".join(i, k), blocks[i].leb_num, use_block),
+                )
 
             break
 

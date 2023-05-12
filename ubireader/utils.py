@@ -18,17 +18,24 @@
 #############################################################
 
 import re
+
 from ubireader.debug import error, log
-from ubireader.ubi.defines import UBI_EC_HDR_MAGIC, FILE_CHUNK_SZ
-from ubireader.ubifs.defines import UBIFS_NODE_MAGIC, UBIFS_SB_NODE_SZ, UBIFS_SB_NODE, UBIFS_COMMON_HDR_SZ
+from ubireader.ubi.defines import FILE_CHUNK_SZ, UBI_EC_HDR_MAGIC
 from ubireader.ubifs import nodes
+from ubireader.ubifs.defines import (
+    UBIFS_COMMON_HDR_SZ,
+    UBIFS_NODE_MAGIC,
+    UBIFS_SB_NODE,
+    UBIFS_SB_NODE_SZ,
+)
+
 
 def guess_start_offset(path, guess_offset=0):
     file_offset = guess_offset
 
-    f = open(path, 'rb')
-    f.seek(0,2)
-    file_size = f.tell()+1
+    f = open(path, "rb")
+    f.seek(0, 2)
+    file_size = f.tell() + 1
     f.seek(guess_offset)
 
     for _ in range(0, file_size, FILE_CHUNK_SZ):
@@ -46,38 +53,44 @@ def guess_start_offset(path, guess_offset=0):
                 ubifs_loc = file_size + 1
 
             if ubi_loc < ubifs_loc:
-                log(guess_start_offset, 'Found UBI magic number at %s' % (file_offset + ubi_loc))
-                return  file_offset + ubi_loc
+                log(
+                    guess_start_offset,
+                    "Found UBI magic number at %s" % (file_offset + ubi_loc),
+                )
+                return file_offset + ubi_loc
 
             elif ubifs_loc < ubi_loc:
-                log(guess_start_offset, 'Found UBIFS magic number at %s' % (file_offset + ubifs_loc))
+                log(
+                    guess_start_offset,
+                    "Found UBIFS magic number at %s" % (file_offset + ubifs_loc),
+                )
                 return file_offset + ubifs_loc
             else:
-                error(guess_start_offset, 'Fatal', 'Could not determine start offset.')
+                error(guess_start_offset, "Fatal", "Could not determine start offset.")
     else:
-        error(guess_start_offset, 'Fatal', 'Could not determine start offset.')
+        error(guess_start_offset, "Fatal", "Could not determine start offset.")
 
     f.close()
 
 
 def guess_filetype(path, start_offset=0):
-    log(guess_filetype, 'Looking for file type at %s' % start_offset)
+    log(guess_filetype, "Looking for file type at %s" % start_offset)
 
-    with open(path, 'rb') as f:
+    with open(path, "rb") as f:
         f.seek(start_offset)
         buf = f.read(4)
 
         if buf == UBI_EC_HDR_MAGIC:
             ftype = UBI_EC_HDR_MAGIC
-            log(guess_filetype, 'File looks like a UBI image.')
+            log(guess_filetype, "File looks like a UBI image.")
 
         elif buf == UBIFS_NODE_MAGIC:
             ftype = UBIFS_NODE_MAGIC
-            log(guess_filetype, 'File looks like a UBIFS image.')
+            log(guess_filetype, "File looks like a UBIFS image.")
         else:
             ftype = None
-            error(guess_filetype, 'Fatal', 'Could not determine file type.')
-    
+            error(guess_filetype, "Fatal", "Could not determine file type.")
+
     return ftype
 
 
@@ -86,16 +99,16 @@ def guess_leb_size(path):
 
     Arguments:
     Str:path    -- Path to file.
-    
+
     Returns:
     Int         -- LEB size.
-    
+
     Searches file for superblock and retrieves leb size.
     """
 
-    f = open(path, 'rb')
-    f.seek(0,2)
-    file_size = f.tell()+1
+    f = open(path, "rb")
+    f.seek(0, 2)
+    file_size = f.tell() + 1
     f.seek(0)
     block_size = None
 
@@ -104,7 +117,7 @@ def guess_leb_size(path):
 
         for m in re.finditer(UBIFS_NODE_MAGIC, buf):
             start = m.start()
-            chdr = nodes.common_hdr(buf[start:start+UBIFS_COMMON_HDR_SZ])
+            chdr = nodes.common_hdr(buf[start : start + UBIFS_COMMON_HDR_SZ])
 
             if chdr and chdr.node_type == UBIFS_SB_NODE:
                 sb_start = start + UBIFS_COMMON_HDR_SZ
@@ -130,18 +143,18 @@ def guess_peb_size(path):
 
     Arguments:
     Str:path    -- Path to file.
-    
+
     Returns:
     Int         -- PEB size.
-    
-    Searches file for Magic Number, picks most 
+
+    Searches file for Magic Number, picks most
         common length between them.
     """
     file_offset = 0
     offsets = []
-    f = open(path, 'rb')
-    f.seek(0,2)
-    file_size = f.tell()+1
+    f = open(path, "rb")
+    f.seek(0, 2)
+    file_size = f.tell() + 1
     f.seek(0)
 
     for _ in range(0, file_size, FILE_CHUNK_SZ):
@@ -153,7 +166,7 @@ def guess_peb_size(path):
                 file_offset = start
                 idx = start
             else:
-                idx = start+file_offset
+                idx = start + file_offset
 
             offsets.append(idx)
 
@@ -163,8 +176,8 @@ def guess_peb_size(path):
     occurrences = {}
     for i in range(0, len(offsets)):
         try:
-            diff = offsets[i] - offsets[i-1]
-        except:
+            diff = offsets[i] - offsets[i - 1]
+        except Exception:
             diff = offsets[i]
 
         if diff not in occurrences:
