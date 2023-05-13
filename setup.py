@@ -25,4 +25,9 @@ setup(
              'scripts/ubireader_utils_info',
              'scripts/ubireader_display_blocks',
             ],
+    entry_points={
+        'console_scripts': [
+            'ubireader = __main__:main',
+        ]
+    }
 )
