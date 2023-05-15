@@ -5,7 +5,7 @@ description = "Extract files from UBI and UBIFS images."
 authors = ["ONEKEY <support@onekey.com>", "Jason Pruitt <jrspruitt@gmail.com>"]
 license = "GNU GPL"
 readme = "README.md"
-packages = [{include = "ubi_reader"}]
+packages = [{include = "ubireader"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
