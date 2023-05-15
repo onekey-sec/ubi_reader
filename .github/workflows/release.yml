@@ -1,0 +1,27 @@
+name: PyPI Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  release:
+    runs-on: ubuntu-20.04
+
+    steps:
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+
+      - name: Pip install
+        run: python -m pip install --upgrade pip poetry
+        shell: bash
+
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - run: poetry publish --build
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{secrets.POETRY_PYPI_TOKEN_PYPI}}

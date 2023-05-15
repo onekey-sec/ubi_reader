@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "ubi-reader"
+version = "0.8.6"
+description = "Extract files from UBI and UBIFS images."
+authors = ["ONEKEY <support@onekey.com>", "Jason Pruitt <jrspruitt@gmail.com>"]
+license = "GNU GPL"
+readme = "README.md"
+packages = [{include = "ubi_reader"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+lzallright = "^0.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "--cov=ubi_reader --cov=tests --cov-branch --cov-fail-under=90"
+norecursedirs = """
+  *.egg
+  *_extract
+  .*
+  dist
+  build
+  target
+"""
+
+[tool.vulture]
+paths = ["ubireader/", "scripts/", "vulture_whitelist.py"]
+exclude = []
+
+[tool.pyright]
+exclude = ["build"]
+
+[tool.poetry.scripts]
+ubireader_display_blocks = "scripts.ubireader_display_blocks:main"
+ubireader_display_info = "scripts.ubireader_display_info:main"
+ubireader_extract_files = "scripts.ubireader_extract_files:main"
+ubireader_extract_images = "scripts.ubireader_extract_images:main"
+ubireader_list_files = "scripts.ubireader_list_files:main"
+ubireader_utils_info = "scripts.ubireader_utils_info:main"

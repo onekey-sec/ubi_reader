@@ -28,11 +28,11 @@ Latest Version
 
     $ git clone https://github.com/jrspruitt/ubi_reader
     $ cd ubi_reader
-    $ sudo python setup.py install
+    $ poetry install
 
 Or
 
-    $ sudo pip install ubi_reader
+    $ pip install --user ubi_reader
 
 
 ## Usage:
