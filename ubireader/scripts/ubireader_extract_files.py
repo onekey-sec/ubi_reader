@@ -27,25 +27,37 @@ from ubireader import settings
 from ubireader.ubi import ubi
 from ubireader.ubi.defines import UBI_EC_HDR_MAGIC
 from ubireader.ubifs import ubifs
+from ubireader.ubifs.output import extract_files
 from ubireader.ubifs.defines import UBIFS_NODE_MAGIC
-from ubireader.utils import guess_filetype, guess_start_offset, guess_leb_size, guess_peb_size
 from ubireader.ubi_io import ubi_file, leb_virtual_file
+from ubireader.debug import error, log
+from ubireader.utils import guess_filetype, guess_start_offset, guess_leb_size, guess_peb_size
 
+def create_output_dir(outpath):
+    if os.path.exists(outpath):
+        if os.listdir(outpath):
+            error(create_output_dir, 'Fatal', 'Output directory is not empty. %s' % outpath)
+    else:
+        try:
+            os.makedirs(outpath)
+            log(create_output_dir, 'Created output path: %s' % outpath)
+        except Exception as e:
+            error(create_output_dir, 'Fatal', '%s' % e)
 
-if __name__=='__main__':
+def main():
     start = time.time()
-    description = 'Show information about UBI or UBIFS image.'
-    usage = 'ubireader_display_info [options] filepath'
+    description = 'Extract contents of a UBI or UBIFS image.'
+    usage = 'ubireader_extract_files [options] filepath'
     parser = argparse.ArgumentParser(usage=usage, description=description)
+
+    parser.add_argument('-k', '--keep-permissions', action='store_true', dest='permissions',
+                      help='Maintain file permissions, requires running as root. (default: False)')
 
     parser.add_argument('-l', '--log', action='store_true', dest='log',
                       help='Print extraction information to screen.')
 
     parser.add_argument('-v', '--verbose-log', action='store_true', dest='verbose',
                       help='Prints nearly everything about anything to screen.')
-
-    parser.add_argument('-u', '--ubifs-info', action='store_true', dest='ubifs_info',
-                      help='Get UBIFS information from inside a UBI image. (default: false)')
     
     parser.add_argument('-p', '--peb-size', type=int, dest='block_size',
                         help='Specify PEB size. (UBI Only)')
@@ -70,6 +82,9 @@ if __name__=='__main__':
 
     parser.add_argument('-f', '--u-boot-fix', action='store_true', dest='uboot_fix',
                       help='Assume blocks with image_seq 0 are because of older U-boot implementations and include them. (default: False)')
+
+    parser.add_argument('-o', '--output-dir', dest='outpath',
+                        help='Specify output directory path.')
 
     parser.add_argument('filepath', help='File to extract contents of.')
 
@@ -110,7 +125,10 @@ if __name__=='__main__':
     if not filetype:
         parser.error('Could not determine file type.')
 
-    ubifs_info = args.ubifs_info
+    if args.outpath:
+        outpath = args.outpath
+    else:
+        outpath = settings.output_dir
 
     if args.block_size:
         block_size = args.block_size
@@ -123,6 +141,7 @@ if __name__=='__main__':
         if not block_size:
             parser.error('Block size could not be determined.')
 
+    perms = args.permissions
 
     # Create file object.
     ufile_obj = ubi_file(path, block_size, start_offset, end_offset)
@@ -131,57 +150,54 @@ if __name__=='__main__':
         # Create UBI object
         ubi_obj = ubi(ufile_obj)
 
-        # Display UBI info if not UBIFS request.
-        if not ubifs_info:
-            print(ubi_obj.display())
-
         # Loop through found images in file.
         for image in ubi_obj.images:
-            # Display image information if not UBIFS request.
-            if not ubifs_info:
-                print('%s' % image.display('\t'))
+
+            # Create path for specific image
+            # In case multiple images in data
+            img_outpath = os.path.join(outpath, '%s' % image.image_seq)
 
             # Loop through volumes in each image.
             for volume in image.volumes:
-                # Show UBI or UBIFS info.
-                if not ubifs_info:
 
-                    # Display volume information.
-                    print(image.volumes[volume].display('\t\t'))
+                # Get blocks associated with this volume.
+                vol_blocks = image.volumes[volume].get_blocks(ubi_obj.blocks)
 
-                else:
-                    # Get blocks associated with this volume.
-                    vol_blocks = image.volumes[volume].get_blocks(ubi_obj.blocks)
-    
-                    # Skip volume if empty.
-                    if not len(vol_blocks):
-                        continue
-    
-                    # Create LEB backed virtual file with volume blocks.
-                    # Necessary to prevent having to load entire UBI image
-                    # into memory.
-                    lebv_file = leb_virtual_file(ubi_obj, vol_blocks)
-    
-                    # Create UBIFS object and print info.
-                    ubifs_obj = ubifs(lebv_file)
-                    print(ubifs_obj.display())
-                    print(ubifs_obj.superblock_node.display('\t'))
-                    print(ubifs_obj.master_node.display('\t'))
-                    try:
-                        print(ubifs_obj.master_node2.display('\t'))
-                    except:
-                        print('Master Node Error only one valid node.')
+                # Create volume data output path.
+                vol_outpath = os.path.join(img_outpath, volume)
+                
+                # Create volume output path directory.
+                create_output_dir(vol_outpath)
+
+                # Skip volume if empty.
+                if not len(vol_blocks):
+                    continue
+
+                # Create LEB backed virtual file with volume blocks.
+                # Necessary to prevent having to load entire UBI image
+                # into memory.
+                lebv_file = leb_virtual_file(ubi_obj, vol_blocks)
+
+                # Extract files from UBI image.
+                ubifs_obj = ubifs(lebv_file)
+                print('Extracting files to: %s' % vol_outpath)
+                extract_files(ubifs_obj, vol_outpath, perms)
+
 
     elif filetype == UBIFS_NODE_MAGIC:
         # Create UBIFS object
         ubifs_obj = ubifs(ufile_obj)
-        print(ubifs_obj.display())
-        print(ubifs_obj.superblock_node.display('\t'))
-        print(ubifs_obj.master_node.display('\t'))
-        try:
-            print(ubifs_obj.master_node2.display('\t'))
-        except:
-            print('Master Node Error only one valid node.')
+
+        # Create directory for files.
+        create_output_dir(outpath)
+
+        # Extract files from UBIFS image.
+        print('Extracting files to: %s' % outpath)
+        extract_files(ubifs_obj, outpath, perms)
 
     else:
         print('Something went wrong to get here.')
+
+
+if __name__=='__main__':
+    main()

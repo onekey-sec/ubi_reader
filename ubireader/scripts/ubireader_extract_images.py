@@ -38,8 +38,7 @@ def create_output_dir(outpath):
         except Exception as e:
             error(create_output_dir, 'Fatal', '%s' % e)
 
-
-if __name__=='__main__':
+def main():
     start = time.time()
     description = 'Extract UBI or UBIFS images from file containing UBI data in it.'
     usage = 'ubireader_extract_images [options] filepath'
@@ -167,3 +166,6 @@ if __name__=='__main__':
                 # Loop through and write volume block data (LEB) to file.
                 for block in image.volumes[volume].reader(ubi_obj):
                     f.write(block)
+
+if __name__=='__main__':
+    main()
