@@ -237,7 +237,7 @@ def make_files(ubi, outpath):
             fscr.write(buf)
         os.chmod(script_path, 0o755)
 
-if __name__=='__main__':
+def main():
     start = time.time()
     description = 'Determine settings for recreating UBI image.'
     usage = 'ubireader_utils_info [options] filepath'
@@ -343,3 +343,5 @@ if __name__=='__main__':
         # Create build scripts.
         make_files(ubi_obj, outpath)
 
+if __name__=='__main__':
+    main()

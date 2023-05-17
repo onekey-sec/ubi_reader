@@ -1,7 +1,8 @@
 #!/usr/bin/env python
+
 #############################################################
-# ubi_reader/scripts/ubireader_display_blocks
-# (c) 2019 Jason Pruitt (jrspruitt@gmail.com)
+# ubi_reader
+# (C) Collin Mulliner based on Jason Pruitt's ubireader_extract_images
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,35 +18,25 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-#############################################################
-# Search by block parameters and display information about
-# matching blocks.
-#############################################################
-
 import os
 import sys
+import time
 import argparse
-from ubireader.ubi import ubi_base
-from ubireader.ubi_io import ubi_file
+
 from ubireader import settings
+from ubireader.ubi import ubi
 from ubireader.ubi.defines import UBI_EC_HDR_MAGIC
+from ubireader.ubifs import ubifs
+from ubireader.ubifs.list import list_files, copy_file
 from ubireader.ubifs.defines import UBIFS_NODE_MAGIC
+from ubireader.ubi_io import ubi_file, leb_virtual_file
+from ubireader.debug import error, log
 from ubireader.utils import guess_filetype, guess_start_offset, guess_leb_size, guess_peb_size
 
-if __name__=='__main__':
-
-    description = 'Search for specified blocks and display information.'
-    usage = """
-    ubireader_display_blocks "{'block.attr': value,...}" path/to/image
-        Search for blocks by given parameters and display information about them.
-        This is block only, no volume or image information is created, which can
-        be used to debug file and image extraction.
-    Example:
-        "{'peb_num':[0, 1] + range(100, 102), 'ec_hdr.ec': 1, 'is_valid': True}"
-        This matches block.peb_num 0, 1, 100, 101, and 102 
-        with a block.ec_hdr.ec (erase count) of 1, that are valid PEB blocks.
-        For a full list of parameters check ubireader.ubi.block.description.
-    """
+def main():
+    start = time.time()
+    description = 'List and Extract files of a UBI or UBIFS image.'
+    usage = 'ubireader_list_files [options] filepath'
     parser = argparse.ArgumentParser(usage=usage, description=description)
 
     parser.add_argument('-l', '--log', action='store_true', dest='log',
@@ -78,16 +69,20 @@ if __name__=='__main__':
     parser.add_argument('-f', '--u-boot-fix', action='store_true', dest='uboot_fix',
                       help='Assume blocks with image_seq 0 are because of older U-boot implementations and include them. (default: False)')
 
-    parser.add_argument('block_search_params',
-                      help="""
-                      Double quoted Dict of ubi.block.description attributes, which is run through eval().
-                      Ex. "{\'peb_num\':[0, 1], \'ec_hdr.ec\': 1, \'is_valid\': True}"
-                      """)
+    parser.add_argument('-P', '--path', dest='listpath',
+                        help='Path to list.')
 
-    parser.add_argument('filepath', help='File with blocks of interest.')
+    parser.add_argument('-C', '--copy', dest='copyfile',
+                        help='File to Copy.')
+
+    parser.add_argument('-D', '--copy-dest', dest='copyfiledest',
+                        help='Copy Destination.')
+
+    parser.add_argument('filepath', help='UBI/UBIFS image file.')
 
     if len(sys.argv) == 1:
         parser.print_help()
+        sys.exit(1)
 
     args = parser.parse_args()
 
@@ -105,9 +100,6 @@ if __name__=='__main__':
         path = args.filepath
         if not os.path.exists(path):
             parser.error("File path doesn't exist.")
-    else:
-        parser.error('File path must be provided.')
-        sys.exit(1)
 
     if args.start_offset:
         start_offset = args.start_offset
@@ -136,55 +128,50 @@ if __name__=='__main__':
         if not block_size:
             parser.error('Block size could not be determined.')
 
-    if args.block_search_params:
-        try:
-            search_params = eval(args.block_search_params)
+    # Create file object.
+    ufile_obj = ubi_file(path, block_size, start_offset, end_offset)
 
-            if not isinstance(search_params, dict):
-                parser.error('Search Param Error: Params must be a Dict of block PEB object items:value pairs.')
+    if filetype == UBI_EC_HDR_MAGIC:
+        # Create UBI object
+        ubi_obj = ubi(ufile_obj)
 
-        except NameError as e:
-            parser.error('Search Param Error: Dict key block attrs must be single quoted.')
+        # Loop through found images in file.
+        for image in ubi_obj.images:
 
-        except Exception as e:
-            parser.error('Search Param Error: %s' % e)
+            # Loop through volumes in each image.
+            for volume in image.volumes:
+
+                # Get blocks associated with this volume.
+                vol_blocks = image.volumes[volume].get_blocks(ubi_obj.blocks)
+
+                # Skip volume if empty.
+                if not len(vol_blocks):
+                    continue
+
+                # Create LEB backed virtual file with volume blocks.
+                # Necessary to prevent having to load entire UBI image
+                # into memory.
+                lebv_file = leb_virtual_file(ubi_obj, vol_blocks)
+
+                # Create UBIFS object.
+                ubifs_obj = ubifs(lebv_file)
+
+                if args.listpath:
+                    list_files(ubifs_obj, args.listpath)
+                if args.copyfile and args.copyfiledest:
+                    copy_file(ubifs_obj, args.copyfile, args.copyfiledest)
+
+    elif filetype == UBIFS_NODE_MAGIC:
+        # Create UBIFS object
+        ubifs_obj = ubifs(ufile_obj)
+
+        if args.listpath:
+            list_files(ubifs_obj, args.listpath)
+        if args.copyfile and args.copyfiledest:
+            copy_file(ubifs_obj, args.copyfile, args.copyfiledest)
 
     else:
-        parser.error('No search parameters given, -b arg is required.')
+        print('Something went wrong to get here.')
 
-
-    ufile_obj = ubi_file(path, block_size, start_offset, end_offset)
-    ubi_obj = ubi_base(ufile_obj)
-    blocks = []
-
-    for block in ubi_obj.blocks:
-        match = True
-
-        for key in search_params:
-            b = ubi_obj.blocks[block]
-
-            for attr in key.split('.'):
-                if hasattr(b, attr):
-                    b = getattr(b, attr)
-
-            if isinstance(search_params[key], list):
-                if isinstance(b, list):
-                    for value in b:
-                        if value in search_params[key]:
-                            break
-                    else:
-                        match = False
-                elif b not in search_params[key]:
-                    match = False
-
-            elif b != search_params[key]:
-                match = False
-                break
-
-        if match:                
-            blocks.append(ubi_obj.blocks[block])
-
-    print('\nBlock matches: %s' % len(blocks))
-
-    for block in blocks:
-        print(block.display())
+if __name__=='__main__':
+    main()
