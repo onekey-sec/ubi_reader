@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ubi-reader"
-version = "0.8.7"
+version = "0.8.8"
 description = "Extract files from UBI and UBIFS images."
 authors = ["ONEKEY <support@onekey.com>", "Jason Pruitt <jrspruitt@gmail.com>"]
 license = "GNU GPL"
@@ -9,7 +9,7 @@ packages = [{include = "ubireader"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-lzallright = "^0.1.0"
+lzallright = "^0.2.1"
 
 [build-system]
 requires = ["poetry-core"]
