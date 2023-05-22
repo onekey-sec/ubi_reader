@@ -9,7 +9,7 @@ packages = [{include = "ubireader"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-lzallright = "^0.1.0"
+lzallright = "^0.2.1"
 
 [build-system]
 requires = ["poetry-core"]
