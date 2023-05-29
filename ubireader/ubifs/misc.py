@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
-from lzallright.lzallright import LZOCompressor as lzo
+from lzallright import LZOCompressor, LZOError
 import struct
 import zlib
 from ubireader.ubifs.defines import *
@@ -62,7 +62,7 @@ def decompress(ctype, unc_len, data):
     """
     if ctype == UBIFS_COMPR_LZO:
         try:
-            return lzo.decompress(b''.join((b'\xf0', struct.pack('>I', unc_len), data)))
+            return LZOCompressor.decompress(data, output_size_hint=unc_len)
         except Exception as e:
             error(decompress, 'Warn', 'LZO Error: %s' % e)
     elif ctype == UBIFS_COMPR_ZLIB:
