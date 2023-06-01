@@ -343,5 +343,8 @@ def main():
         # Create build scripts.
         make_files(ubi_obj, outpath)
 
+    ufile_obj.close()
+
+
 if __name__=='__main__':
     main()

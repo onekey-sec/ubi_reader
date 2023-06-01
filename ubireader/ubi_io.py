@@ -88,6 +88,11 @@ class ubi_file(object):
         self._last_read_addr = self._fhandle.tell()
         self.is_valid = True
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
 
     def _set_start(self, i):
         self._start_offset = i
@@ -105,6 +110,8 @@ class ubi_file(object):
         return self._block_size
     block_size = property(_get_block_size)
 
+    def close(self):
+        self._fhandle.close()
 
     def seek(self, offset):
         self._fhandle.seek(offset)

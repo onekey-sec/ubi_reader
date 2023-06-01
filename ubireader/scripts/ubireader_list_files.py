@@ -173,5 +173,8 @@ def main():
     else:
         print('Something went wrong to get here.')
 
+    ufile_obj.close()
+
+
 if __name__=='__main__':
     main()
