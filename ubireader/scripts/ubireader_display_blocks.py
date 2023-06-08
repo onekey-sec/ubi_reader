@@ -184,6 +184,8 @@ def main():
         if match:                
             blocks.append(ubi_obj.blocks[block])
 
+    ufile_obj.close()
+
     print('\nBlock matches: %s' % len(blocks))
 
     for block in blocks:

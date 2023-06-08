@@ -167,5 +167,8 @@ def main():
                 for block in image.volumes[volume].reader(ubi_obj):
                     f.write(block)
 
+    ufile_obj.close()
+
+
 if __name__=='__main__':
     main()
