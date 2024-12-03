@@ -52,11 +52,15 @@ class ubi_file(object):
     def __init__(self, path, block_size, start_offset=0, end_offset=None):
         self.__name__ = 'UBI_File'
         self.is_valid = False
-        try:
-            log(self, 'Open Path: %s' % path)
-            self._fhandle = open(path, 'rb')
-        except Exception as e:
-            error(self, 'Fatal', 'Open file: %s' % e)
+        self._fileobj_passed = hasattr(path, "read")
+        if self._fileobj_passed:
+            self._fhandle = path
+        else:
+            try:
+                log(self, 'Open Path: %s' % path)
+                self._fhandle = open(path, 'rb')
+            except Exception as e:
+                error(self, 'Fatal', 'Open file: %s' % e)
 
         self._fhandle.seek(0,2)
         file_size = self.tell()
@@ -111,7 +115,8 @@ class ubi_file(object):
     block_size = property(_get_block_size)
 
     def close(self):
-        self._fhandle.close()
+        if not self._fileobj_passed:
+            self._fhandle.close()
 
     def seek(self, offset):
         self._fhandle.seek(offset)

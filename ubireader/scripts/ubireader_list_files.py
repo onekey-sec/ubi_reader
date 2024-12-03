@@ -101,19 +101,21 @@ def main():
         if not os.path.exists(path):
             parser.error("File path doesn't exist.")
 
+    fileobj = open(path, "rb")
+
     if args.start_offset:
         start_offset = args.start_offset
     elif args.guess_offset:
-        start_offset = guess_start_offset(path, args.guess_offset)
+        start_offset = guess_start_offset(fileobj, args.guess_offset)
     else:
-        start_offset = guess_start_offset(path)
+        start_offset = guess_start_offset(fileobj)
 
     if args.end_offset:
         end_offset = args.end_offset
     else:
         end_offset = None
 
-    filetype = guess_filetype(path, start_offset)
+    filetype = guess_filetype(fileobj, start_offset)
     if not filetype:
         parser.error('Could not determine file type.')
 
@@ -121,15 +123,15 @@ def main():
         block_size = args.block_size
     else:
         if filetype == UBI_EC_HDR_MAGIC:
-            block_size = guess_peb_size(path)
+            block_size = guess_peb_size(fileobj)
         elif filetype == UBIFS_NODE_MAGIC:
-            block_size = guess_leb_size(path)
+            block_size = guess_leb_size(fileobj)
 
         if not block_size:
             parser.error('Block size could not be determined.')
 
     # Create file object.
-    ufile_obj = ubi_file(path, block_size, start_offset, end_offset)
+    ufile_obj = ubi_file(fileobj, block_size, start_offset, end_offset)
 
     if filetype == UBI_EC_HDR_MAGIC:
         # Create UBI object
@@ -174,6 +176,7 @@ def main():
         print('Something went wrong to get here.')
 
     ufile_obj.close()
+    fileobj.close()
 
 
 if __name__=='__main__':
