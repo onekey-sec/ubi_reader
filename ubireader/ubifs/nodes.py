@@ -160,7 +160,9 @@ class idx_node(object):
             setattr(self, key, fields[key])
 
         idxs = UBIFS_IDX_NODE_SZ
-        brs = UBIFS_BRANCH_SZ
+        # Dynamic detection of `brs` (branch size), whether a hash is present after
+        # the key in authenticated UBIFS. Not checking the len of the hash.
+        brs = (len(buf) - UBIFS_IDX_NODE_SZ) // self.child_cnt
         setattr(self, 'branches', [branch(buf[idxs+(brs*i):idxs+(brs*i)+brs]) for i in range(0, self.child_cnt)])
         setattr(self, 'errors', [])
 
@@ -183,12 +185,15 @@ class branch(object):
     Bin:buf     -- Raw data to extract header information from.
     """
     def __init__(self, buf):
-        fields = dict(list(zip(UBIFS_BRANCH_FIELDS, struct.unpack(UBIFS_BRANCH_FORMAT, buf))))
+        fields = dict(list(zip(UBIFS_BRANCH_FIELDS, struct.unpack(UBIFS_BRANCH_FORMAT, buf[0:UBIFS_BRANCH_SZ]))))
         for key in fields:
             if key == 'key':
                 setattr(self, key, parse_key(fields[key]))
             else:
                 setattr(self, key, fields[key])
+
+        if len(buf) > UBIFS_BRANCH_SZ:
+            setattr(self, 'hash', buf[UBIFS_BRANCH_SZ:])
 
         setattr(self, 'errors', [])
 
