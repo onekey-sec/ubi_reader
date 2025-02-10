@@ -19,6 +19,7 @@
 
 from ubireader.debug import error, log, verbose_log
 from ubireader.ubi.block import sort
+from ubireader.ubi.defines import UBI_VID_STATIC
 
 class ubi_file(object):
     """UBI image file object
@@ -170,7 +171,10 @@ class ubi_file(object):
         Obj:block -- Block data is desired for.
         """
         self.seek(block.file_offset + block.ec_hdr.data_offset)
-        buf = self._fhandle.read(block.size - block.ec_hdr.data_offset - block.vid_hdr.data_pad)
+        if block.vid_hdr.vol_type == UBI_VID_STATIC:
+            buf = self._fhandle.read(block.vid_hdr.data_size)
+        else:
+            buf = self._fhandle.read(block.size - block.ec_hdr.data_offset - block.vid_hdr.data_pad)
         return buf
 
 
