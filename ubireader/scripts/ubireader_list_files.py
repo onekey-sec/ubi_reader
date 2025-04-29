@@ -78,6 +78,9 @@ def main():
     parser.add_argument('-D', '--copy-dest', dest='copyfiledest',
                         help='Copy Destination.')
 
+    parser.add_argument('-K', '--master-key', dest='master_key',
+                      help='Master key file, given with fscryptctl e.g. to encrypt the UBIFS (support limited to fscrypt v1 policies)')
+
     parser.add_argument('filepath', help='UBI/UBIFS image file.')
 
     if len(sys.argv) == 1:
@@ -95,6 +98,19 @@ def main():
     settings.ignore_block_header_errors = args.ignore_block_header_errors
 
     settings.uboot_fix = args.uboot_fix
+
+    if args.master_key:
+        path = args.master_key
+        if not os.path.exists(path):
+            parser.error("File path doesn't exist.")
+        else :
+            with open(path, "rb") as file:
+                if os.stat(path).st_size != 64:
+                    parser.error("Master key file size is not 64 bytes.")
+                else:
+                    master_key = file.read(64)
+    else:
+        master_key = None
 
     if args.filepath:
         path = args.filepath
@@ -154,7 +170,7 @@ def main():
                 lebv_file = leb_virtual_file(ubi_obj, vol_blocks)
 
                 # Create UBIFS object.
-                ubifs_obj = ubifs(lebv_file)
+                ubifs_obj = ubifs(lebv_file, master_key=master_key)
 
                 if args.listpath:
                     list_files(ubifs_obj, args.listpath)
@@ -163,7 +179,7 @@ def main():
 
     elif filetype == UBIFS_NODE_MAGIC:
         # Create UBIFS object
-        ubifs_obj = ubifs(ufile_obj)
+        ubifs_obj = ubifs(ufile_obj, master_key=master_key)
 
         if args.listpath:
             list_files(ubifs_obj, args.listpath)

@@ -20,6 +20,7 @@
 from ubireader.debug import error, log, verbose_display
 from ubireader.ubifs.defines import *
 from ubireader.ubifs import nodes, display
+from typing import Optional
 
 class ubifs():
     """UBIFS object
@@ -35,9 +36,10 @@ class ubifs():
     Obj:mst_node       -- Master Node of UBIFS image LEB1
     Obj:mst_node2      -- Master Node 2 of UBIFS image LEB2
     """
-    def __init__(self, ubifs_file):
+    def __init__(self, ubifs_file, master_key: Optional[bytes] = None):
         self.__name__ = 'UBIFS'
         self._file = ubifs_file
+        self.master_key = master_key
         try:
             self.file.reset()
             sb_chdr = nodes.common_hdr(self.file.read(UBIFS_COMMON_HDR_SZ))
