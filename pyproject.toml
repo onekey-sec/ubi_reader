@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ubi-reader"
-version = "0.8.10"
+version = "0.8.11"
 description = "Extract files from UBI and UBIFS images."
 authors = ["ONEKEY <support@onekey.com>", "Jason Pruitt <jrspruitt@gmail.com>"]
 license = "GNU GPL"
