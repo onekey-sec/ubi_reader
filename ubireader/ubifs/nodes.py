@@ -80,6 +80,34 @@ class ino_node(object):
     def display(self, tab=''):
         return display.ino_node(self, tab)
 
+class xent_node(object):
+    """Get xattr entry node at given LEB number + offset.
+
+    Arguments:
+    Bin:buf     -- Raw data to extract header information from.
+
+    See ubifs/defines.py for object attributes.
+    """
+    def __init__(self, buf):
+        fields = dict(zip(UBIFS_XENT_NODE_FIELDS, struct.unpack(UBIFS_XENT_NODE_FORMAT, buf[0:UBIFS_XENT_NODE_SZ])))
+        for key in fields:
+            if key == 'key':
+                setattr(self, key, parse_key(fields[key]))
+            else:
+                setattr(self, key, fields[key])
+        setattr(self, 'name', buf[-self.nlen-1:-1].decode())
+        setattr(self, 'errors', [])
+
+    def __repr__(self):
+        return 'UBIFS XATTR Entry Node'
+
+    def __iter__(self):
+        for key in dir(self):
+            if not key.startswith('_'):
+                yield key, getattr(self, key)
+
+    def display(self, tab=''):
+        return display.dent_node(self, tab)
 
 class dent_node(object):
     """Get dir entry node at given LEB number + offset.
@@ -96,8 +124,8 @@ class dent_node(object):
                 setattr(self, key, parse_key(fields[key]))
             else:
                 setattr(self, key, fields[key])
-
-        setattr(self, 'name', '%s' % buf[-self.nlen-1:-1].decode('utf-8'))
+        setattr(self, 'raw_name', buf[-self.nlen-1:-1])
+        setattr(self, 'name', "")
         setattr(self, 'errors', [])
 
     def __repr__(self):

@@ -21,6 +21,7 @@ from ubireader import settings
 from ubireader.ubifs import nodes
 from ubireader.ubifs.defines import *
 from ubireader.debug import error, log, verbose_log, verbose_display
+from ubireader.ubifs.decrypt import decrypt_filenames
 
 def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
     """Walk the index gathering Inode, Dir Entry, and File nodes.
@@ -36,6 +37,26 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
         'ino'    -- Inode node.
         'data'   -- List of data nodes if present.
         'dent'   -- List of directory entry nodes if present.
+        'xent'   -- List of extended directory entry nodes if present.
+    """
+    _index(ubifs, lnum, offset, inodes, bad_blocks)
+    decrypt_filenames(ubifs, inodes)
+
+def _index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
+    """Walk the index gathering Inode, Dir Entry, and File nodes.
+
+    Arguments:
+    Obj:ubifs    -- UBIFS object.
+    Int:lnum     -- Logical erase block number.
+    Int:offset   -- Offset in logical erase block.
+    Dict:inodes  -- Dict of ino/dent/file nodes keyed to inode number.
+
+    Returns:
+    Dict:inodes  -- Dict of ino/dent/file nodes keyed to inode number.
+        'ino'    -- Inode node.
+        'data'   -- List of data nodes if present.
+        'dent'   -- List of directory entry nodes if present.
+        'xent'   -- List of extended directory entry nodes if present.
     """
     if len(bad_blocks):
         if lnum in bad_blocks:
@@ -87,7 +108,7 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
             verbose_log(index, '-------------------')
             log(index, '%s file addr: %s' % (branch, file_offset + UBIFS_IDX_NODE_SZ + (branch_idx * UBIFS_BRANCH_SZ)))
             verbose_display(branch)
-            index(ubifs, branch.lnum, branch.offs, inodes, bad_blocks)
+            _index(ubifs, branch.lnum, branch.offs, inodes, bad_blocks)
             branch_idx += 1
 
     elif chdr.node_type == UBIFS_INO_NODE:
@@ -158,3 +179,25 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
             inodes[ino_num]['dent']= []
 
         inodes[ino_num]['dent'].append(dn)
+
+    elif chdr.node_type == UBIFS_XENT_NODE:
+        try:
+            xn = nodes.xent_node(node_buf)
+
+        except Exception as e:
+            if settings.warn_only_block_read_errors:
+                error(index, 'Error', 'Problem at file address: %s extracting xent_node: %s' % (file_offset, e))
+                return
+            else:
+                error(index, 'Fatal', 'Problem at file address: %s extracting xent_node: %s' % (file_offset, e))
+        ino_num = xn.key['ino_num']
+        log(index, '%s file addr: %s, ino num: %s' % (xn, file_offset, ino_num))
+        verbose_display(xn)
+
+        if not ino_num in inodes:
+            inodes[ino_num] = {}
+
+        if not 'xent' in inodes[ino_num]:
+            inodes[ino_num]['xent']= []
+
+        inodes[ino_num]['xent'].append(xn)

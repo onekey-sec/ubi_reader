@@ -262,6 +262,20 @@ UBIFS_INO_NODE_FIELDS = ['key',         # Node key.
                                         # 'data', no size.
 UBIFS_INO_NODE_SZ = struct.calcsize(UBIFS_INO_NODE_FORMAT)
 
+# Extended attribute node are identical to DENT_NODES
+UBIFS_XENT_NODE_FORMAT = '<%ssQBBHI' % (UBIFS_MAX_KEY_LEN)
+UBIFS_XENT_NODE_FIELDS = ['key',        # Node key.
+                          'inum',       # Target inode number.
+                          'padding1',   # Reserved for future, zeros.
+                          'type',       # Type of target inode.
+                          'nlen',       # Name length.
+                          'cookie',     # 32bit random number, used to
+                                        # construct a 64bit identifier.
+                          ]
+                                        # 'name', no size.
+UBIFS_XENT_NODE_SZ = struct.calcsize(UBIFS_XENT_NODE_FORMAT)
+
+UBIFS_XATTR_NAME_ENCRYPTION_CONTEXT = "c"
 
 # Directory entry node
 UBIFS_DENT_NODE_FORMAT = '<%ssQBBHI' % (UBIFS_MAX_KEY_LEN)
@@ -282,8 +296,9 @@ UBIFS_DATA_NODE_FORMAT = '<%ssIHH' % (UBIFS_MAX_KEY_LEN)
 UBIFS_DATA_NODE_FIELDS = ['key',            # Node key.
                           'size',           # Uncompressed data size.
                           'compr_type',     # Compression type UBIFS_COMPR_*.
-                          'compr_size',     # Compressed data size in bytes
-                                            # only valid when data is encrypted.
+                          'plaintext_size', # Compressed data size in bytes
+                                            # before encryption only valid
+                                            # when data is encrypted.
                           ]
                                             # 'data', no size.
 UBIFS_DATA_NODE_SZ = struct.calcsize(UBIFS_DATA_NODE_FORMAT)
