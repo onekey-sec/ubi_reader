@@ -70,7 +70,7 @@ def datablock_decrypt(block_key: bytes, block_iv: bytes, block_data: bytes):
 def decrypt_filenames(ubifs, inodes):
     if ubifs.master_key is None:
         for inode in inodes.values():
-             for dent in inode['dent']:
+            for dent in inode.get('dent', []):
                 dent.name = dent.raw_name.decode()
         return
     try:
