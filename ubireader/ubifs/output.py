@@ -116,6 +116,7 @@ def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
             inode = inodes[dent_node.inum]
             lnkname = decrypt_symlink_target(ubifs, inodes, dent_node)
             os.symlink('%s' % lnkname, dent_path)
+            _set_file_timestamps(dent_path, inode)
             log(extract_dents, 'Make Symlink: %s > %s' % (dent_path, inode['ino'].data))
 
         except Exception as e:
@@ -166,7 +167,7 @@ def _set_file_perms(path, inode):
     verbose_log(_set_file_perms, 'perms:%s, owner: %s.%s, path: %s' % (inode['ino'].mode, inode['ino'].uid, inode['ino'].gid, path))
 
 def _set_file_timestamps(path, inode):
-    os.utime(path, (inode['ino'].atime_sec, inode['ino'].mtime_sec))
+    os.utime(path, (inode['ino'].atime_sec, inode['ino'].mtime_sec), follow_symlinks = False)
     verbose_log(_set_file_timestamps, 'timestamps: access: %s, modify: %s, path: %s' % (inode['ino'].atime_sec, inode['ino'].mtime_sec, path))
 
 def _write_reg_file(path, data):
