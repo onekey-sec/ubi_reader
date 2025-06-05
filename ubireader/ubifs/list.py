@@ -20,11 +20,11 @@
 import os
 import time
 import struct
-from ubireader.ubifs.decrypt import lookup_inode_nonce, derive_key_from_nonce, datablock_decrypt, decrypt_symlink_target
+from ubireader.ubifs.decrypt import decrypt_symlink_target
 from ubireader.ubifs.defines import *
 from ubireader.ubifs import walk
-from ubireader.ubifs.misc import decompress
-from ubireader.debug import error, log, verbose_log
+from ubireader.ubifs.misc import process_reg_file
+from ubireader.debug import error
 
 
 def list_files(ubifs, list_path):
@@ -88,7 +88,7 @@ def copy_file(ubifs, filepath, destpath):
 
     for dent in inodes[inum]['dent']:
         if dent.name == filename:
-            filedata = _process_reg_file(ubifs, inodes[dent.inum], filepath, inodes)
+            filedata = process_reg_file(ubifs, inodes[dent.inum], filepath, inodes)
             if os.path.isdir(destpath):
                 destpath = os.path.join(destpath, filename)
             with open(destpath, 'wb') as f:
@@ -143,52 +143,3 @@ def file_leng(ubifs, inode):
             fl = fl + data.size
         return fl
     return 0
-
-
-def _process_reg_file(ubifs, inode, path, inodes):
-    try:
-        buf = bytearray()
-        start_key = (UBIFS_DATA_KEY << UBIFS_S_KEY_BLOCK_BITS)
-        if 'data' in inode:
-            compr_type = 0
-            sorted_data = sorted(inode['data'], key=lambda x: x.key['khash'])
-            last_khash = start_key - 1 
-
-            for data in sorted_data:
-
-                # If data nodes are missing in sequence, fill in blanks
-                # with \x00 * UBIFS_BLOCK_SIZE
-                if data.key['khash'] - last_khash != 1:
-                    while 1 != (data.key['khash'] - last_khash):
-                        buf += b'\x00' * UBIFS_BLOCK_SIZE
-                        last_khash += 1
-
-                compr_type = data.compr_type
-                ubifs.file.seek(data.offset)
-                d = ubifs.file.read(data.compr_len)
-
-                if ubifs.master_key is not None:
-                    nonce = lookup_inode_nonce(inodes, inode)
-                    block_key = derive_key_from_nonce(ubifs.master_key, nonce)
-                    # block_id is based on the current hash
-                    # there could be empty blocks
-                    block_id = data.key['khash']-start_key
-                    block_iv = struct.pack("<QQ", block_id, 0)
-                    d = datablock_decrypt(block_key, block_iv, d)
-                    # if unpading is needed the plaintext_size is valid and set to the
-                    # original size of current block, so we can use this to get the amout
-                    # of bytes to unpad
-                    d = d[:data.plaintext_size]
-
-                buf += decompress(compr_type, data.size, d)
-                last_khash = data.key['khash']
-                verbose_log(_process_reg_file, 'ino num: %s, compression: %s, path: %s' % (inode['ino'].key['ino_num'], compr_type, path))
-
-    except Exception as e:
-        error(_process_reg_file, 'Warn', 'inode num:%s path:%s :%s' % (inode['ino'].key['ino_num'], path, e))
-    
-    # Pad end of file with \x00 if needed.
-    if inode['ino'].size > len(buf):
-        buf += b'\x00' * (inode['ino'].size - len(buf))
-        
-    return bytes(buf)
