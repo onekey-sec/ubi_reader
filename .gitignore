@@ -1,43 +1,22 @@
-*.py[cod]
+# Python
+*.py
+__pycache__/
 
-# C extensions
-*.so
+dist/
 
-# Packages
-*.egg
-*.egg-info
-dist
-build
-eggs
-parts
-bin
-var
-sdist
-develop-eggs
-.installed.cfg
-lib
-lib64
-__pycache__
-
-# Installer logs
-pip-log.txt
-
-# Unit test / coverage reports
+# Testing
 .coverage
-.tox
-nosetests.xml
 
-# Translations
-*.mo
+# Development
+.venv/
 
-# Mr Developer
-.mr.developer.cfg
-.project
-.pydevproject
-.settings/
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # ubi_reader specific
-
 *.img
 *.ubi
 *.ubifs
