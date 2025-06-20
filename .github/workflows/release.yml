@@ -9,19 +9,18 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.8"
-
-      - name: Pip install
-        run: python -m pip install --upgrade pip poetry
-        shell: bash
-
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - run: poetry publish --build
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Build and publish
+        run: uv build && uv publish
         env:
-          POETRY_PYPI_TOKEN_PYPI: ${{secrets.POETRY_PYPI_TOKEN_PYPI}}
+          UV_PUBLISH_TOKEN: ${{secrets.PPOETRY_PYPI_TOKEN_PYPI}}
