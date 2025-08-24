@@ -167,7 +167,9 @@ def _set_file_perms(path, inode):
     verbose_log(_set_file_perms, 'perms:%s, owner: %s.%s, path: %s' % (inode['ino'].mode, inode['ino'].uid, inode['ino'].gid, path))
 
 def _set_file_timestamps(path, inode):
-    os.utime(path, (inode['ino'].atime_sec, inode['ino'].mtime_sec), follow_symlinks = False)
+    follow_symlinks = False
+    if os.name == 'nt': follow_symlinks = True
+    os.utime(path, (inode['ino'].atime_sec, inode['ino'].mtime_sec), follow_symlinks=follow_symlinks)
     verbose_log(_set_file_timestamps, 'timestamps: access: %s, modify: %s, path: %s' % (inode['ino'].atime_sec, inode['ino'].mtime_sec, path))
 
 def _write_reg_file(path, data):
