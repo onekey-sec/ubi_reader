@@ -21,6 +21,7 @@ from ubireader.debug import error, log, verbose_display
 from ubireader.ubifs.defines import *
 from ubireader.ubifs import nodes, display
 from typing import Optional
+from zlib import crc32
 
 class ubifs():
     """UBIFS object
@@ -61,23 +62,47 @@ class ubifs():
 
         self._mst_nodes = [None, None]
         for i in range(0, 2):
+            s_mst_offset = self.leb_size * (UBIFS_MST_LNUM + i)
+            mst_offset = s_mst_offset
+            mst_nodes = []
             try:
-                mst_offset = self.leb_size * (UBIFS_MST_LNUM + i) 
-                self.file.seek(mst_offset)
-                mst_chdr = nodes.common_hdr(self.file.read(UBIFS_COMMON_HDR_SZ))
-                log(self , '%s file addr: %s' % (mst_chdr, self.file.last_read_addr()))
-                verbose_display(mst_chdr)
+                while mst_offset < self.leb_size + s_mst_offset:
+                    print("mst_offset::::: %X"%mst_offset)
+                    self.file.seek(mst_offset)
+                    mst_chdr = nodes.common_hdr(self.file.read(UBIFS_COMMON_HDR_SZ))
+                    log(self , '%s file addr: %s' % (mst_chdr, self.file.last_read_addr()))
+                    verbose_display(mst_chdr)
+                    # crc
+                    cpos = self.file.tell()
+                    self.file.seek(mst_offset + 8)
+                    crcdata = self.file.read(mst_chdr.len-8)
+                    self.file.seek(cpos)
+                    crc = (~crc32(crcdata) & 0xFFFFFFFF)
+                    if crc != mst_chdr.crc:
+                        break
 
-                if mst_chdr.node_type == UBIFS_MST_NODE:
                     self.file.seek(mst_offset + UBIFS_COMMON_HDR_SZ)
-                    buf = self.file.read(UBIFS_MST_NODE_SZ)
-                    self._mst_nodes[i] = nodes.mst_node(buf, self.file.last_read_addr())
-                    log(self , '%s%s file addr: %s' % (self._mst_nodes[i], i, self.file.last_read_addr()))
-                    verbose_display(self._mst_nodes[i])
-                else:
-                    raise Exception('Wrong node type.')
+                    if mst_chdr.node_type == UBIFS_MST_NODE:
+                        buf = self.file.read(UBIFS_MST_NODE_SZ)
+                        mst_node = nodes.mst_node(buf, self.file.last_read_addr())
+                        mst_nodes.append(mst_node)
+                        log(self , '%s%s file addr: %s' % (mst_node, i, self.file.last_read_addr()))
+                        verbose_display(mst_node)
+                    elif mst_chdr.node_type == UBIFS_PAD_NODE:
+                        buf = self.file.read(UBIFS_PAD_NODE_SZ)
+                        padnode = nodes.pad_node(buf, self.file.last_read_addr())
+                        mst_offset += padnode.pad_len
+                        log(self , '%s%s file addr: %s' % (padnode, i, self.file.last_read_addr()))
+                        verbose_display(padnode)
+                    else:
+                        raise Exception('Wrong node type.')
+                    mst_offset += mst_chdr.len
             except Exception as e:
                 error(self, 'Warn', 'Master block %s error: %s' % (i, e))
+            
+            # Get the valid master node with the highest sequence number.
+            if len(mst_nodes):
+                self._mst_nodes[i] = max(mst_nodes, key=lambda x: x.cmt_no)
 
         if self._mst_nodes[0] is None and self._mst_nodes[1] is None:
             error(self, 'Fatal', 'No valid Master Node found.')

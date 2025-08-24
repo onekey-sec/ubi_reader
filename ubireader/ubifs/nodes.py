@@ -293,3 +293,31 @@ class mst_node(object):
 
     def display(self, tab=''):
         return display.mst_node(self, tab)
+
+class pad_node(object):
+    """Get pad node at given LEB number + offset.
+
+    Arguments:
+    Bin:buf     -- Raw data to extract header information from.
+    Int:offset  -- Offset in LEB of data node.
+
+    See ubifs/defines.py for object attributes.
+    """
+    def __init__(self, buf, file_offset=-1):
+        self.file_offset = file_offset
+        fields = dict(list(zip(UBIFS_PAD_NODE_FIELDS, struct.unpack(UBIFS_PAD_NODE_FORMAT, buf))))
+        for key in fields:
+            setattr(self, key, fields[key])
+
+        setattr(self, 'errors', [])
+
+    def __repr__(self):
+        return 'UBIFS Pad Node'
+
+    def __iter__(self):
+        for key in dir(self):
+            if not key.startswith('_'):
+                yield key, getattr(self, key)
+
+    def display(self, tab=''):
+        return display.pad_node(self, tab)
