@@ -67,7 +67,6 @@ class ubifs():
             mst_nodes = []
             try:
                 while mst_offset < self.leb_size + s_mst_offset:
-                    print("mst_offset::::: %X"%mst_offset)
                     self.file.seek(mst_offset)
                     mst_chdr = nodes.common_hdr(self.file.read(UBIFS_COMMON_HDR_SZ))
                     log(self , '%s file addr: %s' % (mst_chdr, self.file.last_read_addr()))
