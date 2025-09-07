@@ -19,6 +19,7 @@
 
 from __future__ import annotations
 import os
+from pathlib import PurePath
 import time
 from typing import TYPE_CHECKING
 from ubireader.ubifs.decrypt import decrypt_symlink_target
@@ -32,12 +33,9 @@ if TYPE_CHECKING:
     from ubireader.ubifs import ubifs as Ubifs, nodes
     from ubireader.ubifs.walk import Inode
 
-def list_files(ubifs: Ubifs, list_path: str) -> None:
-    pathnames = list_path.split("/")
-    pnames: list[str] = []
-    for i in pathnames:
-        if len(i) > 0:
-            pnames.append(i)
+def list_files(ubifs: Ubifs, list_path: PurePath | str, *, recursive: bool = False) -> None:
+    list_path = PurePath(list_path)
+    pnames = [part for part in list_path.parts if part != '/']
     try:
         inodes: dict[int, Inode] = {}
         bad_blocks: list[int] = []
@@ -56,8 +54,11 @@ def list_files(ubifs: Ubifs, list_path: str) -> None:
             return
 
         for dent in inodes[inum]['dent']:
-            print_dent(ubifs, inodes, dent, longts=False)
-        
+            if recursive:
+                print_dent_recursive(ubifs, inodes, dent, longts=False, dent_path=list_path / dent.name)
+            else:
+                print_dent(ubifs, inodes, dent, longts=False)
+
         if len(bad_blocks):
             error(list_files, 'Warn', 'Data may be missing or corrupted, bad blocks, LEB [%s]' % ','.join(map(str, bad_blocks)))
 
@@ -113,9 +114,11 @@ def find_dir(inodes: Mapping[int, Inode], inum: int, names: list[str], idx: int)
                 return find_dir(inodes, dent.inum, names, idx+1)
     return None
 
-
-def print_dent(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.dent_node, long: bool = True, longts: bool = False) -> None:
+def print_dent(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.dent_node, long: bool = True, longts: bool = False, *, dent_path: PurePath | None = None) -> None:
     inode = inodes[dent_node.inum]
+    # Display the full path if path is set, otherwise just the name.
+    display_path = str(dent_path) if dent_path is not None else dent_node.name
+
     if long:
         fl = file_leng(ubifs, inode)
 
@@ -128,9 +131,21 @@ def print_dent(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.dent_
         else:
             mtime = time.strftime("%b %d %H:%M", time.gmtime(inode['ino'].mtime_sec))
 
-        print('%6o %2d %s %s %7d %s %s%s' % (inode['ino'].mode, inode['ino'].nlink, inode['ino'].uid, inode['ino'].gid, fl, mtime, dent_node.name, lnk))
+        print('%6o %2d %s %s %7d %s %s%s' % (inode['ino'].mode, inode['ino'].nlink, inode['ino'].uid, inode['ino'].gid, fl, mtime, display_path, lnk))
     else:
-        print(dent_node.name)
+        print(display_path)
+
+
+def print_dent_recursive(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.dent_node, long: bool = True, longts: bool = False, *, dent_path: PurePath) -> None:
+    inode = inodes[dent_node.inum]
+
+    print_dent(ubifs, inodes, dent_node, long=long, longts=longts, dent_path=dent_path)
+
+    if dent_node.type != UBIFS_ITYPE_DIR:
+        return
+
+    for dnode in inode.get('dent', []):
+        print_dent_recursive(ubifs, inodes, dnode, long=long, longts=longts, dent_path=dent_path / dnode.name)
 
 
 def file_leng(ubifs: Ubifs, inode: Inode) -> int:
