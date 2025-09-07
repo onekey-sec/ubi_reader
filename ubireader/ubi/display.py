@@ -17,10 +17,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from ubireader import settings
 from ubireader.ubi.defines import PRINT_COMPAT_LIST, PRINT_VOL_TYPE_LIST, UBI_VTBL_AUTORESIZE_FLG
 
-def ubi(ubi, tab=''):
+if TYPE_CHECKING:
+    from ubireader.ubi import ubi as Ubi
+    from ubireader.ubi.block import description as Block
+    from ubireader.ubi.headers import ec_hdr as EcHdr, vid_hdr as VidHdr, _vtbl_rec as VtblRec
+    from ubireader.ubi.image import description as Image
+    from ubireader.ubi.volume import description as Volume
+
+def ubi(ubi: Ubi, tab: str = '') -> str:
     buf = '%sUBI File\n' % (tab) 
     buf += '%s---------------------\n' % (tab)
     buf += '\t%sMin I/O: %s\n' % (tab, ubi.min_io_size)
@@ -35,7 +44,7 @@ def ubi(ubi, tab=''):
     return buf
 
 
-def image(image, tab=''):
+def image(image: Image, tab: str = '') -> str:
     buf = '%s%s\n' % (tab, image)
     buf += '%s---------------------\n' % (tab)
     buf += '\t%sImage Sequence Num: %s\n' % (tab, image.image_seq)
@@ -45,7 +54,7 @@ def image(image, tab=''):
     return buf
 
 
-def volume(volume, tab=''):
+def volume(volume: Volume, tab: str = '') -> str:
     buf = '%s%s\n' % (tab, volume)
     buf += '%s---------------------\n' % (tab)
     buf += '\t%sVol ID: %s\n' % (tab, volume.vol_id)
@@ -61,7 +70,7 @@ def volume(volume, tab=''):
     return buf
 
 
-def block(block, tab='\t'):
+def block(block: Block, tab: str = '\t') -> str:
     buf = '%s%s\n' % (tab, block)
     buf += '%s---------------------\n' % (tab)
     buf += '\t%sFile Offset: %s\n' %  (tab, block.file_offset)
@@ -95,7 +104,7 @@ def block(block, tab='\t'):
     return buf
 
 
-def ec_hdr(ec_hdr, tab=''):
+def ec_hdr(ec_hdr: EcHdr, tab: str = '') -> str:
     buf = ''
     for key, value in ec_hdr:
         if key == 'errors':
@@ -108,7 +117,7 @@ def ec_hdr(ec_hdr, tab=''):
     return buf
 
 
-def vid_hdr(vid_hdr, tab=''):
+def vid_hdr(vid_hdr: VidHdr, tab: str = '') -> str:
     buf = ''
     for key, value in vid_hdr:
         if key == 'errors':
@@ -133,7 +142,7 @@ def vid_hdr(vid_hdr, tab=''):
     return buf
 
 
-def vol_rec(vol_rec, tab=''):
+def vol_rec(vol_rec: VtblRec, tab: str = '') -> str:
     buf = ''
     for key, value in vol_rec:
         if key == 'errors':

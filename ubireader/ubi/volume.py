@@ -17,9 +17,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from ubireader.debug import log
 from ubireader.ubi import display
 from ubireader.ubi.block import sort, get_blocks_in_list, rm_old_blocks
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Mapping
+    from ubireader.ubi import ubi as Ubi
+    from ubireader.ubi.block import description as Block
+    from ubireader.ubi.block.layout import _LayoutInfo
+    from ubireader.ubi.headers import _vtbl_rec as VtblRec
 
 class description(object):
     """UBI Volume object
@@ -39,7 +48,7 @@ class description(object):
     Volume object is basically a list of block indexes and some metadata
     describing a volume found in a UBI image.
     """
-    def __init__(self, vol_id, vol_rec, block_list):
+    def __init__(self, vol_id: int, vol_rec: VtblRec, block_list: list[int]) -> None:
         self._vol_id = vol_id
         self._vol_rec = vol_rec
         self._name = self._vol_rec.name
@@ -47,44 +56,44 @@ class description(object):
         log(description, 'Create Volume: %s, ID: %s, Block Cnt: %s' % (self.name, self.vol_id, len(self.block_list)))
 
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Volume: %s' % (self.name.decode('utf-8'))
 
 
-    def _get_name(self):
+    def _get_name(self) -> bytes:
         return self._name
     name = property(_get_name)
 
 
-    def _get_vol_id(self):
+    def _get_vol_id(self) -> int:
         return self._vol_id
     vol_id = property(_get_vol_id)
 
 
-    def _get_block_count(self):
+    def _get_block_count(self) -> int:
         return len(self._block_list)
     block_count = property(_get_block_count)
 
 
-    def _get_vol_rec(self):
+    def _get_vol_rec(self) -> VtblRec:
         return self._vol_rec
     vol_rec = property(_get_vol_rec)
 
     
-    def _get_block_list(self):
+    def _get_block_list(self) -> list[int]:
         return self._block_list
     block_list = property(_get_block_list)
 
 
-    def get_blocks(self, blocks):
+    def get_blocks(self, blocks: Mapping[int, Block]) -> dict[int, Block]:
         return get_blocks_in_list(blocks, self._block_list)
 
 
-    def display(self, tab=''):
+    def display(self, tab: str = '') -> str:
         return display.volume(self, tab)
 
 
-    def reader(self, ubi):
+    def reader(self, ubi: Ubi) -> Iterator[bytes]:
         last_leb = 0
         for block in sort.by_leb(self.get_blocks(ubi.blocks)):
             if block == 'x':
@@ -95,7 +104,7 @@ class description(object):
                 yield ubi.file.read_block_data(ubi.blocks[block])
 
 
-def get_volumes(blocks, layout_info):
+def get_volumes(blocks: Mapping[int, Block], layout_info: _LayoutInfo) -> dict[str, description]:
     """Get a list of UBI volume objects from list of blocks
 
     Arguments:
@@ -107,7 +116,7 @@ def get_volumes(blocks, layout_info):
     Dict -- Of Volume objects by volume name, including any
             relevant blocks.
     """
-    volumes = {}
+    volumes: dict[str, description] = {}
 
     vol_blocks_lists = sort.by_vol_id(blocks, layout_info[2])
     for vol_rec in blocks[layout_info[0]].vtbl_recs:

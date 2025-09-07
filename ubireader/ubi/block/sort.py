@@ -17,9 +17,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
+from typing import TYPE_CHECKING, Literal
 from ubireader import settings
 
-def by_image_seq(blocks, image_seq):
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from ubireader.ubi.block import description as Block
+
+def by_image_seq(blocks: Mapping[int, Block], image_seq: int) -> list[int]:
     """Filter blocks to return only those associated with the provided image_seq number.
        If uboot_fix is set, associate blocks with an image_seq of 0 also.
 
@@ -36,7 +42,7 @@ def by_image_seq(blocks, image_seq):
     else:
         return list(filter(lambda block: blocks[block].ec_hdr.image_seq == image_seq, blocks))
 
-def by_leb(blocks):
+def by_leb(blocks: Mapping[int, Block]) -> list[Literal['x'] | int]:
     """Sort blocks by Logical Erase Block number.
     
     Arguments:
@@ -46,7 +52,7 @@ def by_leb(blocks):
     List              -- Indexes of blocks sorted by LEB.
     """ 
     slist_len = len(blocks)
-    slist = ['x'] * slist_len
+    slist: list[Literal['x'] | int] = ['x'] * slist_len
 
     for block in blocks:
         if blocks[block].leb_num >= slist_len:
@@ -59,7 +65,7 @@ def by_leb(blocks):
     return slist
 
 
-def by_vol_id(blocks, slist=None):
+def by_vol_id(blocks: Mapping[int, Block], slist: list[int] | None = None) -> dict[int, list[int]]:
     """Sort blocks by volume id
 
     Arguments:
@@ -70,7 +76,7 @@ def by_vol_id(blocks, slist=None):
     Dict -- blocks grouped in lists with dict key as volume id.
     """
 
-    vol_blocks = {}
+    vol_blocks: dict[int, list[int]] = {}
 
     # sort block by volume
     # not reliable with multiple partitions (fifo)
@@ -88,7 +94,7 @@ def by_vol_id(blocks, slist=None):
 
     return vol_blocks
 
-def by_type(blocks, slist=None):
+def by_type(blocks: Mapping[int, Block], slist: list[int] | None = None) -> tuple[list[int], list[int], list[int], list[int]]:
     """Sort blocks into layout, internal volume, data or unknown
 
     Arguments:
@@ -106,10 +112,10 @@ def by_type(blocks, slist=None):
                     of crc in ed_hdr or vid_hdr.
     """
 
-    layout = []
-    data = []
-    int_vol = []
-    unknown = []
+    layout: list[int] = []
+    data: list[int] = []
+    int_vol: list[int] = []
+    unknown: list[int] = []
     
     for i in blocks:
         if slist and i not in slist:
