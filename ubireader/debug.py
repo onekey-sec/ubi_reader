@@ -17,23 +17,36 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
 import sys
 import traceback
+from typing import Literal, NoReturn, Protocol, overload
 from ubireader import settings
 
-def log(obj, message):
+class _Obj(Protocol):
+    __name__: str
+
+def log(obj: _Obj, message: str) -> None:
     if settings.logging_on or settings.logging_on_verbose:
         print('{} {}'.format(obj.__name__, message))
 
-def verbose_log(obj, message):
+def verbose_log(obj: _Obj, message: str) -> None:
     if settings.logging_on_verbose:
         log(obj, message)
 
-def verbose_display(displayable_obj):
+class _Displayable(Protocol):
+    def display(self, tab: str) -> str: ...
+
+def verbose_display(displayable_obj: _Displayable) -> None:
     if settings.logging_on_verbose:
         print(displayable_obj.display('\t'))
 
-def error(obj, level, message):
+@overload
+def error(obj: _Obj, level: Literal['fatal', 'Fatal'], message: str) -> NoReturn: ...
+@overload
+def error(obj: _Obj, level: str, message: str) -> None: ...
+
+def error(obj: _Obj, level: str, message: str) -> None:
     if settings.error_action == 'exit':
         print('{} {}: {}'.format(obj.__name__, level, message))
         if settings.fatal_traceback:

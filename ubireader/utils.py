@@ -17,13 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
 import re
 from ubireader.debug import error, log
 from ubireader.ubi.defines import UBI_EC_HDR_MAGIC, FILE_CHUNK_SZ
 from ubireader.ubifs.defines import UBIFS_NODE_MAGIC, UBIFS_SB_NODE_SZ, UBIFS_SB_NODE, UBIFS_COMMON_HDR_SZ
 from ubireader.ubifs import nodes
 
-def guess_start_offset(path, guess_offset=0):
+def guess_start_offset(path: str, guess_offset: int =0) -> int | None:
     file_offset = guess_offset
 
     f = open(path, 'rb')
@@ -60,7 +61,7 @@ def guess_start_offset(path, guess_offset=0):
     f.close()
 
 
-def guess_filetype(path, start_offset=0):
+def guess_filetype(path: str, start_offset: int = 0) -> bytes | None:
     log(guess_filetype, 'Looking for file type at %s' % start_offset)
 
     with open(path, 'rb') as f:
@@ -81,7 +82,7 @@ def guess_filetype(path, start_offset=0):
     return ftype
 
 
-def guess_leb_size(path):
+def guess_leb_size(path: str) -> int | None:
     """Get LEB size from superblock
 
     Arguments:
@@ -125,7 +126,7 @@ def guess_leb_size(path):
     return block_size
 
 
-def guess_peb_size(path):
+def guess_peb_size(path: str) -> int | None:
     """Determine the most likely block size
 
     Arguments:
@@ -138,7 +139,7 @@ def guess_peb_size(path):
         common length between them.
     """
     file_offset = 0
-    offsets = []
+    offsets: list[int] = []
     f = open(path, 'rb')
     f.seek(0,2)
     file_size = f.tell()+1
@@ -160,7 +161,7 @@ def guess_peb_size(path):
         file_offset += FILE_CHUNK_SZ
     f.close()
 
-    occurrences = {}
+    occurrences: dict[int, int] = {}
     for i in range(0, len(offsets)):
         try:
             diff = offsets[i] - offsets[i-1]

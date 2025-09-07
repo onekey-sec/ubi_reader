@@ -17,9 +17,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from ubireader.debug import error, log, verbose_log
 from ubireader.ubi.block import sort
 from ubireader.ubi.defines import UBI_VID_STATIC
+
+if TYPE_CHECKING:
+    from typing import Self # In TYPE_CHECKING block because it's only available after python 3.11
+    from collections.abc import Iterator, Mapping
+    from ubireader.ubi import ubi as Ubi
+    from ubireader.ubi.block import description as Block
 
 class ubi_file(object):
     """UBI image file object
@@ -50,7 +58,7 @@ class ubi_file(object):
     extract blocks, etc.
     """
 
-    def __init__(self, path, block_size, start_offset=0, end_offset=None):
+    def __init__(self, path: str, block_size: int, start_offset: int = 0, end_offset: int | None = None) -> None:
         self.__name__ = 'UBI_File'
         self.is_valid = False
         try:
@@ -89,54 +97,54 @@ class ubi_file(object):
         self._last_read_addr = self._fhandle.tell()
         self.is_valid = True
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
         self.close()
 
-    def _set_start(self, i):
+    def _set_start(self, i: int) -> None:
         self._start_offset = i
-    def _get_start(self):
+    def _get_start(self) -> int:
         return self._start_offset
     start_offset = property(_get_start, _set_start)
 
 
-    def _get_end(self):
+    def _get_end(self) -> int:
         return self._end_offset
     end_offset = property(_get_end)
 
 
-    def _get_block_size(self):
+    def _get_block_size(self) -> int:
         return self._block_size
     block_size = property(_get_block_size)
 
-    def close(self):
+    def close(self) -> None:
         self._fhandle.close()
 
-    def seek(self, offset):
+    def seek(self, offset: int) -> None:
         self._fhandle.seek(offset)
 
 
-    def read(self, size):
+    def read(self, size: int) -> bytes:
         self._last_read_addr = self.tell()
         verbose_log(self, 'read loc: %s, size: %s' % (self._last_read_addr, size))
         return self._fhandle.read(size)
 
 
-    def tell(self):
+    def tell(self) -> int:
         return self._fhandle.tell()
 
 
-    def last_read_addr(self):
+    def last_read_addr(self) -> int:
         return self._last_read_addr
 
 
-    def reset(self):
+    def reset(self) -> None:
         self._fhandle.seek(self.start_offset)
 
 
-    def reader(self):
+    def reader(self) -> Iterator[bytes]:
         self.reset()
         while True:
             cur_loc = self._fhandle.tell()
@@ -154,7 +162,7 @@ class ubi_file(object):
             yield buf
 
 
-    def read_block(self, block):
+    def read_block(self, block: Block) -> bytes:
         """Read complete PEB data from file.
         
         Argument:
@@ -164,7 +172,7 @@ class ubi_file(object):
         return self._fhandle.read(block.size)
 
 
-    def read_block_data(self, block):
+    def read_block_data(self, block: Block) -> bytes:
         """Read LEB data from file
         
         Argument:
@@ -180,7 +188,7 @@ class ubi_file(object):
 
 
 class leb_virtual_file():
-    def __init__(self, ubi, block_list):
+    def __init__(self, ubi: Ubi, block_list: Mapping[int, Block]) -> None:
         self.__name__ = 'leb_virtual_file'
         self.is_valid = False
         self._ubi = ubi
@@ -196,7 +204,7 @@ class leb_virtual_file():
             self.is_valid = True
 
 
-    def read(self, size):
+    def read(self, size: int) -> bytes:
         buf = ''
         leb = int(self.tell() / self._ubi.leb_size)
         offset = self.tell() % self._ubi.leb_size
@@ -227,24 +235,24 @@ class leb_virtual_file():
                 error(self, 'Fatal', 'read loc: %s, size: %s, LEB: %s, offset: %s, error: %s' % (self._last_read_addr, size, leb, offset, e))
 
 
-    def reset(self):
+    def reset(self) -> None:
         self.seek(0)
 
 
-    def seek(self, offset):
+    def seek(self, offset: int) -> None:
         self._seek = offset
 
 
-    def tell(self):
+    def tell(self) -> int:
         return self._seek
 
 
-    def last_read_addr(self):
+    def last_read_addr(self) -> int:
         """Start address of last physical file read"""
         return self._last_read_addr
 
 
-    def reader(self):
+    def reader(self) -> Iterator[bytes]:
         last_leb = 0
         for block in self._blocks:
             while 0 != (self._ubi.blocks[block].leb_num - last_leb):
