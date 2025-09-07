@@ -17,10 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from ubireader.debug import error, log, verbose_display
 from ubireader.ubifs.defines import *
 from ubireader.ubifs import nodes, display
-from typing import Optional
+
+if TYPE_CHECKING:
+    from ubireader.ubi_io import ubi_file as UbiFile, leb_virtual_file as LebVirtualFile
 
 class ubifs():
     """UBIFS object
@@ -36,7 +40,7 @@ class ubifs():
     Obj:mst_node       -- Master Node of UBIFS image LEB1
     Obj:mst_node2      -- Master Node 2 of UBIFS image LEB2
     """
-    def __init__(self, ubifs_file, master_key: Optional[bytes] = None):
+    def __init__(self, ubifs_file: UbiFile | LebVirtualFile, master_key: bytes | None = None) -> None:
         self.__name__ = 'UBIFS'
         self._file = ubifs_file
         self.master_key = master_key
@@ -59,7 +63,7 @@ class ubifs():
         except Exception as e:
             error(self, 'Fatal', 'Super block error: %s' % e)
 
-        self._mst_nodes = [None, None]
+        self._mst_nodes: list[nodes.mst_node | None] = [None, None]
         for i in range(0, 2):
             try:
                 mst_offset = self.leb_size * (UBIFS_MST_LNUM + i) 
@@ -88,12 +92,12 @@ class ubifs():
             log(self , 'Swapping Master Nodes due to bad first node.')
 
 
-    def _get_file(self):
+    def _get_file(self) -> UbiFile | LebVirtualFile:
         return self._file
     file = property(_get_file)
 
 
-    def _get_superblock(self):
+    def _get_superblock(self) -> nodes.sb_node:
         """ Superblock Node Object
 
         Returns:
@@ -103,7 +107,7 @@ class ubifs():
     superblock_node = property(_get_superblock)
 
 
-    def _get_master_node(self):
+    def _get_master_node(self) -> nodes.mst_node | None:
         """Master Node Object
 
         Returns:
@@ -113,7 +117,7 @@ class ubifs():
     master_node = property(_get_master_node)
 
 
-    def _get_master_node2(self):
+    def _get_master_node2(self) -> nodes.mst_node | None:
         """Master Node Object 2
 
         Returns:
@@ -123,7 +127,7 @@ class ubifs():
     master_node2 = property(_get_master_node2)
 
 
-    def _get_leb_size(self):
+    def _get_leb_size(self) -> int:
         """LEB size of UBI blocks in file.
 
         Returns:
@@ -133,7 +137,7 @@ class ubifs():
     leb_size = property(_get_leb_size)
 
 
-    def _get_min_io_size(self):
+    def _get_min_io_size(self) -> int:
         """Min I/O Size
 
         Returns:
@@ -142,7 +146,7 @@ class ubifs():
         return self._min_io_size
     min_io_size = property(_get_min_io_size)
     
-    def display(self, tab=''):
+    def display(self, tab: str = '') -> str:
         """Print information about this object.
         
         Argument:

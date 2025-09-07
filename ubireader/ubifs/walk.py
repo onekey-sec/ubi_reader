@@ -17,13 +17,26 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
+from collections.abc import MutableMapping
+from typing import TYPE_CHECKING, TypedDict
 from ubireader import settings
 from ubireader.ubifs import nodes
 from ubireader.ubifs.defines import *
 from ubireader.debug import error, log, verbose_log, verbose_display
 from ubireader.ubifs.decrypt import decrypt_filenames
 
-def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
+if TYPE_CHECKING:
+    from ubireader.ubifs import ubifs as Ubifs
+
+class Inode(TypedDict, total=False):
+    ino: nodes.ino_node
+    data: list[nodes.data_node]
+    dent: list[nodes.dent_node]
+    xent: list[nodes.xent_node]
+    hlink: str
+
+def index(ubifs: Ubifs, lnum: int, offset: int, inodes: MutableMapping[int, Inode] = {}, bad_blocks: list[int] = []) -> None:
     """Walk the index gathering Inode, Dir Entry, and File nodes.
 
     Arguments:
@@ -42,7 +55,7 @@ def index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
     _index(ubifs, lnum, offset, inodes, bad_blocks)
     decrypt_filenames(ubifs, inodes)
 
-def _index(ubifs, lnum, offset, inodes={}, bad_blocks=[]):
+def _index(ubifs: Ubifs, lnum: int, offset: int, inodes: MutableMapping[int, Inode] = {}, bad_blocks: list[int] = []) -> None:
     """Walk the index gathering Inode, Dir Entry, and File nodes.
 
     Arguments:

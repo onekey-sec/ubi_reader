@@ -1,12 +1,19 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from ubireader.ubifs.defines import UBIFS_XATTR_NAME_ENCRYPTION_CONTEXT
 from ubireader.debug import error
 from cryptography.hazmat.primitives.ciphers import (
    Cipher, algorithms, modes
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from ubireader.ubifs import ubifs as Ubifs, nodes
+    from ubireader.ubifs.walk import Inode
+
 AES_BLOCK_SIZE = algorithms.AES.block_size // 8
 
-def lookup_inode_nonce(inodes: dict, inode: dict) -> bytes:
+def lookup_inode_nonce(inodes: Mapping[int, Inode], inode: Inode) -> bytes | None:
     # get the extended attribute 'xent' of the inode
     if 'xent' not in inode or not inode['xent']:
         raise ValueError(f"No xent found for inode {inode}")
@@ -29,7 +36,7 @@ def derive_key_from_nonce(master_key: bytes, nonce: bytes) -> bytes:
     return derived_key
 
 
-def filename_decrypt(key: bytes, ciphertext: bytes):
+def filename_decrypt(key: bytes, ciphertext: bytes) -> bytes:
     
     # using AES CTS-CBC mode not supported by pyca cryptography 
     if len(ciphertext) > AES_BLOCK_SIZE:
@@ -59,7 +66,7 @@ def filename_decrypt(key: bytes, ciphertext: bytes):
     return plaintext.rstrip(b'\x00')
     
 
-def datablock_decrypt(block_key: bytes, block_iv: bytes, block_data: bytes):
+def datablock_decrypt(block_key: bytes, block_iv: bytes, block_data: bytes) -> bytes:
     decryptor = Cipher(
         algorithms.AES(block_key),
         modes.XTS(block_iv),
@@ -67,7 +74,7 @@ def datablock_decrypt(block_key: bytes, block_iv: bytes, block_data: bytes):
     return decryptor.update(block_data) + decryptor.finalize()
 
 
-def decrypt_filenames(ubifs, inodes):
+def decrypt_filenames(ubifs: Ubifs, inodes: Mapping[int, Inode]) -> None:
     if ubifs.master_key is None:
         for inode in inodes.values():
             for dent in inode.get('dent', []):
@@ -87,7 +94,7 @@ def decrypt_filenames(ubifs, inodes):
         error(decrypt_filenames, 'Error', str(e))
 
 
-def decrypt_symlink_target(ubifs, inodes, dent_node) -> str:
+def decrypt_symlink_target(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.dent_node) -> str:
     if ubifs.master_key is None:
         return inodes[dent_node.inum]['ino'].data.decode()
     inode = inodes[dent_node.inum]

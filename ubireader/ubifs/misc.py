@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
+from typing import TYPE_CHECKING, TypedDict
 from lzallright import LZOCompressor
 import struct
 import zlib
@@ -25,13 +27,22 @@ from ubireader.debug import error, verbose_log
 from ubireader.debug import error
 from ubireader.ubifs.decrypt import lookup_inode_nonce, derive_key_from_nonce, datablock_decrypt
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from ubireader.ubifs import ubifs as Ubifs
+    from ubireader.ubifs.walk import Inode
+
 # For happy printing
 ino_types = ['file', 'dir','lnk','blk','chr','fifo','sock']
 node_types = ['ino','data','dent','xent','trun','pad','sb','mst','ref','idx','cs','orph']
 key_types = ['ino','data','dent','xent']
 
+class ParsedKey(TypedDict):
+    type: str
+    ino_num: int
+    khash: int
 
-def parse_key(key):
+def parse_key(key: bytes) -> ParsedKey:
     """Parse node key
 
     Arguments:
@@ -51,7 +62,7 @@ def parse_key(key):
     return {'type':key_type, 'ino_num':ino_num, 'khash': khash}
 
 
-def decompress(ctype, unc_len, data):
+def decompress(ctype: int, unc_len: int, data: bytes) -> bytes | None:
     """Decompress data.
 
     Arguments:
@@ -76,7 +87,7 @@ def decompress(ctype, unc_len, data):
         return data
 
 
-def process_reg_file(ubifs, inode, path, inodes):
+def process_reg_file(ubifs: Ubifs, inode: Inode, path: str, inodes: Mapping[int, Inode]) -> bytes:
     try:
         buf = bytearray()
         start_key = (UBIFS_DATA_KEY << UBIFS_S_KEY_BLOCK_BITS)
