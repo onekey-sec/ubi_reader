@@ -17,8 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
 import os
 import struct
+from typing import TYPE_CHECKING
 
 from ubireader.ubifs.decrypt import decrypt_symlink_target
 from ubireader import settings
@@ -27,13 +29,18 @@ from ubireader.ubifs import walk
 from ubireader.ubifs.misc import process_reg_file
 from ubireader.debug import error, log, verbose_log
 
-def is_safe_path(basedir, path):
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from ubireader.ubifs import ubifs as Ubifs, nodes
+    from ubireader.ubifs.walk import Inode
+
+def is_safe_path(basedir: str, path: str) -> bool:
     basedir = os.path.realpath(basedir)
     path = os.path.realpath(os.path.join(basedir, path))
     return True if path.startswith(basedir) else False
 
 
-def extract_files(ubifs, out_path, perms=False):
+def extract_files(ubifs: Ubifs, out_path: str, perms: bool = False) -> None:
     """Extract UBIFS contents to_path/
 
     Arguments:
@@ -41,8 +48,8 @@ def extract_files(ubifs, out_path, perms=False):
     Str:out_path  -- Path to extract contents to.
     """
     try:
-        inodes = {}
-        bad_blocks = []
+        inodes: dict[int, Inode] = {}
+        bad_blocks: list[int] = []
 
         walk.index(ubifs, ubifs.master_node.root_lnum, ubifs.master_node.root_offs, inodes, bad_blocks)
 
@@ -59,7 +66,7 @@ def extract_files(ubifs, out_path, perms=False):
         error(extract_files, 'Error', '%s' % e)
 
 
-def extract_dents(ubifs, inodes, dent_node, path='', perms=False):
+def extract_dents(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.dent_node, path: str = '', perms: bool = False) -> None:
     if dent_node.inum not in inodes:
         error(extract_dents, 'Error', 'inum: %s not found in inodes' % (dent_node.inum))
         return

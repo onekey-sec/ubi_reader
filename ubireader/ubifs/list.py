@@ -17,25 +17,30 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
 import os
 import time
-import struct
+from typing import TYPE_CHECKING
 from ubireader.ubifs.decrypt import decrypt_symlink_target
 from ubireader.ubifs.defines import *
 from ubireader.ubifs import walk
 from ubireader.ubifs.misc import process_reg_file
 from ubireader.debug import error
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from ubireader.ubifs import ubifs as Ubifs, nodes
+    from ubireader.ubifs.walk import Inode
 
-def list_files(ubifs, list_path):
+def list_files(ubifs: Ubifs, list_path: str) -> None:
     pathnames = list_path.split("/")
-    pnames = []
+    pnames: list[str] = []
     for i in pathnames:
         if len(i) > 0:
             pnames.append(i)
     try:
-        inodes = {}
-        bad_blocks = []
+        inodes: dict[int, Inode] = {}
+        bad_blocks: list[int] = []
 
         walk.index(ubifs, ubifs.master_node.root_lnum, ubifs.master_node.root_offs, inodes, bad_blocks)
 
@@ -60,9 +65,9 @@ def list_files(ubifs, list_path):
         error(list_files, 'Error', '%s' % e)
 
 
-def copy_file(ubifs, filepath, destpath):
+def copy_file(ubifs: Ubifs, filepath: str, destpath: str) -> bool:
     pathnames = filepath.split("/")
-    pnames = []
+    pnames: list[str] = []
     for i in pathnames:
         if len(i) > 0:
             pnames.append(i)
@@ -70,8 +75,8 @@ def copy_file(ubifs, filepath, destpath):
     filename = pnames[len(pnames)-1]
     del pnames[-1]
 
-    inodes = {}
-    bad_blocks = []
+    inodes: dict[int, Inode] = {}
+    bad_blocks: list[int] = []
 
     walk.index(ubifs, ubifs.master_node.root_lnum, ubifs.master_node.root_offs, inodes, bad_blocks)
 
@@ -97,7 +102,7 @@ def copy_file(ubifs, filepath, destpath):
     return False
 
 
-def find_dir(inodes, inum, names, idx):
+def find_dir(inodes: Mapping[int, Inode], inum: int, names: list[str], idx: int) -> int | None:
     if len(names) == 0:
         return 1
     for dent in inodes[inum]['dent']:
@@ -109,7 +114,7 @@ def find_dir(inodes, inum, names, idx):
     return None
 
 
-def print_dent(ubifs, inodes, dent_node, long=True, longts=False):
+def print_dent(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.dent_node, long: bool = True, longts: bool = False) -> None:
     inode = inodes[dent_node.inum]
     if long:
         fl = file_leng(ubifs, inode)
@@ -128,7 +133,7 @@ def print_dent(ubifs, inodes, dent_node, long=True, longts=False):
         print(dent_node.name)
 
 
-def file_leng(ubifs, inode):
+def file_leng(ubifs: Ubifs, inode: Inode) -> int:
     fl = 0
     if 'data' in inode:
         compr_type = 0

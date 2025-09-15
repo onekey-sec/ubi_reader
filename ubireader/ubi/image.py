@@ -17,13 +17,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from ubireader.debug import log
 from ubireader.ubi import display
 from ubireader.ubi.volume import get_volumes
 from ubireader.ubi.block import get_blocks_in_list
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from ubireader.ubi.block import description as Block
+    from ubireader.ubi.block.layout import _LayoutInfo
+    from ubireader.ubi.volume import description as Volume
+
 class description(object):
-    def __init__(self, blocks, layout_info):
+    def __init__(self, blocks: dict[int, Block], layout_info: _LayoutInfo) -> None:
         self._image_seq = blocks[layout_info[0]].ec_hdr.image_seq
         self.vid_hdr_offset = blocks[layout_info[0]].ec_hdr.vid_hdr_offset
         self.version = blocks[layout_info[0]].ec_hdr.version
@@ -33,28 +41,28 @@ class description(object):
         self._volumes = get_volumes(blocks, layout_info)
         log(description, 'Created Image: %s, Volume Cnt: %s' % (self.image_seq, len(self.volumes)))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Image: %s' % (self.image_seq)
 
 
-    def get_blocks(self, blocks):
+    def get_blocks(self, blocks: Mapping[int, Block]) -> dict[int, Block]:
         return get_blocks_in_list(blocks, self._block_list)
 
 
-    def _get_peb_range(self):
+    def _get_peb_range(self) -> list[int]:
         return [self._start_peb, self._end_peb]
     peb_range = property(_get_peb_range)
 
 
-    def _get_image_seq(self):
+    def _get_image_seq(self) -> int:
         return self._image_seq
     image_seq = property(_get_image_seq)
 
 
-    def _get_volumes(self):
+    def _get_volumes(self) -> dict[str, Volume]:
         return self._volumes
     volumes = property(_get_volumes)
 
 
-    def display(self, tab=''):
+    def display(self, tab: str = '') -> str:
         return display.image(self, tab)

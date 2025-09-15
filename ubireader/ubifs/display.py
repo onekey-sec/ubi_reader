@@ -17,16 +17,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from ubireader.ubifs.defines import PRINT_UBIFS_FLGS, PRINT_UBIFS_MST
 
-def ubifs(ubifs, tab=''):
+if TYPE_CHECKING:
+    from ubireader.ubifs import ubifs as Ubifs
+    from ubireader.ubifs import nodes
+
+def ubifs(ubifs: Ubifs, tab: str = '') -> str:
     buf = '%sUBIFS Image\n' % (tab)
     buf += '%s---------------------\n' % (tab)
     buf += '%sMin I/O: %s\n' % (tab, ubifs.min_io_size)
     buf += '%sLEB Size: %s\n' % (tab, ubifs.leb_size)
     return buf
 
-def common_hdr(chdr, tab=''):
+def common_hdr(chdr: nodes.common_hdr, tab: str = '') -> str:
     buf = '%s%s\n' % (tab, chdr)
     buf += '%s---------------------\n' % (tab)
     tab += '\t'
@@ -41,7 +47,7 @@ def common_hdr(chdr, tab=''):
             buf += '%s%s: %r\n' % (tab, key, value)
     return buf
 
-def sb_node(node, tab=''):
+def sb_node(node: nodes.sb_node, tab: str = '') -> str:
     buf = '%s%s\n' % (tab, node)
     buf += '%sFile offset: %s\n' % (tab, node.file_offset)
     buf += '%s---------------------\n' % (tab)
@@ -69,7 +75,7 @@ def sb_node(node, tab=''):
     return buf
 
 
-def mst_node(node, tab=''):
+def mst_node(node: nodes.mst_node, tab: str = '') -> str:
     buf = '%s%s\n' % (tab, node)
     buf += '%sFile offset: %s\n' % (tab, node.file_offset)
     buf += '%s---------------------\n' % (tab)
@@ -94,7 +100,7 @@ def mst_node(node, tab=''):
     return buf
 
 
-def dent_node(node, tab=''):
+def dent_node(node: nodes.dent_node, tab: str = '') -> str:
     buf = '%s%s\n' % (tab, node)
     buf += '%s---------------------\n' % (tab)
     tab += '\t'
@@ -108,7 +114,7 @@ def dent_node(node, tab=''):
     return buf
 
 
-def data_node(node, tab=''):
+def data_node(node: nodes.data_node, tab: str = '') -> str:
     buf = '%s%s\n' % (tab, node)
     buf += '%s---------------------\n' % (tab)
     tab += '\t'
@@ -122,7 +128,7 @@ def data_node(node, tab=''):
     return buf
 
 
-def idx_node(node, tab=''):
+def idx_node(node: nodes.idx_node, tab: str = '') -> str:
     buf = '%s%s\n' % (tab, node)
     buf += '%s---------------------\n' % (tab)
     tab += '\t'
@@ -136,7 +142,7 @@ def idx_node(node, tab=''):
     return buf
 
 
-def ino_node(node, tab=''):
+def ino_node(node: nodes.ino_node, tab: str = '') -> str:
     buf = '%s%s\n' % (tab, node)
     buf += '%s---------------------\n' % (tab)
     tab += '\t'
@@ -150,7 +156,7 @@ def ino_node(node, tab=''):
     return buf
 
 
-def branch(node, tab=''):
+def branch(node: nodes.branch, tab: str = '') -> str:
     buf = '%s%s\n' % (tab, node)
     buf += '%s---------------------\n' % (tab)
     tab += '\t'

@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from zlib import crc32
 from ubireader import settings
 from ubireader.debug import error, log, verbose_display, verbose_log
@@ -24,6 +26,10 @@ from ubireader.ubi import display
 from ubireader.ubi.defines import UBI_EC_HDR_SZ, UBI_VID_HDR_SZ, UBI_INTERNAL_VOL_START, UBI_EC_HDR_MAGIC, UBI_CRC32_INIT
 from ubireader.ubi.headers import ec_hdr, vid_hdr, vtbl_recs
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+    from ubireader.ubi import ubi_base as UbiBase
+    from ubireader.ubi.headers import _vtbl_rec as VtblRec
 
 class description(object):
     """UBI Block description Object
@@ -48,16 +54,18 @@ class description(object):
     Will print out all information when invoked as a string.
     """
 
-    def __init__(self, block_buf):
+    data_crc: int
+
+    def __init__(self, block_buf: bytes) -> None:
  
         self.file_offset = -1
         self.peb_num = -1
         self.leb_num = -1
         self.size = -1
 
-        self.vid_hdr = None
+        self.vid_hdr: vid_hdr | None = None
         self.is_internal_vol = False
-        self.vtbl_recs = []
+        self.vtbl_recs: list[VtblRec] = []
 
         # TODO better understanding of block types/errors
         self.ec_hdr = ec_hdr(block_buf[0:UBI_EC_HDR_SZ])
@@ -77,16 +85,16 @@ class description(object):
         self.is_valid = not self.ec_hdr.errors and not self.vid_hdr.errors or settings.ignore_block_header_errors
 
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Block: PEB# %s: LEB# %s' % (self.peb_num, self.leb_num)
 
 
-    def display(self, tab=''):
+    def display(self, tab: str ='') -> str:
         return display.block(self, tab)
 
 
 
-def get_blocks_in_list(blocks, idx_list):
+def get_blocks_in_list(blocks: Mapping[int, description], idx_list: Iterable[int]) -> dict[int, description]:
     """Retrieve block objects in list of indexes
 
     Arguments:
@@ -103,7 +111,7 @@ def get_blocks_in_list(blocks, idx_list):
 
 
 
-def extract_blocks(ubi):
+def extract_blocks(ubi: UbiBase) -> dict[int, description]:
     """Get a list of UBI block objects from file
 
     Arguments:.
@@ -113,11 +121,11 @@ def extract_blocks(ubi):
     Dict -- Of block objects keyed by PEB number.
     """
 
-    blocks = {}
+    blocks: dict[int, description] = {}
     ubi.file.seek(ubi.file.start_offset)
     peb_count = 0
     cur_offset = 0
-    bad_blocks = []
+    bad_blocks: list[int] = []
 
     # range instead of xrange, as xrange breaks > 4GB end_offset.
     for i in range(ubi.file.start_offset, ubi.file.end_offset, ubi.file.block_size):
@@ -157,8 +165,8 @@ def extract_blocks(ubi):
     return blocks
 
 
-def rm_old_blocks(blocks, block_list):
-    del_blocks = []
+def rm_old_blocks(blocks: Mapping[int, description], block_list: Iterable[int]) -> list[int]:
+    del_blocks: list[int] = []
 
     for i in block_list:
         if i in del_blocks:

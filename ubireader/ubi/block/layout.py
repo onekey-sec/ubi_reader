@@ -17,10 +17,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
+from typing import TYPE_CHECKING, Literal, Protocol, overload
 from ubireader.debug import log
 from ubireader.ubi.block import sort
 
-def group_pairs(blocks, layout_blocks_list):
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+    from ubireader.ubi.block import description as Block
+
+class _LayoutPair(Protocol):
+    def __getitem__(self, idx: Literal[0, 1], /) -> int: ...
+    def __contains__(self, key: object, /) -> bool: ...
+
+def group_pairs(blocks: Mapping[int, Block], layout_blocks_list: Iterable[int]) -> list[_LayoutPair]:
     """Sort a list of layout blocks into pairs
 
     Arguments:
@@ -31,7 +41,7 @@ def group_pairs(blocks, layout_blocks_list):
     List -- Layout block pair indexes grouped in a list
     """
 
-    image_dict={}
+    image_dict: dict[int, _LayoutPair] = {}
     for block_id in layout_blocks_list:
         image_seq=blocks[block_id].ec_hdr.image_seq
         if image_seq not in image_dict:
@@ -43,8 +53,13 @@ def group_pairs(blocks, layout_blocks_list):
 
     return list(image_dict.values())
 
+class _LayoutInfo(_LayoutPair, Protocol):
+    @overload
+    def __getitem__(self, idx: Literal[0, 1], /) -> int: ...
+    @overload
+    def __getitem__(self, idx: Literal[2], /) -> list[int]: ...
 
-def associate_blocks(blocks, layout_pairs):
+def associate_blocks(blocks: Mapping[int, Block], layout_pairs: list[_LayoutPair]) -> list[_LayoutInfo]:
     """Group block indexes with appropriate layout pairs
 
     Arguments:
@@ -55,7 +70,7 @@ def associate_blocks(blocks, layout_pairs):
     List -- Layout block pairs grouped with associated block ranges.
     """
 
-    seq_blocks = []
+    seq_blocks: list[int] = []
     for layout_pair in layout_pairs:
         seq_blocks = sort.by_image_seq(blocks, blocks[layout_pair[0]].ec_hdr.image_seq)
         seq_blocks = [b for b in seq_blocks if b not in layout_pair]
