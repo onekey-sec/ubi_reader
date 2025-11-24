@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "ubireader"}]
 
 [tool.poetry.dependencies]
-python = ">=3.9.2"
+python = ">=3.10"
 lzallright = "^0.2.1"
 cryptography = "^44.0.2"
 
