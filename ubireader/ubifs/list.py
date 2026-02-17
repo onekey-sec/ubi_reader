@@ -54,15 +54,10 @@ def list_files(ubifs: Ubifs, list_path: PurePath | str, *, recursive: bool = Fal
             return
 
         for dent in inodes[inum]['dent']:
-            print_dent(
-                ubifs,
-                inodes,
-                dent,
-                longts=False,
-                recursive=recursive,
-                # Only show absolute paths if recursive
-                dent_path=(list_path / dent.name) if recursive else None,
-            )
+            if recursive:
+                print_dent_recursive(ubifs, inodes, dent, longts=False, dent_path=list_path / dent.name)
+            else:
+                print_dent(ubifs, inodes, dent, longts=False, dent_path=None)
         
         if len(bad_blocks):
             error(list_files, 'Warn', 'Data may be missing or corrupted, bad blocks, LEB [%s]' % ','.join(map(str, bad_blocks)))
@@ -120,6 +115,26 @@ def find_dir(inodes: Mapping[int, Inode], inum: int, names: list[str], idx: int)
     return None
 
 
+def print_dent_recursive(
+    ubifs: Ubifs,
+    inodes: Mapping[int, Inode],
+    dent_node: nodes.dent_node,
+    long: bool,
+    longts: bool,
+    *,
+    dent_path: PurePath,
+) -> None:
+    inode = inodes[dent_node.inum]
+
+    print_dent(ubifs, inodes, dent_node, long=long, longts=longts, dent_path=dent_path)
+
+    if dent_node.type != UBIFS_ITYPE_DIR:
+        return
+
+    for dnode in inode.get('dent', []):
+        print_dent_recursive(ubifs, inodes, dnode, long=long, longts=longts, dent_path=dent_path / dnode.name)
+
+
 def print_dent(
     ubifs: Ubifs,
     inodes: Mapping[int, Inode],
@@ -127,7 +142,6 @@ def print_dent(
     long: bool = True,
     longts: bool = False,
     *,
-    recursive: bool = False,
     # Path of the directory entry
     dent_path: PurePath | None = None,
 ) -> None:
@@ -151,17 +165,6 @@ def print_dent(
     else:
         print(display_path)
 
-    if recursive and dent_node.type == UBIFS_ITYPE_DIR:
-        for dnode in inode.get('dent', []):
-            print_dent(
-                ubifs,
-                inodes,
-                dnode,
-                long=long,
-                longts=longts,
-                recursive=recursive,
-                dent_path=dent_path / dnode.name if dent_path is not None else None,
-            )
 
 def file_leng(ubifs: Ubifs, inode: Inode) -> int:
     fl = 0
