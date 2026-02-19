@@ -18,10 +18,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #############################################################
 
+from __future__ import annotations
 import os
 import sys
 import time
 import argparse
+from typing import Protocol, cast
 
 from ubireader import settings
 from ubireader.ubi import ubi
@@ -32,6 +34,23 @@ from ubireader.ubifs.defines import UBIFS_NODE_MAGIC
 from ubireader.ubi_io import ubi_file, leb_virtual_file
 from ubireader.debug import error, log
 from ubireader.utils import guess_filetype, guess_start_offset, guess_leb_size, guess_peb_size
+
+class _Args(Protocol):
+    log: bool
+    verbose: bool
+    block_size: int | None
+    start_offset: int | None
+    end_offset: int | None
+    guess_offset: int | None
+    warn_only_block_read_errors: bool
+    ignore_block_header_errors: bool
+    uboot_fix: bool
+    listpath: str | None
+    copyfile: str | None
+    copyfiledest: str | None
+    master_key: str | None
+    recursive: bool
+    filepath: str
 
 def main():
     start = time.time()
@@ -81,13 +100,16 @@ def main():
     parser.add_argument('-K', '--master-key', dest='master_key',
                       help='Master key file, given with fscryptctl e.g. to encrypt the UBIFS (support limited to fscrypt v1 policies)')
 
+    parser.add_argument('-r', '--recursive', action='store_true',
+                        help='List files recursively and show absolute paths.')
+
     parser.add_argument('filepath', help='UBI/UBIFS image file.')
 
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
 
-    args = parser.parse_args()
+    args = cast(_Args, parser.parse_args())
 
     settings.logging_on = args.log
 
@@ -98,6 +120,9 @@ def main():
     settings.ignore_block_header_errors = args.ignore_block_header_errors
 
     settings.uboot_fix = args.uboot_fix
+
+    if args.recursive and not args.listpath:
+        parser.error("Recursive option needs a path to start with.")
 
     if args.master_key:
         path = args.master_key
@@ -173,7 +198,7 @@ def main():
                 ubifs_obj = ubifs(lebv_file, master_key=master_key)
 
                 if args.listpath:
-                    list_files(ubifs_obj, args.listpath)
+                    list_files(ubifs_obj, args.listpath, recursive=args.recursive)
                 if args.copyfile and args.copyfiledest:
                     copy_file(ubifs_obj, args.copyfile, args.copyfiledest)
 
@@ -182,7 +207,7 @@ def main():
         ubifs_obj = ubifs(ufile_obj, master_key=master_key)
 
         if args.listpath:
-            list_files(ubifs_obj, args.listpath)
+            list_files(ubifs_obj, args.listpath, recursive=args.recursive)
         if args.copyfile and args.copyfiledest:
             copy_file(ubifs_obj, args.copyfile, args.copyfiledest)
 
