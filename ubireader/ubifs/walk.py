@@ -90,6 +90,12 @@ def _index(ubifs: Ubifs, lnum: int, offset: int, inodes: MutableMapping[int, Ino
     log(index , '%s file addr: %s' % (chdr, ubifs.file.last_read_addr()))
     verbose_display(chdr)
     read_size = chdr.len - UBIFS_COMMON_HDR_SZ
+    if read_size < 0:
+        if settings.warn_only_block_read_errors:
+            error(index, 'Error', 'LEB: %s at %s, Node len (%s) < common header size, skipping.' % (lnum, ubifs.leb_size * lnum + offset, chdr.len))
+            return
+        else:
+            error(index, 'Fatal', 'LEB: %s at %s, Node len (%s) < common header size.' % (lnum, ubifs.leb_size * lnum + offset, chdr.len))
     node_buf = ubifs.file.read(read_size)
     file_offset = ubifs.file.last_read_addr()
 
