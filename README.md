@@ -26,7 +26,7 @@ This branch will probably remain seperate, as it is meant to be customized to ai
 
 Latest Version
 
-    $ git clone https://github.com/jrspruitt/ubi_reader
+    $ git clone https://github.com/onekey-sec/ubi_reader
     $ cd ubi_reader
     $ poetry install
 
