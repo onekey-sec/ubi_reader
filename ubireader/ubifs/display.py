@@ -99,6 +99,14 @@ def mst_node(node: nodes.mst_node, tab: str = '') -> str:
             buf += '%s%s: %r\n' % (tab, key, value)
     return buf
 
+def pad_node(node, tab=''):
+    buf = '%s%s\n' % (tab, node)
+    buf += '%sFile offset: %s\n' % (tab, node.file_offset)
+    buf += '%s---------------------\n' % (tab)
+    tab += '\t'
+    for key, value in node:
+        buf += '%s%s: %r\n' % (tab, key, value)
+    return buf
 
 def dent_node(node: nodes.dent_node, tab: str = '') -> str:
     buf = '%s%s\n' % (tab, node)
