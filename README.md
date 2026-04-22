@@ -5,9 +5,9 @@ determine the parameter settings to recreate them using the mtd-utils tools.
 
 
 ### Known Issues
-These are some known issues, that prevent an exact data dump from occuring.
+These are some known issues, that prevent an exact data dump from occurring.
 
-* This does not replay the journal, so uncommited data will not be retrieved. Data can be in the journal with both clean and unclean shutdowns.
+* This does not replay the journal, so uncommitted data will not be retrieved. Data can be in the journal with both clean and unclean shutdowns.
 
 * Depending on how the NAND was dumped, the data bits may not be error corrected.
 
@@ -19,7 +19,7 @@ The testing branch includes a tools/ directory, that has scripts to help when tr
 
 An override system is also included, for manually setting certain parameters that may be reported wrong by the UBI/FS data.
 
-This branch will probably remain seperate, as it is meant to be customized to aid in extracting data from problematic images. You can install it with 'python setup.py develop' to make it easier to modify ubi_reader as needed.
+This branch will probably remain separate, as it is meant to be customized to aid in extracting data from problematic images. You can install it with 'python setup.py develop' to make it easier to modify ubi_reader as needed.
 
 
 ## Installation:
@@ -27,7 +27,7 @@ This branch will probably remain seperate, as it is meant to be customized to ai
 Latest Version
 
     $ git clone https://github.com/onekey-sec/ubi_reader
-    $ cd ubi_reader
+    $ autocomplete_ubi_reader
     $ poetry install
 
 Or
@@ -47,7 +47,7 @@ Run program with -h or --help for explanation of options.
     ubireader_extract_files [options] path/to/file
 
 The script accepts a file with UBI or UBIFS data in it, so should work with a NAND
-dump. It will search for the first occurance of UBI or UBIFS data and attempt to
+dump. It will search for the first occurrence of UBI or UBIFS data and attempt to
 extract the contents. If file includes special files, you will need to run as
 root or sudo for it to create these files. With out it, it'll skip them and show a
 warning that these files were not created.
@@ -56,7 +56,7 @@ warning that these files were not created.
     ubireader_list_files [options] path/to/file
 
 The script accepts a file with UBI or UBIFS data in it, so should work with a NAND
-dump. It will search for the first occurance of UBI or UBIFS data and treat it as
+dump. It will search for the first occurrence of UBI or UBIFS data and treat it as
 a UBIFS. To list files supply the path to list (-P, --path), e.g. "-P /" to list
 the filesystems root directory. To copy a file from the filesystem to a local directory
 supply the source path (-C, --copy) and the destination path (-D, --copy-dest),
@@ -90,7 +90,7 @@ option, it will get the UBIFS info from inside a UBI file instead.
 
 Search for and display block information. This can be used for debugging failed image
 and file extractions. The blocks are searched for using a double quoted Python Dict of
-search paramaters, example. "{'peb_num':[0, 1] + range(100, 102), 'ec_hdr.ec': 1, 'is_valid': True}"
+search parameters, example. "{'peb_num':[0, 1] + range(100, 102), 'ec_hdr.ec': 1, 'is_valid': True}"
 This will find PEBs 0, 1, 100, 101, 102, with an erase count of 1 that is a valid block.
 Can use any of the parameters in ubireader.ubi.block.description.
 
