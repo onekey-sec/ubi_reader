@@ -47,7 +47,7 @@ Run program with -h or --help for explanation of options.
     ubireader_extract_files [options] path/to/file
 
 The script accepts a file with UBI or UBIFS data in it, so should work with a NAND
-dump. It will search for the first occurance of UBI or UBIFS data and attempt to
+dump. It will search for the first occurrence of UBI or UBIFS data and attempt to
 extract the contents. If file includes special files, you will need to run as
 root or sudo for it to create these files. With out it, it'll skip them and show a
 warning that these files were not created.
@@ -56,7 +56,7 @@ warning that these files were not created.
     ubireader_list_files [options] path/to/file
 
 The script accepts a file with UBI or UBIFS data in it, so should work with a NAND
-dump. It will search for the first occurance of UBI or UBIFS data and treat it as
+dump. It will search for the first occurrence of UBI or UBIFS data and treat it as
 a UBIFS. To list files supply the path to list (-P, --path), e.g. "-P /" to list
 the filesystems root directory. To copy a file from the filesystem to a local directory
 supply the source path (-C, --copy) and the destination path (-D, --copy-dest),
