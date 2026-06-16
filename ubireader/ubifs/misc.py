@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, TypedDict
 from lzallright import LZOCompressor
 import struct
 import zlib
+import zstandard
 from ubireader.ubifs.defines import *
 from ubireader.debug import error, verbose_log
 from ubireader.debug import error
@@ -66,9 +67,9 @@ def decompress(ctype: int, unc_len: int, data: bytes) -> bytes | None:
     """Decompress data.
 
     Arguments:
-    Int:ctype    -- Compression type LZO, ZLIB (*currently unused*).
-    Int:unc_len  -- Uncompressed data lenth.
-    Str:data     -- Data to be uncompessed.
+    Int:ctype    -- Compression type LZO, ZLIB, or ZSTD.
+    Int:unc_len  -- Uncompressed data length.
+    Str:data     -- Data to be uncompressed.
 
     Returns:
     Uncompressed Data.
@@ -83,6 +84,11 @@ def decompress(ctype: int, unc_len: int, data: bytes) -> bytes | None:
             return zlib.decompress(data, -11)
         except Exception as e:
             error(decompress, 'Warn', 'ZLib Error: %s' % e)
+    elif ctype == UBIFS_COMPR_ZSTD:
+        try:
+            return zstandard.decompress(data, max_output_size=unc_len)
+        except Exception as e:
+            error(decompress, 'Warn', 'ZSTD Error: %s' % e)
     else:
         return data
 
