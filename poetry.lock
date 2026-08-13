@@ -163,29 +163,29 @@ ssh = ["bcrypt (>=3.1.5)"]
 
 [[package]]
 name = "lzallright"
-version = "0.2.5"
+version = "0.2.6"
 description = "A Python 3.8+ binding for LZ👌(lzokay) library"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "lzallright-0.2.5-cp313-cp313t-macosx_10_12_x86_64.whl", hash = "sha256:3360c54fed202bd3583d9ef9cbaa2bc44663ab5e77978791de902a1bdab5f53b"},
-    {file = "lzallright-0.2.5-cp313-cp313t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fe9e6d803f50674745b1cc4197be5ead36e1bd0e38a0885ec0e8f05e93de4ad5"},
-    {file = "lzallright-0.2.5-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6b4e1258718e2790c5f14cfb0f8d4e0b948a68e2171179c575bdf0e1cf5f070d"},
-    {file = "lzallright-0.2.5-cp313-cp313t-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:c4997803b2b5228ea111bd8bef3a78379ca2e35f474a2fd7359a7a90e994c861"},
-    {file = "lzallright-0.2.5-cp313-cp313t-musllinux_1_1_aarch64.whl", hash = "sha256:c578de078ea1ed7906e4b9e062a971129496019a9ed877bf6e44d632980cdddd"},
-    {file = "lzallright-0.2.5-cp313-cp313t-musllinux_1_1_x86_64.whl", hash = "sha256:1222bfb03c2fa613f6fbb6759ec07c0af730d469c11cfc72bd8194c0618a85dc"},
-    {file = "lzallright-0.2.5-cp313-cp313t-win_amd64.whl", hash = "sha256:2d6c0db359629cf498f7fdf39b78f87ad06b885df2454016a69ee6b58d698e34"},
-    {file = "lzallright-0.2.5-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:825cd3761d95f8a443dadb31735efe161026a3bb5ee1634fd5a4e63ee0c72290"},
-    {file = "lzallright-0.2.5-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:bd1a248f7af1bd98772768c34d568eb198308d41b1675e7bbdddcad0e898a856"},
-    {file = "lzallright-0.2.5-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:77bb5e62bd126909aa3b60fc1ca352ee909d24d9d73f90a8633eaba7627a7896"},
-    {file = "lzallright-0.2.5-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:85928e0a2a32c95d47506555e07a5eb96c0316258442f9c2bacc501574e4fcf6"},
-    {file = "lzallright-0.2.5-cp38-abi3-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:c4f23e1c55947a5aa67dbf8f78ef590876c23cae130a3cbbaca862a65ec9c19a"},
-    {file = "lzallright-0.2.5-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:7585ac3e2c2b7a82480c9498f4ea0f7152ace2d328dd43faf30bb2c18d3ca9c3"},
-    {file = "lzallright-0.2.5-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:68b570361fe56d036f9110cd64f47d9303020a3e6d2d4cf8efb6986669cfcf3c"},
-    {file = "lzallright-0.2.5-cp38-abi3-win32.whl", hash = "sha256:cce0d98146c6c2eac4b07b0174f78e2a2633925d55f553f4efc5b7c6eea01627"},
-    {file = "lzallright-0.2.5-cp38-abi3-win_amd64.whl", hash = "sha256:0d95c33137e7c1f38129c2e746fb6a5d079bf2112a264b141fd7eebc39923290"},
-    {file = "lzallright-0.2.5.tar.gz", hash = "sha256:e467cb21b58669c1d2f00ba714230ec8133c302e52006038186098ffd02fafd7"},
+    {file = "lzallright-0.2.6-cp313-cp313t-macosx_10_12_x86_64.whl", hash = "sha256:d3945571f95292abcd20bf771b89c0790f3a819febab80336fa97d37f11ffd2f"},
+    {file = "lzallright-0.2.6-cp313-cp313t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5e9f6f6ea4a00ed6767b984b10edbb076707efcf3a83e29a819cc6467c8d3b6f"},
+    {file = "lzallright-0.2.6-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:10549563dcc9360a3e6c622ef79a91b9ed0e11fa3ff5ca7a4a19de436841c97d"},
+    {file = "lzallright-0.2.6-cp313-cp313t-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:af34c732607aa95a4c791b1e7b65088433d98d02d373a73be7a0b2a12112583b"},
+    {file = "lzallright-0.2.6-cp313-cp313t-musllinux_1_1_aarch64.whl", hash = "sha256:80a4cd499c9a3e20b1e65682afae402ee17ff135e84cca347ae87149fb285348"},
+    {file = "lzallright-0.2.6-cp313-cp313t-musllinux_1_1_x86_64.whl", hash = "sha256:2c59c0375cb4893f8b15745a92b8f9b8c3612f99a91e981c2d464e7d81be1c2d"},
+    {file = "lzallright-0.2.6-cp313-cp313t-win_amd64.whl", hash = "sha256:32056f4305289f7b319c1c4599976ba076d08c2e0c09e7624dc22870b4417215"},
+    {file = "lzallright-0.2.6-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:c6ffcda4ae2868c97b6bb3de03ad478c9b64a1025bd204e295e377b5370c6379"},
+    {file = "lzallright-0.2.6-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:d5895100ddd2bc55cf85b0743c2c7797bd49fd0f2ff90bbdde6fb99a34cb586b"},
+    {file = "lzallright-0.2.6-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c733d7cbcd253c1ae70b49164b047e24db0f797148a2fda976663e34e3245114"},
+    {file = "lzallright-0.2.6-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bad91a3b9dde691a1aef2201f5d5dfa478ded10095383f76504532859a84fb48"},
+    {file = "lzallright-0.2.6-cp38-abi3-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:d85ce6456a9fd546752e98cc81337eb8b9c22ef583d9c43eec079ed221f3c8b4"},
+    {file = "lzallright-0.2.6-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:e73574775f3b34172fef0c8c04c469aff43aaa181dc27e5f6cbcc6531fe87111"},
+    {file = "lzallright-0.2.6-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:e765d575792746d9c08d2f3b8daa18fbb9c921eb74e7fff52f58991688e539be"},
+    {file = "lzallright-0.2.6-cp38-abi3-win32.whl", hash = "sha256:5719ba092d1ba7157e8236fdff9e82b6186aaf23d8d23c994f3b1cd31b83dd9a"},
+    {file = "lzallright-0.2.6-cp38-abi3-win_amd64.whl", hash = "sha256:0022a1bbaac84380fe1a143066cbd535b42563cbe39c38b2435b1d96a06d9ff4"},
+    {file = "lzallright-0.2.6.tar.gz", hash = "sha256:15917d4e5aadf601b58da0bbf034c5715853fffe843a3ee4b5040ae0e5d954ad"},
 ]
 
 [[package]]
@@ -329,4 +329,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "8afd0b5e1d4a1942e1a5c6215a6689b5784d948c4a96a9a6e324ed459e1dbb90"
+content-hash = "4f51c7976d76c296be0f001986fe9005429087002acbcb32d2b62dd921bb388e"
