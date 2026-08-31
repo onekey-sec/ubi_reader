@@ -53,6 +53,9 @@ def main():
     parser.add_argument('-k', '--keep-permissions', action='store_true', dest='permissions',
                       help='Maintain file permissions, requires running as root. (default: False)')
 
+    parser.add_argument('-x', '--preserve-xattr', action='store_true', dest='xattrs',
+                      help='Restore extended attributes and file metadata (e.g. security.ima/security.evm), requires running as root. (default: False)')
+
     parser.add_argument('-l', '--log', action='store_true', dest='log',
                       help='Print extraction information to screen.')
 
@@ -157,7 +160,11 @@ def main():
         if not block_size:
             parser.error('Block size could not be determined.')
 
-    perms = args.permissions
+    # EVM attributes authenticate ownership and mode.  Enable metadata
+    # preservation whenever xattrs are requested so a restored EVM signature
+    # is valid even if --keep-permissions was omitted.
+    perms = args.permissions or args.xattrs
+    xattrs = args.xattrs
 
     # Create file object.
     ufile_obj = ubi_file(path, block_size, start_offset, end_offset)
@@ -197,7 +204,7 @@ def main():
                 # Extract files from UBI image.
                 ubifs_obj = ubifs(lebv_file, master_key=master_key)
                 print('Extracting files to: %s' % vol_outpath)
-                extract_files(ubifs_obj, vol_outpath, perms)
+                extract_files(ubifs_obj, vol_outpath, perms, xattrs)
 
 
     elif filetype == UBIFS_NODE_MAGIC:
@@ -209,7 +216,7 @@ def main():
 
         # Extract files from UBIFS image.
         print('Extracting files to: %s' % outpath)
-        extract_files(ubifs_obj, outpath, perms)
+        extract_files(ubifs_obj, outpath, perms, xattrs)
 
     else:
         print('Something went wrong to get here.')

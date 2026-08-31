@@ -40,14 +40,24 @@ def is_safe_path(basedir: str, path: str) -> bool:
     return True if path.startswith(basedir) else False
 
 
-def extract_files(ubifs: Ubifs, out_path: str, perms: bool = False) -> None:
+def extract_files(ubifs: Ubifs, out_path: str, perms: bool = False, xattrs: bool = False) -> None:
     """Extract UBIFS contents to_path/
 
     Arguments:
     Obj:ubifs    -- UBIFS object.
     Str:out_path  -- Path to extract contents to.
+    Bool:perms   -- Restore file owner/group/mode, requires running as root.
+    Bool:xattrs  -- Restore extended attributes (e.g. security.*). This also
+                    restores file metadata, because security.evm signs it;
+                    requires running as root.
     """
     try:
+        # security.evm covers inode metadata, so an EVM xattr is only useful
+        # when ownership and mode are restored as well.  Keep this invariant
+        # for callers of this API in addition to the command-line interface.
+        if xattrs:
+            perms = True
+
         inodes: dict[int, Inode] = {}
         bad_blocks: list[int] = []
 
@@ -57,7 +67,16 @@ def extract_files(ubifs: Ubifs, out_path: str, perms: bool = False) -> None:
             raise Exception('No inodes found')
 
         for dent in inodes[1]['dent']:
-            extract_dents(ubifs, inodes, dent, out_path, perms)
+            extract_dents(ubifs, inodes, dent, out_path, perms, xattrs)
+
+        # The output directory represents the UBIFS root inode.  Its metadata
+        # must be in place before security.evm is written.
+        _set_file_timestamps(out_path, inodes[1])
+        if perms:
+            _set_file_perms(out_path, inodes[1])
+
+        if xattrs:
+            _write_xattrs(ubifs, out_path, inodes[1], inodes)
 
         if len(bad_blocks):
             error(extract_files, 'Warn', 'Data may be missing or corrupted, bad blocks, LEB [%s]' % ','.join(map(str, bad_blocks)))
@@ -66,7 +85,7 @@ def extract_files(ubifs: Ubifs, out_path: str, perms: bool = False) -> None:
         error(extract_files, 'Error', '%s' % e)
 
 
-def extract_dents(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.dent_node, path: str = '', perms: bool = False) -> None:
+def extract_dents(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.dent_node, path: str = '', perms: bool = False, xattrs: bool = False) -> None:
     if dent_node.inum not in inodes:
         error(extract_dents, 'Error', 'inum: %s not found in inodes' % (dent_node.inum))
         return
@@ -91,9 +110,12 @@ def extract_dents(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.de
 
         if 'dent' in inode:
             for dnode in inode['dent']:
-                extract_dents(ubifs, inodes, dnode, dent_path, perms)
+                extract_dents(ubifs, inodes, dnode, dent_path, perms, xattrs)
 
         _set_file_timestamps(dent_path, inode)
+
+        if xattrs:
+            _write_xattrs(ubifs, dent_path, inode, inodes)
 
     elif dent_node.type == UBIFS_ITYPE_REG:
         try:
@@ -114,6 +136,9 @@ def extract_dents(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.de
             if perms:
                 _set_file_perms(dent_path, inode)
 
+            if xattrs:
+                _write_xattrs(ubifs, dent_path, inode, inodes)
+
         except Exception as e:
             error(extract_dents, 'Warn', 'FILE Fail: %s' % e)
 
@@ -126,8 +151,14 @@ def extract_dents(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.de
             _set_file_timestamps(dent_path, inode)
             log(extract_dents, 'Make Symlink: %s > %s' % (dent_path, inode['ino'].data))
 
+            if perms:
+                _set_file_perms(dent_path, inode)
+
+            if xattrs:
+                _write_xattrs(ubifs, dent_path, inode, inodes)
+
         except Exception as e:
-            error(extract_dents, 'Warn', 'SYMLINK Fail: %s' % e) 
+            error(extract_dents, 'Warn', 'SYMLINK Fail: %s' % e)
 
     elif dent_node.type in [UBIFS_ITYPE_BLK, UBIFS_ITYPE_CHR]:
         try:
@@ -136,15 +167,25 @@ def extract_dents(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.de
                 os.mknod(dent_path, inode['ino'].mode, dev)
                 log(extract_dents, 'Make Device Node: %s' % (dent_path))
 
+                _set_file_timestamps(dent_path, inode)
+
                 if perms:
                     _set_file_perms(dent_path, inode)
+
+                if xattrs:
+                    _write_xattrs(ubifs, dent_path, inode, inodes)
             else:
                 log(extract_dents, 'Create dummy device.')
                 _write_reg_file(dent_path, str(dev))
 
+                _set_file_timestamps(dent_path, inode)
+
                 if perms:
                     _set_file_perms(dent_path, inode)
-                
+
+                if xattrs:
+                    _write_xattrs(ubifs, dent_path, inode, inodes)
+
         except Exception as e:
             error(extract_dents, 'Warn', 'DEV Fail: %s' % e)
 
@@ -153,8 +194,13 @@ def extract_dents(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.de
             os.mkfifo(dent_path, inode['ino'].mode)
             log(extract_dents, 'Make FIFO: %s' % (path))
 
+            _set_file_timestamps(dent_path, inode)
+
             if perms:
                 _set_file_perms(dent_path, inode)
+
+            if xattrs:
+                _write_xattrs(ubifs, dent_path, inode, inodes)
         except Exception as e:
             error(extract_dents, 'Warn', 'FIFO Fail: %s : %s' % (dent_path, e))
 
@@ -162,11 +208,41 @@ def extract_dents(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.de
         try:
             if settings.use_dummy_socket_file:
                 _write_reg_file(dent_path, '')
+                _set_file_timestamps(dent_path, inode)
                 if perms:
                     _set_file_perms(dent_path, inode)
+
+                if xattrs:
+                    _write_xattrs(ubifs, dent_path, inode, inodes)
         except Exception as e:
             error(extract_dents, 'Warn', 'SOCK Fail: %s : %s' % (dent_path, e))
 
+
+def _write_xattrs(ubifs, path, inode, inodes):
+    if 'xent' not in inode:
+        return
+
+    # EVM authenticates other protected xattrs (for example security.ima and
+    # security.capability).  UBIFS xent order is not significant, therefore
+    # always install its signature last.
+    xents = sorted(inode['xent'], key=lambda xent: xent.name == 'security.evm')
+
+    for xent in xents:
+        if xent.inum not in inodes:
+            error(_write_xattrs, 'Warn', 'xattr inum: %s not found in inodes' % (xent.inum))
+            continue
+
+        # Xattr values are stored inline in their own inode's data field,
+        # the same way symlink targets are (see decrypt_symlink_target),
+        # rather than as separate UBIFS_DATA_KEY nodes.
+        xattr_inode = inodes[xent.inum]
+        value = xattr_inode['ino'].data[:xattr_inode['ino'].size]
+
+        try:
+            os.setxattr(path, xent.name, value, follow_symlinks=False)
+            verbose_log(_write_xattrs, 'xattr: %s (%s bytes), path: %s' % (xent.name, len(value), path))
+        except OSError as e:
+            error(_write_xattrs, 'Warn', 'XATTR Fail: %s: %s' % (xent.name, e))
 
 def _set_file_perms(path, inode):
     os.chown(path, inode['ino'].uid, inode['ino'].gid, follow_symlinks=False)
