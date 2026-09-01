@@ -169,8 +169,9 @@ def extract_dents(ubifs: Ubifs, inodes: Mapping[int, Inode], dent_node: nodes.de
 
 
 def _set_file_perms(path, inode):
-    os.chown(path, inode['ino'].uid, inode['ino'].gid)
-    os.chmod(path, inode['ino'].mode)
+    os.chown(path, inode['ino'].uid, inode['ino'].gid, follow_symlinks=False)
+    if not os.path.islink(path):
+        os.chmod(path, inode['ino'].mode)
     verbose_log(_set_file_perms, 'perms:%s, owner: %s.%s, path: %s' % (inode['ino'].mode, inode['ino'].uid, inode['ino'].gid, path))
 
 def _set_file_timestamps(path, inode):
