@@ -37,8 +37,7 @@ if TYPE_CHECKING:
 def is_safe_path(basedir: str, path: str) -> bool:
     basedir = os.path.realpath(basedir)
     path = os.path.realpath(os.path.join(basedir, path))
-    return True if path.startswith(basedir) else False
-
+    return basedir == os.path.commonpath((basedir, path))
 
 def extract_files(ubifs: Ubifs, out_path: str, perms: bool = False, xattrs: bool = False) -> None:
     """Extract UBIFS contents to_path/
