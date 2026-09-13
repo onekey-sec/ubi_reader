@@ -5,23 +5,77 @@ on:
     types: [created]
 
 jobs:
-  release:
+  build:
+    name: Build Python distribution
     runs-on: ubuntu-24.04
-
+    permissions:
+      contents: read
     steps:
+      - name: Checkout source code
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.10"
 
-      - name: Pip install
+      - name: Install Poetry
         run: python -m pip install --upgrade pip poetry
         shell: bash
 
-      - name: Checkout source code
-        uses: actions/checkout@v4
+      - name: Build distribution
+        run: poetry build
 
-      - run: poetry publish --build
-        env:
-          POETRY_PYPI_TOKEN_PYPI: ${{secrets.POETRY_PYPI_TOKEN_PYPI}}
+      - name: Upload distribution artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/
+
+  publish-to-pypi:
+    name: Publish Python distribution to PyPI
+    needs: build
+    runs-on: ubuntu-24.04
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/ubi-reader
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Download distribution artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: python-distributions
+          path: dist/
+
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  publish-to-testpypi:
+    name: Publish Python distribution to TestPyPi
+    needs: build
+    runs-on: ubuntu-24.04
+
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/ubi-reader
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Download distribution artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: python-distributions
+          path: dist/
+
+      - name: Publish distribution to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
