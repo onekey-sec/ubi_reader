@@ -27,7 +27,8 @@ from ubireader.ubifs import nodes
 def guess_start_offset(path: str, guess_offset: int =0) -> int | None:
     file_offset = guess_offset
 
-    f = open(path, 'rb')
+    is_fileobj = hasattr(path, "read")
+    f = path if is_fileobj else open(path, 'rb')
     f.seek(0,2)
     file_size = f.tell()+1
     f.seek(guess_offset)
@@ -58,26 +59,31 @@ def guess_start_offset(path: str, guess_offset: int =0) -> int | None:
     else:
         error(guess_start_offset, 'Fatal', 'Could not determine start offset.')
 
-    f.close()
+    if not is_fileobj:
+        f.close()
 
 
 def guess_filetype(path: str, start_offset: int = 0) -> bytes | None:
     log(guess_filetype, 'Looking for file type at %s' % start_offset)
 
-    with open(path, 'rb') as f:
-        f.seek(start_offset)
-        buf = f.read(4)
+    is_fileobj = hasattr(path, "read")
+    f = path if is_fileobj else open(path, 'rb')
+    f.seek(start_offset)
+    buf = f.read(4)
 
-        if buf == UBI_EC_HDR_MAGIC:
-            ftype = UBI_EC_HDR_MAGIC
-            log(guess_filetype, 'File looks like a UBI image.')
+    if buf == UBI_EC_HDR_MAGIC:
+        ftype = UBI_EC_HDR_MAGIC
+        log(guess_filetype, 'File looks like a UBI image.')
 
-        elif buf == UBIFS_NODE_MAGIC:
-            ftype = UBIFS_NODE_MAGIC
-            log(guess_filetype, 'File looks like a UBIFS image.')
-        else:
-            ftype = None
-            error(guess_filetype, 'Fatal', 'Could not determine file type.')
+    elif buf == UBIFS_NODE_MAGIC:
+        ftype = UBIFS_NODE_MAGIC
+        log(guess_filetype, 'File looks like a UBIFS image.')
+    else:
+        ftype = None
+        error(guess_filetype, 'Fatal', 'Could not determine file type.')
+
+    if not is_fileobj:
+        f.close()
     
     return ftype
 
@@ -94,7 +100,8 @@ def guess_leb_size(path: str) -> int | None:
     Searches file for superblock and retrieves leb size.
     """
 
-    f = open(path, 'rb')
+    is_fileobj = hasattr(path, "read")
+    f = path if is_fileobj else open(path, 'rb')
     f.seek(0,2)
     file_size = f.tell()+1
     f.seek(0)
@@ -119,10 +126,12 @@ def guess_leb_size(path: str) -> int | None:
 
                 sbn = nodes.sb_node(buf)
                 block_size = sbn.leb_size
-                f.close()
+                if not is_fileobj:
+                    f.close()
                 return block_size
 
-    f.close()
+    if not is_fileobj:
+        f.close()
     return block_size
 
 
@@ -140,7 +149,8 @@ def guess_peb_size(path: str) -> int | None:
     """
     file_offset = 0
     offsets: list[int] = []
-    f = open(path, 'rb')
+    is_fileobj = hasattr(path, "read")
+    f = path if is_fileobj else open(path, 'rb')
     f.seek(0,2)
     file_size = f.tell()+1
     f.seek(0)
@@ -159,7 +169,8 @@ def guess_peb_size(path: str) -> int | None:
             offsets.append(idx)
 
         file_offset += FILE_CHUNK_SZ
-    f.close()
+    if not is_fileobj:
+        f.close()
 
     occurrences: dict[int, int] = {}
     for i in range(0, len(offsets)):

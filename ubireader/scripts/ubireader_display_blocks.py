@@ -109,19 +109,21 @@ def main():
         parser.error('File path must be provided.')
         sys.exit(1)
 
+    fileobj = open(path, "rb")
+
     if args.start_offset:
         start_offset = args.start_offset
     elif args.guess_offset:
-        start_offset = guess_start_offset(path, args.guess_offset)
+        start_offset = guess_start_offset(fileobj, args.guess_offset)
     else:
-        start_offset = guess_start_offset(path)
+        start_offset = guess_start_offset(fileobj)
 
     if args.end_offset:
         end_offset = args.end_offset
     else:
         end_offset = None
 
-    filetype = guess_filetype(path, start_offset)
+    filetype = guess_filetype(fileobj, start_offset)
     if not filetype:
         parser.error('Could not determine file type.')
 
@@ -129,9 +131,9 @@ def main():
         block_size = args.block_size
     else:
         if filetype == UBI_EC_HDR_MAGIC:
-            block_size = guess_peb_size(path)
+            block_size = guess_peb_size(fileobj)
         elif filetype == UBIFS_NODE_MAGIC:
-            block_size = guess_leb_size(path)
+            block_size = guess_leb_size(fileobj)
 
         if not block_size:
             parser.error('Block size could not be determined.')
@@ -153,7 +155,7 @@ def main():
         parser.error('No search parameters given, -b arg is required.')
 
 
-    ufile_obj = ubi_file(path, block_size, start_offset, end_offset)
+    ufile_obj = ubi_file(fileobj, block_size, start_offset, end_offset)
     ubi_obj = ubi_base(ufile_obj)
     blocks = []
 
@@ -185,6 +187,7 @@ def main():
             blocks.append(ubi_obj.blocks[block])
 
     ufile_obj.close()
+    fileobj.close()
 
     print('\nBlock matches: %s' % len(blocks))
 
